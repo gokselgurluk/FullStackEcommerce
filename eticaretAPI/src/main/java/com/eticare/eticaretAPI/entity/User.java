@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.List;
 
 
 @Entity
@@ -52,4 +53,14 @@ public class User {
     private Date lastLogin;
 
     private  boolean active =true ;// Varsayılan olarak kullanıcı aktif
+
+    @OneToMany(mappedBy = "user" ,cascade=CascadeType.ALL,orphanRemoval = true)
+    private List<Order> orderList;
+
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Review> reviews;
+
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CMS> cmsContent;
 }
