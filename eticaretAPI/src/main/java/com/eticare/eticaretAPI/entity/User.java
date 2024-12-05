@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -39,7 +40,7 @@ public class User {
     @Email(message = "Email must be a valid format")
     @NotBlank(message = "Email cannot be empty or blank")
     @Column(unique = true)
-    private String mail;
+    private String email;
 
 
     @Enumerated(EnumType.STRING)
@@ -63,4 +64,7 @@ public class User {
 
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CMS> cmsContent;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Payment> payments = new ArrayList<>();
 }

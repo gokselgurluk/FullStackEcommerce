@@ -18,7 +18,7 @@ public class CMS {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long cmsId;
+    private Long Id;
 
     @Column(nullable = false, length = 255)
     private String contentTitle;
