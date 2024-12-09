@@ -1,5 +1,6 @@
 package com.eticare.eticaretAPI.entity;
 
+import com.eticare.eticaretAPI.entity.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,7 +26,8 @@ public class Payment {
     private String paymentMethod ;
 
     @Column(nullable = false)
-    private  String paymentStatus;
+    @Enumerated(EnumType.STRING)// Enum'u veritabanında string olarak saklar
+    private PaymentStatus paymentStatus;
 
     @Column(precision = 10,scale = 2,nullable = false)
     private BigDecimal amount;

@@ -1,6 +1,7 @@
 package com.eticare.eticaretAPI.service.impl;
 
 import com.eticare.eticaretAPI.entity.Payment;
+import com.eticare.eticaretAPI.entity.enums.PaymentStatus;
 import com.eticare.eticaretAPI.repository.IPaymentRepository;
 import com.eticare.eticaretAPI.service.PaymentService;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,11 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public List<Payment> getAllPayments() {
         return paymentRepository.findAll();
+    }
+
+    @Override
+    public List<Payment> getPaymentByStatus(PaymentStatus paymentStatus) {
+        return paymentRepository.findByPaymentStatus(paymentStatus);
     }
 
     @Override
