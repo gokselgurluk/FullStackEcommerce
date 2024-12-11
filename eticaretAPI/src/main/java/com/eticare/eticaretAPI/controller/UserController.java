@@ -1,5 +1,7 @@
 package com.eticare.eticaretAPI.controller;
 
+import com.eticare.eticaretAPI.config.ModelMapper.IModelMapperService;
+import com.eticare.eticaretAPI.dto.response.UserResponse;
 import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.service.UserService;
 import org.springframework.http.ResponseEntity;
@@ -11,9 +13,11 @@ import java.util.List;
 @RequestMapping("/api/users")
 public class UserController {
     private final UserService userService;
+    private final IModelMapperService modelMapperService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, IModelMapperService modelMapperService) {
         this.userService = userService;
+        this.modelMapperService = modelMapperService;
     }
 
     @PostMapping
@@ -26,8 +30,9 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
     @GetMapping("/{id}")
-    public ResponseEntity<User> getByUserId(@PathVariable Long id){
-        return ResponseEntity.ok(userService.getUserById(id));
+    public ResponseEntity<UserResponse> getByUserId(@PathVariable Long id){
+        User user =userService.getUserById(id);
+        return ResponseEntity.ok(this.modelMapperService.forResponse().map(user,UserResponse.class));
     }
     @DeleteMapping("/{id}")
     public ResponseEntity<User> deleteUser(@PathVariable Long id){
