@@ -21,9 +21,17 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<User>createOrUpdateUser(@RequestBody User user){
-        return ResponseEntity.ok(userService.createOrUpdateUser(user));
-    }
+    public ResponseEntity<UserResponse>createOrUpdateUser(@RequestBody User user){
+
+        // Kullanıcı oluşturma veya güncelleme
+        User createdUser = userService.createOrUpdateUser(user);
+
+        // User -> UserResponse dönüşümü
+        UserResponse response = modelMapperService.forResponse().map(createdUser, UserResponse.class);
+
+        // HTTP 200 (OK) döndürme
+        return ResponseEntity.ok(response);
+        }
 
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers(){
