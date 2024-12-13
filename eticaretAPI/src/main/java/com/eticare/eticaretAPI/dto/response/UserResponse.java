@@ -21,5 +21,5 @@ public class UserResponse {
     private Role roleEnum;
     private Date createdAt;
     private Date lastLogin;
-    private boolean active;
+    //private boolean active;
 }

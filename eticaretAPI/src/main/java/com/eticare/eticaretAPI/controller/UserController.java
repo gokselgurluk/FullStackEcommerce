@@ -7,7 +7,10 @@ import com.eticare.eticaretAPI.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
@@ -34,8 +37,14 @@ public class UserController {
         }
 
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers(){
-        return ResponseEntity.ok(userService.getAllUsers());
+    public ResponseEntity<Map<String,Object>> getAllUsers(){
+        List<User> users = userService.getAllUsers();
+        List<UserResponse> response =users.stream().map(user->this.modelMapperService.forResponse().map(user,UserResponse.class)).collect(Collectors.toList());
+        Map<String, Object> responseBody = new HashMap<>();
+        responseBody.put("status", "success");
+        responseBody.put("users", response);
+        responseBody.put("total", response.size());
+        return ResponseEntity.ok(responseBody);
     }
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getByUserId(@PathVariable Long id){
