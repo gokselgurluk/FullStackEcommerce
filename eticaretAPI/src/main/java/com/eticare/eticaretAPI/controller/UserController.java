@@ -24,36 +24,24 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserResponse>createOrUpdateUser(@RequestBody User user){
-
-        // Kullanıcı oluşturma veya güncelleme
-        User createdUser = userService.createOrUpdateUser(user);
-
-        // User -> UserResponse dönüşümü
-        UserResponse response = modelMapperService.forResponse().map(createdUser, UserResponse.class);
-
+    public ResponseEntity<UserResponse> createOrUpdateUser(@RequestBody User user) {
         // HTTP 200 (OK) döndürme
-        return ResponseEntity.ok(response);
-        }
+        return ResponseEntity.ok(userService.createOrUpdateUser(user));
+    }
 
     @GetMapping
-    public ResponseEntity<Map<String,Object>> getAllUsers(){
-        List<User> users = userService.getAllUsers();
-        List<UserResponse> response =users.stream().map(user->this.modelMapperService.forResponse().map(user,UserResponse.class)).collect(Collectors.toList());
-        Map<String, Object> responseBody = new HashMap<>();
-        responseBody.put("status", "success");
-        responseBody.put("users", response);
-        responseBody.put("total", response.size());
-        return ResponseEntity.ok(responseBody);
+    public ResponseEntity<Map<String, Object>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers());
     }
+
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getByUserId(@PathVariable Long id){
-        User user =userService.getUserById(id);
-        return ResponseEntity.ok(this.modelMapperService.forResponse().map(user,UserResponse.class));
+    public ResponseEntity<UserResponse> getByUserId(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.getUserById(id));
     }
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<User> deleteUser(@PathVariable Long id){
-                userService.deleteUser(id);
-        return  ResponseEntity.noContent().build();
+    public ResponseEntity<User> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
     }
 }

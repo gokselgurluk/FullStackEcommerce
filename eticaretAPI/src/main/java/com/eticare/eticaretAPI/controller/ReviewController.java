@@ -1,21 +1,27 @@
 package com.eticare.eticaretAPI.controller;
 
+import com.eticare.eticaretAPI.config.ModelMapper.IModelMapperService;
+import com.eticare.eticaretAPI.dto.response.ReviewResponse;
 import com.eticare.eticaretAPI.entity.Review;
 import com.eticare.eticaretAPI.service.ReviewService;
+import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("api/reviews")
 public class ReviewController {
 
     private final ReviewService reviewService;
+    private final IModelMapperService modelMapperService;
 
-    public ReviewController(ReviewService reviewService) {
+    public ReviewController(ReviewService reviewService, IModelMapperService modelMapperService) {
         this.reviewService = reviewService;
+        this.modelMapperService = modelMapperService;
     }
 
     @PostMapping
@@ -24,8 +30,10 @@ public class ReviewController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Review>> getAllReview (){
-        return ResponseEntity.ok(reviewService.getAllReview());
+    public ResponseEntity<List<ReviewResponse>> getAllReview (){
+        List<Review> review =reviewService.getAllReview();
+        List<ReviewResponse> response =review.stream().map(Review->this.modelMapperService.forResponse().map(Review,ReviewResponse.class)).collect(Collectors.toList());
+        return ResponseEntity.ok(response);
 
     }
 
