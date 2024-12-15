@@ -1,8 +1,12 @@
 package com.eticare.eticaretAPI.controller;
 
+import com.eticare.eticaretAPI.config.ModelMapper.IModelMapperService;
+import com.eticare.eticaretAPI.dto.response.OrderItemResponse;
+import com.eticare.eticaretAPI.dto.response.ProductResponse;
 import com.eticare.eticaretAPI.entity.Order;
 import com.eticare.eticaretAPI.entity.OrderItem;
 import com.eticare.eticaretAPI.service.OrderItemService;
+import org.aspectj.weaver.ast.Or;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,36 +14,43 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/order-items")
 public class OrderItemController {
 
     private final OrderItemService  orderItemService;
+    private  final IModelMapperService modelMapperService;
 
 
     @Autowired
-    public OrderItemController( OrderItemService orderItemService) {
+    public OrderItemController(OrderItemService orderItemService, IModelMapperService modelMapperService) {
         this.orderItemService = orderItemService;
+
+        this.modelMapperService = modelMapperService;
 
     }
 
     @GetMapping
-    ResponseEntity<List<OrderItem>> getAllOrderItem(){
-        return ResponseEntity.ok(orderItemService.getAllOrderItems());
+    ResponseEntity<List<OrderItemResponse>> getAllOrderItem(){
+        List<OrderItem> orderItems=orderItemService.getAllOrderItems();
+        List<OrderItemResponse> response = orderItems.stream().map(OrderItem->this.modelMapperService.forResponse().map(OrderItem, OrderItemResponse.class)).collect(Collectors.toList());
+        return ResponseEntity.ok(response);
 
     }
 
     @GetMapping("/{id}")
-    ResponseEntity<Optional<OrderItem>> getOrderItemById(@PathVariable Long id){
-
-        return ResponseEntity.ok(orderItemService.getOrderItemById(id));
+    ResponseEntity<OrderItemResponse> getOrderItemById(@PathVariable Long id){
+        Optional<OrderItem> orderItem  = orderItemService.getOrderItemById(id);
+        return orderItem.map(OrderItem->ResponseEntity.ok(this.modelMapperService.forResponse().map(OrderItem, OrderItemResponse.class))).orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    ResponseEntity<OrderItem> createOrderItem(@RequestBody OrderItem orderItem){
+    ResponseEntity<OrderItemResponse> createOrderItem(@RequestBody OrderItem orderItem){
         OrderItem createdOrderItem =orderItemService.createOrUpdate(orderItem);
-        return new ResponseEntity<>(createdOrderItem, HttpStatus.CREATED);
+        OrderItemResponse response =this.modelMapperService.forResponse().map(createdOrderItem, OrderItemResponse.class);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @PutMapping

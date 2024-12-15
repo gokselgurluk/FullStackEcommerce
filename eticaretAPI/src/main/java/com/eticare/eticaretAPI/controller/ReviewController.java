@@ -25,8 +25,10 @@ public class ReviewController {
     }
 
     @PostMapping
-    public ResponseEntity<Review> createOrUpdateReview (@RequestBody Review review){
-        return  ResponseEntity.ok(reviewService.createOrUpdate(review));
+    public ResponseEntity<ReviewResponse> createOrUpdateReview (@RequestBody Review review){
+        Review createdReview =reviewService.createOrUpdate(review);
+        ReviewResponse response = this.modelMapperService.forResponse().map(createdReview,ReviewResponse.class);
+        return  ResponseEntity.ok(response);
     }
 
     @GetMapping
@@ -38,13 +40,22 @@ public class ReviewController {
     }
 
     @GetMapping("/{id}")
-    ResponseEntity<Optional<Review>> getReviewById(@PathVariable Long id){
-        return ResponseEntity.ok(reviewService.getReviewById(id));
+    ResponseEntity<ReviewResponse> getReviewById(@PathVariable Long id){
+        Optional<Review> review =reviewService.getReviewById(id);
+        if(review.isPresent()){
+            ReviewResponse response= this.modelMapperService.forResponse().map(review.get(),ReviewResponse.class);
+            //Optional türü maplenemez. Önce içerdiği nesneyi .get ile almanız gerekiyor.
+            return ResponseEntity.ok(response);
+        }else{
+           return ResponseEntity.noContent().build();
+        }
     }
 
     @GetMapping("/product/{productId}")
-    ResponseEntity<List<Review>> getReviewByProductId(@PathVariable Long id){
-      return   ResponseEntity.ok(reviewService.getReviewByProductId(id));
+    ResponseEntity<List<ReviewResponse>> getReviewByProductId(@PathVariable Long id){
+        List<Review> reviews = reviewService.getReviewByProductId(id);
+        List<ReviewResponse> response =reviews.stream().map(Review->this.modelMapperService.forResponse().map(Review,ReviewResponse.class)).collect(Collectors.toList());
+        return   ResponseEntity.ok(response);
     }
 
     @DeleteMapping("delete/{id}")
