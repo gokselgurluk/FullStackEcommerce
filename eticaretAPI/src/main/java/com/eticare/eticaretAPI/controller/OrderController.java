@@ -40,15 +40,18 @@ private final IModelMapperService modelMapperService;
     }
 
     @PostMapping
-    ResponseEntity<Order> createOrder (@RequestBody Order order){
+    ResponseEntity<OrderResponse> createOrder (@RequestBody Order order){
         Order createdOrder = orderService.createOrUpdate(order);
-        return new ResponseEntity<>(createdOrder, HttpStatus.CREATED);
+        OrderResponse response = this.modelMapperService.forResponse().map(createdOrder,OrderResponse.class);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
     @PutMapping("/{id}")
-    ResponseEntity<Order> updateOrder(@PathVariable Long id ,@RequestBody Order order){
+    ResponseEntity<OrderResponse> updateOrder(@PathVariable Long id ,@RequestBody Order order){
         order.setId(id);
         Order updatedOrder =orderService.createOrUpdate(order);
-        return ResponseEntity.ok(updatedOrder);
+        OrderResponse response = this.modelMapperService.forResponse().map(updatedOrder,OrderResponse.class);
+
+        return ResponseEntity.ok(response);
     }
     @DeleteMapping("/{id}")
     ResponseEntity<Order> deleteOrder(@PathVariable Long id){

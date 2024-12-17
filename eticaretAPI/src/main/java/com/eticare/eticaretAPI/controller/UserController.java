@@ -1,9 +1,11 @@
 package com.eticare.eticaretAPI.controller;
 
 import com.eticare.eticaretAPI.config.ModelMapper.IModelMapperService;
+import com.eticare.eticaretAPI.dto.request.User.UserSaveRequest;
 import com.eticare.eticaretAPI.dto.response.UserResponse;
 import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,9 +26,12 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserResponse> createOrUpdateUser(@RequestBody User user) {
+    public ResponseEntity<UserResponse> createOrUpdateUser(@RequestBody @Valid UserSaveRequest userSaveRequest) {
+
+        UserResponse userResponse = userService.createOrUpdateUser(userSaveRequest);
+       // UserServise sınıfında user sınıfı maplenıyor metot tıpı  UserResponse donuyor bu yuzden burada maplemedık maplemedık
+        return ResponseEntity.ok(userResponse);
         // HTTP 200 (OK) döndürme
-        return ResponseEntity.ok(userService.createOrUpdateUser(user));
     }
 
     @GetMapping

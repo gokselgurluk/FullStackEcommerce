@@ -1,6 +1,7 @@
 package com.eticare.eticaretAPI.service.impl;
 
 import com.eticare.eticaretAPI.config.ModelMapper.IModelMapperService;
+import com.eticare.eticaretAPI.dto.request.User.UserSaveRequest;
 import com.eticare.eticaretAPI.dto.response.UserResponse;
 import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.repository.IUserRepository;
@@ -28,11 +29,10 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public UserResponse createOrUpdateUser(User user) {
-
+    public UserResponse createOrUpdateUser(UserSaveRequest userSaveRequest) {
+        User user = this.modelMapperService.forRequest().map(userSaveRequest,User.class);
         // Kullanıcı oluşturma veya güncelleme
         User createdUser = userRepository.save(user);
-
         // User -> UserResponse dönüşümü
         UserResponse response = modelMapperService.forResponse().map(createdUser, UserResponse.class);
 
