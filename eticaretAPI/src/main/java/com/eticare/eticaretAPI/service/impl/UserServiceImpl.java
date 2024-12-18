@@ -29,8 +29,8 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public UserResponse createOrUpdateUser(UserSaveRequest userSaveRequest) {
-        User user = this.modelMapperService.forRequest().map(userSaveRequest,User.class);
+    public UserResponse createOrUpdateUser(Object object) {
+        User user = this.modelMapperService.forRequest().map(object,User.class);
         // Kullanıcı oluşturma veya güncelleme
         User createdUser = userRepository.save(user);
         // User -> UserResponse dönüşümü
