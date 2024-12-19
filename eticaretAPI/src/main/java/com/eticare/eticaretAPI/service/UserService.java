@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface UserService {
-UserResponse createOrUpdateUser (Object object);
+UserResponse createOrUpdateUser (String action ,Object object);
 Map<String, Object> getAllUsers();
 UserResponse getUserById (Long id);
 

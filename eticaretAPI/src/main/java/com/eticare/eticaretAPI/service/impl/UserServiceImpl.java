@@ -2,12 +2,16 @@ package com.eticare.eticaretAPI.service.impl;
 
 import com.eticare.eticaretAPI.config.ModelMapper.IModelMapperService;
 import com.eticare.eticaretAPI.dto.request.User.UserSaveRequest;
+import com.eticare.eticaretAPI.dto.request.User.UserUpdateRequest;
 import com.eticare.eticaretAPI.dto.response.UserResponse;
 import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.repository.IUserRepository;
 import com.eticare.eticaretAPI.service.UserService;
 import jakarta.persistence.GeneratedValue;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.annotation.processing.Generated;
 import java.util.HashMap;
@@ -26,18 +30,40 @@ public class UserServiceImpl implements UserService {
         this.userRepository = userRepository;
         this.modelMapperService = modelMapperService;
     }
-
-
-    @Override
-    public UserResponse createOrUpdateUser(Object object) {
-        User user = this.modelMapperService.forRequest().map(object,User.class);
+    public UserResponse creatUser(@Valid UserSaveRequest userSaveRequest){
+        User user = this.modelMapperService.forRequest().map(userSaveRequest,User.class);
         // Kullanıcı oluşturma veya güncelleme
         User createdUser = userRepository.save(user);
         // User -> UserResponse dönüşümü
         UserResponse response = modelMapperService.forResponse().map(createdUser, UserResponse.class);
+        return response ;
+    }
+    public UserResponse updateUser(@Valid UserUpdateRequest userUpdateRequest) {
+        User user = this.modelMapperService.forRequest().map(userUpdateRequest,User.class);
+        // Kullanıcı oluşturma veya güncelleme
+        User updateUser = userRepository.save(user);
+        // User -> UserResponse dönüşümü
+        UserResponse response = modelMapperService.forResponse().map(updateUser, UserResponse.class);
+        return response ;
+    }
 
-        return  response;
 
+    @Override
+    public UserResponse createOrUpdateUser(String action ,Object object) {
+
+        if("create".equalsIgnoreCase(action)){
+            UserSaveRequest  userSaveRequest = this.modelMapperService.forRequest().map(object,UserSaveRequest.class);
+            return (creatUser(userSaveRequest));
+
+        }else if("update".equalsIgnoreCase(action)){
+            UserUpdateRequest userUpdateRequest = this.modelMapperService.forRequest().map(object,UserUpdateRequest.class);
+
+            return updateUser(userUpdateRequest);
+        } else {
+
+          throw new IllegalArgumentException("Invalid action type");
+
+        }
     }
 
     @Override
