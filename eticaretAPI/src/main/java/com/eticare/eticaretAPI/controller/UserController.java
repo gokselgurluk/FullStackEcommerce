@@ -28,22 +28,9 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<?> createOrUpdateUser(@RequestParam("action") String action ,@RequestBody @Valid Object object) {
-        UserSaveRequest userSaveRequest;
-        UserUpdateRequest userUpdateRequest;
-        UserResponse userResponse;
-        if("create".equalsIgnoreCase(action)){
-           userSaveRequest = this.modelMapperService.forRequest().map(object,UserSaveRequest.class);
-            userResponse =   userService.createOrUpdateUser(userSaveRequest);
-            return ResponseEntity.ok(userResponse);
+        UserResponse userResponse =   userService.createOrUpdateUser( action,object);
+        return ResponseEntity.ok(userResponse);
 
-        }else if("update".equalsIgnoreCase(action)){
-            userUpdateRequest = this.modelMapperService.forRequest().map(object,UserUpdateRequest.class);
-            userResponse =   userService.createOrUpdateUser(userUpdateRequest);
-            return ResponseEntity.ok(userResponse);
-        } else {
-       return ResponseEntity.badRequest().body("Invalid action type");
-
-        }
        // UserServise sınıfında user sınıfı maplenıyor metot tıpı  UserResponse donuyor bu yuzden burada maplemedık maplemedık
 
         // HTTP 200 (OK) döndürme
