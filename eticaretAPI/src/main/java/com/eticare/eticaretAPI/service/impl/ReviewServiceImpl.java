@@ -21,7 +21,8 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public Review createOrUpdate(Review review) {
+    public Review create(Review review) {
+
         return  reviewRepository.save(review);
     }
 

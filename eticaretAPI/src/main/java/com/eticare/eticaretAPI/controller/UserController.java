@@ -27,14 +27,13 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createOrUpdateUser(@RequestParam("action") String action ,@RequestBody @Valid Object object) {
+    public ResponseEntity<UserResponse> createUser(@RequestParam("action") String action ,@RequestBody @Valid Object object) {
         UserResponse userResponse =   userService.createOrUpdateUser( action,object);
         return ResponseEntity.ok(userResponse);
-
-       // UserServise sınıfında user sınıfı maplenıyor metot tıpı  UserResponse donuyor bu yuzden burada maplemedık maplemedık
-
-        // HTTP 200 (OK) döndürme
+        // UserServise sınıfında user sınıfı maplenıyor metot tıpı  UserResponse donuyor bu yuzden burada maplemedık maplemedık
     }
+
+
 
     @GetMapping
     public ResponseEntity<Map<String, Object>> getAllUsers() {

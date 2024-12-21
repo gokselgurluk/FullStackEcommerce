@@ -1,11 +1,14 @@
 package com.eticare.eticaretAPI.controller;
 
 import com.eticare.eticaretAPI.config.ModelMapper.IModelMapperService;
+import com.eticare.eticaretAPI.dto.request.Review.ReviewSaveRequest;
 import com.eticare.eticaretAPI.dto.response.ReviewResponse;
 import com.eticare.eticaretAPI.entity.Review;
 import com.eticare.eticaretAPI.service.ReviewService;
+import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,21 +17,26 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("api/reviews")
+@Validated
 public class ReviewController {
 
     private final ReviewService reviewService;
     private final IModelMapperService modelMapperService;
+    private final ModelMapper modelMapper;
 
-    public ReviewController(ReviewService reviewService, IModelMapperService modelMapperService) {
+    public ReviewController(ReviewService reviewService, IModelMapperService modelMapperService, ModelMapper modelMapper) {
         this.reviewService = reviewService;
         this.modelMapperService = modelMapperService;
+        this.modelMapper = modelMapper;
     }
 
-    @PostMapping
-    public ResponseEntity<ReviewResponse> createOrUpdateReview (@RequestBody Review review){
-        Review createdReview =reviewService.createOrUpdate(review);
+    @PostMapping("/created")
+    public ResponseEntity<ReviewResponse> createReview (@RequestBody @Valid ReviewSaveRequest saveRequest ){
+        Review review =modelMapper.map(saveRequest,Review.class);
+        Review createdReview =reviewService.create(review);
         ReviewResponse response = this.modelMapperService.forResponse().map(createdReview,ReviewResponse.class);
         return  ResponseEntity.ok(response);
+
     }
 
     @GetMapping
