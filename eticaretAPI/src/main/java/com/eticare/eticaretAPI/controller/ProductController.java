@@ -1,9 +1,12 @@
 package com.eticare.eticaretAPI.controller;
 
 import com.eticare.eticaretAPI.config.ModelMapper.ModelMapperServiceImpl;
+import com.eticare.eticaretAPI.dto.request.Product.ProductSaveRequest;
+import com.eticare.eticaretAPI.dto.request.Product.ProductUpdateRequest;
 import com.eticare.eticaretAPI.dto.response.ProductResponse;
 import com.eticare.eticaretAPI.entity.Product;
 import com.eticare.eticaretAPI.service.ProductService;
+import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -42,11 +45,19 @@ public class ProductController {
     }
 
 
-    @PostMapping
-    ResponseEntity<ProductResponse> creatOrUpdate(@RequestBody Product product){
-        Product productStatus = productService.createOrUpdate(product);
-        ProductResponse response = this.modelMapperService.forResponse().map(productStatus,ProductResponse.class);
+    @PostMapping("/create")
+    ResponseEntity<ProductResponse> createProduct(@RequestBody @Valid ProductSaveRequest productSaveRequest){
+        Product product = this.modelMapperService.forRequest().map(productSaveRequest,Product.class);
+        productService.createOrUpdate(product);
+        ProductResponse response = this.modelMapperService.forResponse().map(product,ProductResponse.class);
         return  new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+    @PutMapping("/update")
+    ResponseEntity<ProductResponse> createProduct(@RequestBody @Valid ProductUpdateRequest productUpdateRequest){
+        Product product = this.modelMapperService.forRequest().map(productUpdateRequest,Product.class);
+        productService.createOrUpdate(product);
+        ProductResponse response = this.modelMapperService.forResponse().map(product,ProductResponse.class);
+        return  new ResponseEntity<>(response, HttpStatus.valueOf("Update completed"));
     }
 
     @DeleteMapping("/{id}")

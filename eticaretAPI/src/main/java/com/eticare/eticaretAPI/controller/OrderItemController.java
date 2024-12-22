@@ -53,7 +53,7 @@ public class OrderItemController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @PutMapping
+    @PutMapping("/{id}")
     ResponseEntity<OrderItem> updateOrderItem(@PathVariable Long id , @RequestBody OrderItem orderItem){
         orderItem.setId(id);
         return ResponseEntity.ok(orderItemService.createOrUpdate(orderItem));

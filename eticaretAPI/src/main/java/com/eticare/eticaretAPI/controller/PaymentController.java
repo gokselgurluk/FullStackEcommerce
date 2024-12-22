@@ -1,10 +1,13 @@
 package com.eticare.eticaretAPI.controller;
 
 import com.eticare.eticaretAPI.config.ModelMapper.IModelMapperService;
+import com.eticare.eticaretAPI.dto.request.Payment.PaymentSaveRequest;
+import com.eticare.eticaretAPI.dto.request.Payment.PaymentUpdateRequest;
 import com.eticare.eticaretAPI.dto.response.PaymentResponse;
 import com.eticare.eticaretAPI.entity.Payment;
 import com.eticare.eticaretAPI.entity.enums.PaymentStatus;
 import com.eticare.eticaretAPI.service.PaymentService;
+import jakarta.validation.Valid;
 import org.hibernate.query.NativeQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -65,11 +68,19 @@ public class PaymentController {
     }
 
     // Create a new payment
-    @PostMapping
-    ResponseEntity<PaymentResponse> createPayment(@RequestBody Payment payment){
-        Payment createdPayment=paymentService.createOrUpdate(payment);
-        PaymentResponse response =this.modelMapperService.forResponse().map(createdPayment,PaymentResponse.class);
+    @PostMapping("/create")
+    ResponseEntity<PaymentResponse> createPayment(@RequestBody @Valid PaymentSaveRequest paymentSaveRequest){
+        Payment payment = this.modelMapperService.forRequest().map(paymentSaveRequest,Payment.class);
+        paymentService.createOrUpdate(payment);
+        PaymentResponse response =this.modelMapperService.forResponse().map(payment,PaymentResponse.class);
         return new ResponseEntity<>(response , HttpStatus.CREATED);
+    }
+    @PutMapping("/update")
+    ResponseEntity<PaymentResponse> updatePayment(@RequestBody @Valid PaymentUpdateRequest paymentUpdateRequest){
+        Payment payment  = this.modelMapperService.forResponse().map(paymentUpdateRequest, Payment.class);
+        paymentService.createOrUpdate(payment);
+        PaymentResponse response =this.modelMapperService.forResponse().map(payment,PaymentResponse.class);
+        return ResponseEntity.ok(response);
     }
     @PutMapping("/{id}")
     ResponseEntity<PaymentResponse> updatePayment(@PathVariable Long id ,@RequestBody  Payment payment)
