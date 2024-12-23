@@ -1,8 +1,9 @@
 package com.eticare.eticaretAPI.controller;
 
-import com.eticare.eticaretAPI.config.ModelMapper.IModelMapperService;
-import com.eticare.eticaretAPI.dto.request.User.UserSaveRequest;
-import com.eticare.eticaretAPI.dto.request.User.UserUpdateRequest;
+import com.eticare.eticaretAPI.config.modelMapper.IModelMapperService;
+import com.eticare.eticaretAPI.config.result.Result;
+import com.eticare.eticaretAPI.config.result.ResultData;
+import com.eticare.eticaretAPI.config.result.ResultHelper;
 import com.eticare.eticaretAPI.dto.response.UserResponse;
 import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.service.UserService;
@@ -10,10 +11,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
@@ -27,9 +25,9 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserResponse> createUser(@RequestParam("action") String action ,@RequestBody @Valid Object object) {
+    public ResultData<UserResponse> createUser(@RequestParam("action") String action , @RequestBody @Valid Object object) {
         UserResponse userResponse =   userService.createOrUpdateUser( action,object);
-        return ResponseEntity.ok(userResponse);
+        return ResultHelper.created(userResponse);
         // UserServise sınıfında user sınıfı maplenıyor metot tıpı  UserResponse donuyor bu yuzden burada maplemedık maplemedık
     }
 

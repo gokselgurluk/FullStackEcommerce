@@ -1,10 +1,8 @@
-package com.eticare.eticaretAPI.config.ModelMapper;
+package com.eticare.eticaretAPI.config.modelMapper;
 
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
-import org.modelmapper.spi.MatchingStrategy;
 import org.springframework.stereotype.Service;
-import org.springframework.ui.Model;
 
 @Service
 public class ModelMapperServiceImpl implements IModelMapperService{

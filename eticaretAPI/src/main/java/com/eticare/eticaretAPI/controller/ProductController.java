@@ -1,16 +1,14 @@
 package com.eticare.eticaretAPI.controller;
 
-import com.eticare.eticaretAPI.config.ModelMapper.ModelMapperServiceImpl;
+import com.eticare.eticaretAPI.config.modelMapper.ModelMapperServiceImpl;
 import com.eticare.eticaretAPI.dto.request.Product.ProductSaveRequest;
 import com.eticare.eticaretAPI.dto.request.Product.ProductUpdateRequest;
 import com.eticare.eticaretAPI.dto.response.ProductResponse;
 import com.eticare.eticaretAPI.entity.Product;
 import com.eticare.eticaretAPI.service.ProductService;
 import jakarta.validation.Valid;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

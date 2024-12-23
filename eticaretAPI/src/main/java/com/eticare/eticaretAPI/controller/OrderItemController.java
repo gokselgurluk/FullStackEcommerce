@@ -1,12 +1,11 @@
 package com.eticare.eticaretAPI.controller;
 
-import com.eticare.eticaretAPI.config.ModelMapper.IModelMapperService;
+import com.eticare.eticaretAPI.config.modelMapper.IModelMapperService;
+import com.eticare.eticaretAPI.dto.request.Order.OrderUpdateRequest;
+import com.eticare.eticaretAPI.dto.request.OrderItem.OrderItemSaveRequest;
 import com.eticare.eticaretAPI.dto.response.OrderItemResponse;
-import com.eticare.eticaretAPI.dto.response.ProductResponse;
-import com.eticare.eticaretAPI.entity.Order;
 import com.eticare.eticaretAPI.entity.OrderItem;
 import com.eticare.eticaretAPI.service.OrderItemService;
-import org.aspectj.weaver.ast.Or;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,17 +45,20 @@ public class OrderItemController {
         return orderItem.map(OrderItem->ResponseEntity.ok(this.modelMapperService.forResponse().map(OrderItem, OrderItemResponse.class))).orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping
-    ResponseEntity<OrderItemResponse> createOrderItem(@RequestBody OrderItem orderItem){
-        OrderItem createdOrderItem =orderItemService.createOrUpdate(orderItem);
-        OrderItemResponse response =this.modelMapperService.forResponse().map(createdOrderItem, OrderItemResponse.class);
+    @PostMapping("/create")
+    ResponseEntity<OrderItemResponse> createOrderItem(@RequestBody OrderItemSaveRequest orderItemSaveRequest){
+        OrderItem orderItem=this.modelMapperService.forRequest().map(orderItemSaveRequest,OrderItem.class);
+        orderItemService.createOrUpdate(orderItem);
+        OrderItemResponse response =this.modelMapperService.forResponse().map(orderItem, OrderItemResponse.class);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}")
-    ResponseEntity<OrderItem> updateOrderItem(@PathVariable Long id , @RequestBody OrderItem orderItem){
-        orderItem.setId(id);
-        return ResponseEntity.ok(orderItemService.createOrUpdate(orderItem));
+    @PutMapping("/update")
+    ResponseEntity<OrderItemResponse> updateOrderItem(@RequestBody OrderUpdateRequest orderUpdateRequest){
+       OrderItem orderItemUpdate=this.modelMapperService.forRequest().map(orderUpdateRequest,OrderItem.class);
+        orderItemService.createOrUpdate(orderItemUpdate);
+        OrderItemResponse response =this.modelMapperService.forResponse().map(orderItemUpdate,OrderItemResponse.class);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping

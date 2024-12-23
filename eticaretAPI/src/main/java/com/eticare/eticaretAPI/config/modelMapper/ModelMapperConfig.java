@@ -1,9 +1,8 @@
-package com.eticare.eticaretAPI.config.ModelMapper;
+package com.eticare.eticaretAPI.config.modelMapper;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.ui.Model;
 
 @Configuration
 public class ModelMapperConfig {

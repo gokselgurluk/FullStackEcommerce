@@ -1,6 +1,6 @@
 package com.eticare.eticaretAPI.controller;
 
-import com.eticare.eticaretAPI.config.ModelMapper.IModelMapperService;
+import com.eticare.eticaretAPI.config.modelMapper.IModelMapperService;
 import com.eticare.eticaretAPI.dto.request.Payment.PaymentSaveRequest;
 import com.eticare.eticaretAPI.dto.request.Payment.PaymentUpdateRequest;
 import com.eticare.eticaretAPI.dto.response.PaymentResponse;
@@ -8,10 +8,8 @@ import com.eticare.eticaretAPI.entity.Payment;
 import com.eticare.eticaretAPI.entity.enums.PaymentStatus;
 import com.eticare.eticaretAPI.service.PaymentService;
 import jakarta.validation.Valid;
-import org.hibernate.query.NativeQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

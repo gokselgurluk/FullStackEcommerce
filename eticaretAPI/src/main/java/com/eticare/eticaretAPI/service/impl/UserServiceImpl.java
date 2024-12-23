@@ -1,19 +1,15 @@
 package com.eticare.eticaretAPI.service.impl;
 
-import com.eticare.eticaretAPI.config.ModelMapper.IModelMapperService;
+import com.eticare.eticaretAPI.config.modelMapper.IModelMapperService;
 import com.eticare.eticaretAPI.dto.request.User.UserSaveRequest;
 import com.eticare.eticaretAPI.dto.request.User.UserUpdateRequest;
 import com.eticare.eticaretAPI.dto.response.UserResponse;
 import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.repository.IUserRepository;
 import com.eticare.eticaretAPI.service.UserService;
-import jakarta.persistence.GeneratedValue;
 import jakarta.validation.Valid;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 
-import javax.annotation.processing.Generated;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

@@ -1,10 +1,12 @@
 package com.eticare.eticaretAPI.controller;
 
-import com.eticare.eticaretAPI.config.ModelMapper.IModelMapperService;
+import com.eticare.eticaretAPI.config.modelMapper.IModelMapperService;
+import com.eticare.eticaretAPI.dto.request.Category.CategorySaveRequest;
+import com.eticare.eticaretAPI.dto.request.Category.CategoryUpdateRequest;
 import com.eticare.eticaretAPI.dto.response.CategoryResponse;
 import com.eticare.eticaretAPI.entity.Category;
 import com.eticare.eticaretAPI.service.CategoryService;
-import org.apache.coyote.Response;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -56,18 +58,19 @@ public class CategoryController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping
-    ResponseEntity<CategoryResponse> createCategory(@RequestBody Category category) {
-        Category createdCategory = categoryService.createOrUpdate(category);
+    @PostMapping("/create")
+    ResponseEntity<CategoryResponse> createCategory(@RequestBody @Valid  CategorySaveRequest  categorySaveRequest) {
+        Category createdCategory = this.modelMapperService.forRequest().map(categorySaveRequest,Category.class);
+        categoryService.createOrUpdate(createdCategory);
         CategoryResponse response = this.modelMapperService.forResponse().map(createdCategory,CategoryResponse.class);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}")
-    ResponseEntity<CategoryResponse> updateCAtegory(@PathVariable Long id, @RequestBody Category category) {
-        category.setId(id);
-        Category categoryUpdate =categoryService.createOrUpdate(category);
-        CategoryResponse response = this.modelMapperService.forResponse().map(categoryUpdate,CategoryResponse.class);
+    @PutMapping("/update")
+    ResponseEntity<CategoryResponse> updateCAtegory(@RequestBody @Valid CategoryUpdateRequest categoryUpdateRequest) {
+        Category updateCategory =this.modelMapperService.forResponse().map(categoryUpdateRequest,Category.class);
+        categoryService.createOrUpdate(updateCategory);
+        CategoryResponse response = this.modelMapperService.forResponse().map(updateCategory,CategoryResponse.class);
         return ResponseEntity.ok(response);
     }
 

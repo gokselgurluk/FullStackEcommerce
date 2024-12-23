@@ -1,10 +1,13 @@
 package com.eticare.eticaretAPI.controller;
 
 
-import com.eticare.eticaretAPI.config.ModelMapper.IModelMapperService;
+import com.eticare.eticaretAPI.config.modelMapper.IModelMapperService;
+import com.eticare.eticaretAPI.dto.request.Order.OrderCreateRequest;
+import com.eticare.eticaretAPI.dto.request.Order.OrderUpdateRequest;
 import com.eticare.eticaretAPI.dto.response.OrderResponse;
 import com.eticare.eticaretAPI.entity.Order;
 import com.eticare.eticaretAPI.service.OrderService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -39,18 +42,18 @@ private final IModelMapperService modelMapperService;
 
     }
 
-    @PostMapping
-    ResponseEntity<OrderResponse> createOrder (@RequestBody Order order){
-        Order createdOrder = orderService.createOrUpdate(order);
+    @PostMapping("/create")
+    ResponseEntity<OrderResponse> createOrder (@RequestBody @Valid OrderCreateRequest orderCreateRequest){
+        Order createdOrder = this.modelMapperService.forRequest().map(orderCreateRequest ,Order.class);
+        orderService.createOrUpdate(createdOrder);
         OrderResponse response = this.modelMapperService.forResponse().map(createdOrder,OrderResponse.class);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
-    @PutMapping("/{id}")
-    ResponseEntity<OrderResponse> updateOrder(@PathVariable Long id ,@RequestBody Order order){
-        order.setId(id);
-        Order updatedOrder =orderService.createOrUpdate(order);
+    @PutMapping("/update")
+    ResponseEntity<OrderResponse> updateOrder(@RequestBody @Valid OrderUpdateRequest orderUpdateRequest){
+        Order updatedOrder =this.modelMapperService.forRequest().map(orderUpdateRequest,Order.class);
+        orderService.createOrUpdate(updatedOrder);
         OrderResponse response = this.modelMapperService.forResponse().map(updatedOrder,OrderResponse.class);
-
         return ResponseEntity.ok(response);
     }
     @DeleteMapping("/{id}")

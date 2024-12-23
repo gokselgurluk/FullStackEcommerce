@@ -1,8 +1,6 @@
-package com.eticare.eticaretAPI.config.ModelMapper;
+package com.eticare.eticaretAPI.config.modelMapper;
 
 import org.modelmapper.ModelMapper;
-import org.springframework.ui.Model;
-import org.springframework.ui.ModelMap;
 
 public interface IModelMapperService {
     ModelMapper forRequest();

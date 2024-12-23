@@ -1,9 +1,12 @@
 package com.eticare.eticaretAPI.controller;
 
-import com.eticare.eticaretAPI.config.ModelMapper.IModelMapperService;
+import com.eticare.eticaretAPI.config.modelMapper.IModelMapperService;
+import com.eticare.eticaretAPI.dto.request.CMS.CmsSaveRequest;
+import com.eticare.eticaretAPI.dto.request.CMS.CmsUpdateRequest;
 import com.eticare.eticaretAPI.dto.response.CMSResponse;
 import com.eticare.eticaretAPI.entity.CMS;
 import com.eticare.eticaretAPI.service.CmsService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -44,18 +47,19 @@ public class CMSController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping
-    ResponseEntity<CMSResponse> createContent(@RequestBody CMS cms){
-        CMS createdCms =cmsService.createOrUpdateContend(cms);
+    @PostMapping("/create")
+    ResponseEntity<CMSResponse> createContent(@RequestBody @Valid CmsSaveRequest cmsSaveRequest){
+        CMS createdCms = this.modelMapperService.forRequest().map(cmsSaveRequest,CMS.class);
+        cmsService.createOrUpdateContend(createdCms);
         CMSResponse response =this.modelMapperService.forResponse().map(createdCms,CMSResponse.class);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}")
-    ResponseEntity<CMSResponse> updateContent(@PathVariable Long id ,@RequestBody CMS cms){
-        cms.setId(id);
-        CMS cmsUpdate =cmsService.createOrUpdateContend(cms);
-        CMSResponse response =this.modelMapperService.forResponse().map(cmsUpdate,CMSResponse.class);
+    @PutMapping("/update")
+    ResponseEntity<CMSResponse> updateContent(@RequestBody @Valid CmsUpdateRequest cmsUpdateRequest){
+        CMS updatedCms = this.modelMapperService.forRequest().map(cmsUpdateRequest,CMS.class);
+        cmsService.createOrUpdateContend(updatedCms);
+        CMSResponse response =this.modelMapperService.forResponse().map(updatedCms,CMSResponse.class);
         return ResponseEntity.ok(response);
 
     }
