@@ -26,7 +26,7 @@ public class UserController {
 
     @PostMapping
     public ResultData<UserResponse> createUser(@RequestParam("action") String action , @RequestBody @Valid Object object) {
-        UserResponse userResponse =   userService.createOrUpdateUser( action,object);
+        UserResponse userResponse =   userService.createOrUpdateUser(action,object);
         return ResultHelper.created(userResponse);
         // UserServise sınıfında user sınıfı maplenıyor metot tıpı  UserResponse donuyor bu yuzden burada maplemedık maplemedık
     }

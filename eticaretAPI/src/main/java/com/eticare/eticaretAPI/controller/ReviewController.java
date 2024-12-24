@@ -1,6 +1,8 @@
 package com.eticare.eticaretAPI.controller;
 
 import com.eticare.eticaretAPI.config.modelMapper.IModelMapperService;
+import com.eticare.eticaretAPI.config.result.ResultData;
+import com.eticare.eticaretAPI.config.result.ResultHelper;
 import com.eticare.eticaretAPI.dto.request.Review.ReviewSaveRequest;
 import com.eticare.eticaretAPI.dto.request.Review.ReviewUpdateRequest;
 import com.eticare.eticaretAPI.dto.response.ReviewResponse;
@@ -33,51 +35,52 @@ public class ReviewController {
     }
 
     @PostMapping("/created")
-    public ResponseEntity<ReviewResponse> createReview (@RequestBody @Valid ReviewSaveRequest saveRequest ){
+    public ResultData<ReviewResponse> createReview (@RequestBody @Valid ReviewSaveRequest saveRequest ){
         Review review =modelMapper.map(saveRequest,Review.class);
         reviewService.createOrUpdate(review);
         ReviewResponse response = this.modelMapperService.forResponse().map(review,ReviewResponse.class);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return ResultHelper.created(response);
     }
     @PutMapping("/update")
-    public ResponseEntity<ReviewResponse> updateReview(@RequestBody @Valid ReviewUpdateRequest reviewUpdateRequest){
+    public ResultData<ReviewResponse> updateReview(@RequestBody @Valid ReviewUpdateRequest reviewUpdateRequest){
         Review review =this.modelMapperService.forRequest().map(reviewUpdateRequest , Review.class);
         reviewService.createOrUpdate(review);
         ReviewResponse response =this.modelMapperService.forResponse().map(review,ReviewResponse.class);
-        return new ResponseEntity<>(response , HttpStatus.valueOf("Update Completed"));
+        return  ResultHelper.success(response);
     }
 
     @GetMapping
-    public ResponseEntity<List<ReviewResponse>> getAllReview (){
+    public ResultData<List<ReviewResponse>> getAllReview (){
         List<Review> review =reviewService.getAllReview();
         List<ReviewResponse> response =review.stream().map(Review->this.modelMapperService.forResponse().map(Review,ReviewResponse.class)).collect(Collectors.toList());
-        return ResponseEntity.ok(response);
+        return ResultHelper.success(response);
 
     }
 
     @GetMapping("/{id}")
-    ResponseEntity<ReviewResponse> getReviewById(@PathVariable Long id){
+    ResultData<ReviewResponse> getReviewById(@PathVariable Long id){
         Optional<Review> review =reviewService.getReviewById(id);
+
         if(review.isPresent()){
-            ReviewResponse response= this.modelMapperService.forResponse().map(review.get(),ReviewResponse.class);
+            ReviewResponse response = this.modelMapperService.forResponse().map(review.get(),ReviewResponse.class);
             //Optional türü maplenemez. Önce içerdiği nesneyi .get ile almanız gerekiyor.
-            return ResponseEntity.ok(response);
+            return ResultHelper.created(response);
         }else{
-           return ResponseEntity.noContent().build();
+           return ResultHelper.errorWithData("veri silme hatası",null,HttpStatus.NOT_FOUND);
         }
     }
 
     @GetMapping("/product/{productId}")
-    ResponseEntity<List<ReviewResponse>> getReviewByProductId(@PathVariable Long id){
+    ResultData<List<ReviewResponse>> getReviewByProductId(@PathVariable Long id){
         List<Review> reviews = reviewService.getReviewByProductId(id);
         List<ReviewResponse> response =reviews.stream().map(Review->this.modelMapperService.forResponse().map(Review,ReviewResponse.class)).collect(Collectors.toList());
-        return   ResponseEntity.ok(response);
+        return   ResultHelper.success(response);
     }
 
     @DeleteMapping("delete/{id}")
-    ResponseEntity<Review> deleteReview(@PathVariable Long id){
-        reviewService.deleteReview(id);
-        return  ResponseEntity.noContent().build();
+    ResultData<Review> deleteReview(@PathVariable Long id){
+       reviewService.deleteReview(id);
+        return  ResultHelper.success(null);
     }
 
 }

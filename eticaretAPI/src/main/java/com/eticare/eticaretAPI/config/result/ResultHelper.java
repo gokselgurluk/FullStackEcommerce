@@ -1,5 +1,6 @@
 package com.eticare.eticaretAPI.config.result;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 
 import java.util.List;
@@ -22,5 +23,9 @@ public class ResultHelper {
 
     public static <T> ResultData<T> success(T data) {
         return new ResultData<>(true, ResultMessages.OK, 200, data);
+    }
+
+    public static <T> ResultData<T> errorWithData(String message, T data, HttpStatus status) {
+        return new ResultData<>(false, message, status.value(), data);
     }
 }
