@@ -25,7 +25,7 @@ public class UserController {
     }
 
     @PostMapping
-    public ResultData<UserResponse> createUser(@RequestParam("action") String action , @RequestBody @Valid Object object) {
+    public ResultData<UserResponse> createUser(@RequestParam("action") String action , @RequestBody Object object) {
         UserResponse userResponse =   userService.createOrUpdateUser(action,object);
         return ResultHelper.created(userResponse);
         // UserServise sınıfında user sınıfı maplenıyor metot tıpı  UserResponse donuyor bu yuzden burada maplemedık maplemedık
@@ -44,8 +44,8 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<User> deleteUser(@PathVariable Long id) {
+    public Result deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
-        return ResponseEntity.noContent().build();
+        return ResultHelper.Ok();
     }
 }

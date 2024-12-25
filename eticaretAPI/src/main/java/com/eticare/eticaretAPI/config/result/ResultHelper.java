@@ -28,4 +28,7 @@ public class ResultHelper {
     public static <T> ResultData<T> errorWithData(String message, T data, HttpStatus status) {
         return new ResultData<>(false, message, status.value(), data);
     }
+    public static Result Ok(){
+        return new Result(true,ResultMessages.OK,"200");
+    }
 }

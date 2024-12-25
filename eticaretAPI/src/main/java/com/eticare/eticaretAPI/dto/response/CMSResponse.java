@@ -1,7 +1,5 @@
 package com.eticare.eticaretAPI.dto.response;
 
-import com.eticare.eticaretAPI.entity.User;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

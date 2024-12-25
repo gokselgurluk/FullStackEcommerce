@@ -1,10 +1,6 @@
 package com.eticare.eticaretAPI.dto.response;
 
-import com.eticare.eticaretAPI.entity.OrderItem;
-import com.eticare.eticaretAPI.entity.Payment;
-import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.entity.enums.OrderStatus;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

@@ -1,6 +1,7 @@
 package com.eticare.eticaretAPI.controller;
 
 import com.eticare.eticaretAPI.config.modelMapper.ModelMapperServiceImpl;
+import com.eticare.eticaretAPI.config.result.Result;
 import com.eticare.eticaretAPI.config.result.ResultData;
 import com.eticare.eticaretAPI.config.result.ResultHelper;
 import com.eticare.eticaretAPI.dto.request.Product.ProductSaveRequest;
@@ -63,8 +64,8 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
-    ResultData<Void> deleteProduct(@PathVariable Long id){
+    Result deleteProduct(@PathVariable Long id){
         productService.deleteProduct(id);
-        return ResultHelper.success(null);
+        return ResultHelper.Ok();
     }
 }

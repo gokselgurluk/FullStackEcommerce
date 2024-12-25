@@ -1,6 +1,7 @@
 package com.eticare.eticaretAPI.controller;
 
 import com.eticare.eticaretAPI.config.modelMapper.IModelMapperService;
+import com.eticare.eticaretAPI.config.result.Result;
 import com.eticare.eticaretAPI.config.result.ResultData;
 import com.eticare.eticaretAPI.config.result.ResultHelper;
 import com.eticare.eticaretAPI.dto.request.Review.ReviewSaveRequest;
@@ -78,9 +79,9 @@ public class ReviewController {
     }
 
     @DeleteMapping("delete/{id}")
-    ResultData<Review> deleteReview(@PathVariable Long id){
+    Result deleteReview(@PathVariable Long id){
        reviewService.deleteReview(id);
-        return  ResultHelper.success(null);
+        return ResultHelper.Ok();
     }
 
 }

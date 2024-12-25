@@ -1,6 +1,9 @@
 package com.eticare.eticaretAPI.controller;
 
 import com.eticare.eticaretAPI.config.modelMapper.IModelMapperService;
+import com.eticare.eticaretAPI.config.result.Result;
+import com.eticare.eticaretAPI.config.result.ResultData;
+import com.eticare.eticaretAPI.config.result.ResultHelper;
 import com.eticare.eticaretAPI.dto.request.CMS.CmsSaveRequest;
 import com.eticare.eticaretAPI.dto.request.CMS.CmsUpdateRequest;
 import com.eticare.eticaretAPI.dto.response.CMSResponse;
@@ -26,47 +29,46 @@ public class CMSController {
     }
 
     @GetMapping
-    ResponseEntity<List<CMSResponse>> getAllContent(){
+    ResultData<List<CMSResponse>> getAllContent(){
         List<CMS> contents =cmsService.getAllContents();
-        List< CMSResponse> responses = contents.stream().map(CMS->this.modelMapperService.forResponse().map(CMS,CMSResponse.class)).collect(Collectors.toList());
-        return ResponseEntity.ok(responses);
+        List< CMSResponse> response = contents.stream().map(CMS->this.modelMapperService.forResponse().map(CMS,CMSResponse.class)).collect(Collectors.toList());
+        return ResultHelper.success(response);
     }
 
     @GetMapping("/{id}")
-    ResponseEntity<CMSResponse> getContentById(@PathVariable Long id){
+    ResultData<CMSResponse> getContentById(@PathVariable Long id){
         CMS cms =cmsService.getContentById(id);
         CMSResponse response =this.modelMapperService.forResponse().map(cms,CMSResponse.class);
-        return ResponseEntity.ok(response);
+        return ResultHelper.success(response);
     }
 
     @GetMapping("/author/{authorId}")
-    ResponseEntity<List<CMSResponse>> getContentByAuthorId(@PathVariable Long id){
-
+    ResultData<List<CMSResponse>> getContentByAuthorId(@PathVariable Long id){
         List<CMS> cmsList =cmsService.getContentsByAuthorId(id);
         List< CMSResponse> response = cmsList.stream().map(CMS->this.modelMapperService.forResponse().map(CMS,CMSResponse.class)).collect(Collectors.toList());
-        return ResponseEntity.ok(response);
+        return ResultHelper.success(response);
     }
 
     @PostMapping("/create")
-    ResponseEntity<CMSResponse> createContent(@RequestBody @Valid CmsSaveRequest cmsSaveRequest){
+    ResultData<CMSResponse> createContent(@RequestBody @Valid CmsSaveRequest cmsSaveRequest){
         CMS createdCms = this.modelMapperService.forRequest().map(cmsSaveRequest,CMS.class);
         cmsService.createOrUpdateContend(createdCms);
         CMSResponse response =this.modelMapperService.forResponse().map(createdCms,CMSResponse.class);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return ResultHelper.created(response);
     }
 
     @PutMapping("/update")
-    ResponseEntity<CMSResponse> updateContent(@RequestBody @Valid CmsUpdateRequest cmsUpdateRequest){
+    ResultData<CMSResponse> updateContent(@RequestBody @Valid CmsUpdateRequest cmsUpdateRequest){
         CMS updatedCms = this.modelMapperService.forRequest().map(cmsUpdateRequest,CMS.class);
         cmsService.createOrUpdateContend(updatedCms);
         CMSResponse response =this.modelMapperService.forResponse().map(updatedCms,CMSResponse.class);
-        return ResponseEntity.ok(response);
+        return ResultHelper.success(response);
 
     }
 
     @DeleteMapping("/{id}")
-    ResponseEntity<CMS> deleteCMS (@PathVariable Long id){
+    Result deleteCMS (@PathVariable Long id){
         cmsService.deleteContent(id);
-        return  ResponseEntity.noContent().build();
+        return ResultHelper.Ok();
     }
 }

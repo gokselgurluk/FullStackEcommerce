@@ -1,6 +1,9 @@
 package com.eticare.eticaretAPI.controller;
 
 import com.eticare.eticaretAPI.config.modelMapper.IModelMapperService;
+import com.eticare.eticaretAPI.config.result.Result;
+import com.eticare.eticaretAPI.config.result.ResultData;
+import com.eticare.eticaretAPI.config.result.ResultHelper;
 import com.eticare.eticaretAPI.dto.request.Order.OrderUpdateRequest;
 import com.eticare.eticaretAPI.dto.request.OrderItem.OrderItemSaveRequest;
 import com.eticare.eticaretAPI.dto.response.OrderItemResponse;
@@ -26,45 +29,44 @@ public class OrderItemController {
     @Autowired
     public OrderItemController(OrderItemService orderItemService, IModelMapperService modelMapperService) {
         this.orderItemService = orderItemService;
-
         this.modelMapperService = modelMapperService;
-
     }
 
     @GetMapping
-    ResponseEntity<List<OrderItemResponse>> getAllOrderItem(){
+    ResultData<List<OrderItemResponse>> getAllOrderItem(){
         List<OrderItem> orderItems=orderItemService.getAllOrderItems();
         List<OrderItemResponse> response = orderItems.stream().map(OrderItem->this.modelMapperService.forResponse().map(OrderItem, OrderItemResponse.class)).collect(Collectors.toList());
-        return ResponseEntity.ok(response);
+        return ResultHelper.success(response);
 
     }
 
     @GetMapping("/{id}")
-    ResponseEntity<OrderItemResponse> getOrderItemById(@PathVariable Long id){
+    ResultData<OrderItemResponse> getOrderItemById(@PathVariable Long id){
         Optional<OrderItem> orderItem  = orderItemService.getOrderItemById(id);
-        return orderItem.map(OrderItem->ResponseEntity.ok(this.modelMapperService.forResponse().map(OrderItem, OrderItemResponse.class))).orElse(ResponseEntity.notFound().build());
+        return orderItem.map(OrderItem->ResultHelper.success(this.modelMapperService.forResponse().map(OrderItem, OrderItemResponse.class)))
+                .orElse(ResultHelper.errorWithData("Veri bulunamadı ",null,HttpStatus.NOT_FOUND));
     }
 
     @PostMapping("/create")
-    ResponseEntity<OrderItemResponse> createOrderItem(@RequestBody OrderItemSaveRequest orderItemSaveRequest){
+    ResultData<OrderItemResponse> createOrderItem(@RequestBody OrderItemSaveRequest orderItemSaveRequest){
         OrderItem orderItem=this.modelMapperService.forRequest().map(orderItemSaveRequest,OrderItem.class);
         orderItemService.createOrUpdate(orderItem);
         OrderItemResponse response =this.modelMapperService.forResponse().map(orderItem, OrderItemResponse.class);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return ResultHelper.success(response);
     }
 
     @PutMapping("/update")
-    ResponseEntity<OrderItemResponse> updateOrderItem(@RequestBody OrderUpdateRequest orderUpdateRequest){
+    ResultData<OrderItemResponse> updateOrderItem(@RequestBody OrderUpdateRequest orderUpdateRequest){
        OrderItem orderItemUpdate=this.modelMapperService.forRequest().map(orderUpdateRequest,OrderItem.class);
         orderItemService.createOrUpdate(orderItemUpdate);
         OrderItemResponse response =this.modelMapperService.forResponse().map(orderItemUpdate,OrderItemResponse.class);
-        return ResponseEntity.ok(response);
+        return ResultHelper.success(response);
     }
 
     @DeleteMapping
-    ResponseEntity<OrderItem> deleteOrderItem(@PathVariable Long id){
+    Result deleteOrderItem(@PathVariable Long id){
         orderItemService.deleteOrderItem(id);
-        return ResponseEntity.noContent().build();
+        return ResultHelper.Ok();
     }
 
 }
