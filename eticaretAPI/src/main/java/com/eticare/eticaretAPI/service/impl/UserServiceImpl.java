@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -80,6 +81,11 @@ public class UserServiceImpl implements UserService {
     public UserResponse getUserById(Long id) {
         User user=userRepository.findById(id).orElseThrow(()->new NotFoundException("User not found with id :" +id));
         return this.modelMapperService.forResponse().map(user,UserResponse.class);
+    }
+
+    @Override
+    public Optional<User> findByUsername(String username) {
+        return Optional.empty();
     }
 
     @Override
