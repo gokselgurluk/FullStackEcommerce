@@ -10,6 +10,5 @@ import java.util.List;
 @Repository
 public interface ICMSRepository extends JpaRepository<CMS,Long> {
 
-
     List<CMS> findByAuthorId(Long authorId);
 }

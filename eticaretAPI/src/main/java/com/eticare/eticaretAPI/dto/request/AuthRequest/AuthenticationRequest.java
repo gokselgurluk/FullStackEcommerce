@@ -3,7 +3,7 @@ package com.eticare.eticaretAPI.dto.request.AuthRequest;
 import lombok.Data;
 
 @Data
-public class AuthRequest {
+public class AuthenticationRequest {
     private String username;
     private String password;
 }

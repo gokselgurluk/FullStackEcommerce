@@ -29,7 +29,7 @@ public class User {
     private Long id ;
 
     @NotBlank(message = "Name cannot be empty or blank")
-    private String name ;
+    private String username;
 
     @NotBlank(message = "Surname cannot be empty or blank")
     private String surname;

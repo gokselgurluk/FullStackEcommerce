@@ -10,5 +10,6 @@ public class PasswordConfig {
     @Bean
     public PasswordEncoder passwordEncoder(){
         return  new BCryptPasswordEncoder();
+       // Parolaları şifrelemek için BCrypt kullanıyoruz
     }
 }
