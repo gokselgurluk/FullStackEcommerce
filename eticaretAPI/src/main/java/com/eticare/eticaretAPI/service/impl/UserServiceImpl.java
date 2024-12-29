@@ -10,6 +10,7 @@ import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.repository.IUserRepository;
 import com.eticare.eticaretAPI.service.UserService;
 import jakarta.validation.Valid;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -25,20 +26,29 @@ public class UserServiceImpl implements UserService {
     private final  IUserRepository userRepository;
     private final IModelMapperService modelMapperService;
 
-    public UserServiceImpl(IUserRepository userRepository, IModelMapperService modelMapperService) {
+    private final PasswordEncoder passwordEncoder;
+
+    public UserServiceImpl(IUserRepository userRepository, IModelMapperService modelMapperService, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.modelMapperService = modelMapperService;
+        this.passwordEncoder = passwordEncoder;
     }
     public UserResponse createUser(@Valid UserSaveRequest userSaveRequest) {
         if (userRepository.existsByEmail(userSaveRequest.getEmail())) {
             throw new EmailAlreadyRegisteredException("Email daha önce kayıtedilmiş");
         }
         User user = this.modelMapperService.forRequest().map(userSaveRequest, User.class);
+        user.setPassword(passwordEncoder.encode(userSaveRequest.getPassword()));
         return saveUserAndReturnResponse(user);
     }
 
     public UserResponse updateUser(@Valid UserUpdateRequest userUpdateRequest) {
         User user = this.modelMapperService.forRequest().map(userUpdateRequest, User.class);
+
+        if (userUpdateRequest.getPassword() != null && !userUpdateRequest.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(userUpdateRequest.getPassword()));
+        }
+
         return saveUserAndReturnResponse(user);
     }
 
