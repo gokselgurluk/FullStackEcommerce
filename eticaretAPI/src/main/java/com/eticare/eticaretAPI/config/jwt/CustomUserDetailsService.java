@@ -25,7 +25,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     // Burada kullanıcıyı veritabanından alacağınız kodu yazabilirsiniz
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByUserName(username)
+        return userRepository.findByUsername(username)
                 .map(user -> new CustomUserDetails(
                         user.getUsername(),
                         user.getPassword(),

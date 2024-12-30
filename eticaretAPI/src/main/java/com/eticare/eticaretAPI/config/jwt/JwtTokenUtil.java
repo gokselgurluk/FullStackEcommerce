@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
@@ -27,11 +28,9 @@ public class JwtTokenUtil {
                 .signWith(SignatureAlgorithm.ES256,secretKey) // Yeni yöntem  // Bean'den gelen anahtarı kullanıyoruz
                 .compact();
     }
-    public boolean validateToken(String token) {
-        if(getTokenUsername(token)!=null && isTokenExpired(token)) {
-            return  true;
-        }
-       return false;
+    public boolean validateToken(String token, UserDetails userDetails) {
+        final String usernameFromToken = getTokenUsername(token);
+        return usernameFromToken.equals(userDetails.getUsername()) && !isTokenExpired(token);
     }
     private Claims getClaims(String token) {
         Claims claims = Jwts.parserBuilder()  // Güncel yöntem: parserBuilder() kullanılıyor
@@ -49,7 +48,7 @@ public class JwtTokenUtil {
     public boolean isTokenExpired(String token) {
             Claims claims = getClaims(token);
             // Token'ın son kullanma tarihi
-            return claims.getExpiration().before(new Date(System.currentTimeMillis()));  // Eğer son kullanma tarihi geçmişse, true döner
+            return claims.getExpiration().after(new Date(System.currentTimeMillis()));  // Eğer son kullanma tarihi geçmişse, true döner
         }
 
 

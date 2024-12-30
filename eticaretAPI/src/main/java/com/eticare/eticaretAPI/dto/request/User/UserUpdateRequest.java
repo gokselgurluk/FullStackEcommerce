@@ -15,7 +15,7 @@ public class UserUpdateRequest {
 
     @NotBlank(message = "Name cannot be empty or blank")
     @Size(max = 50, message = "First name must be less than 50 characters.")
-    private String name;
+    private String username;
 
     @NotBlank(message = "Surname cannot be empty or blank")
     @Size(max = 50, message = "Last name must be less than 50 characters.")

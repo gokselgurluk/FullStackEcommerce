@@ -15,7 +15,7 @@ import java.util.Date;
 @Builder
 public class UserResponse {
     private Long id;
-    private String name;
+    private String username;
     private String surname;
     private String email;
     private Role roleEnum;

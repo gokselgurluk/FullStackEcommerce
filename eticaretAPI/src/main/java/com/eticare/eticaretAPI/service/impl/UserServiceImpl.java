@@ -33,6 +33,7 @@ public class UserServiceImpl implements UserService {
         this.modelMapperService = modelMapperService;
         this.passwordEncoder = passwordEncoder;
     }
+    @Override
     public UserResponse createUser(@Valid UserSaveRequest userSaveRequest) {
         if (userRepository.existsByEmail(userSaveRequest.getEmail())) {
             throw new EmailAlreadyRegisteredException("Email daha önce kayıtedilmiş");
@@ -41,7 +42,7 @@ public class UserServiceImpl implements UserService {
         user.setPassword(passwordEncoder.encode(userSaveRequest.getPassword()));
         return saveUserAndReturnResponse(user);
     }
-
+    @Override
     public UserResponse updateUser(@Valid UserUpdateRequest userUpdateRequest) {
         User user = this.modelMapperService.forRequest().map(userUpdateRequest, User.class);
 
@@ -59,22 +60,7 @@ public class UserServiceImpl implements UserService {
         return modelMapperService.forResponse().map(savedUser, UserResponse.class);
     }
 
-    @Override
-    public UserResponse createOrUpdateUser(String action, Object object) {
-        if (object == null) {
-            throw new IllegalArgumentException("Request body cannot be null.");
-        }
 
-        if ("create".equalsIgnoreCase(action)) {
-            UserSaveRequest userSaveRequest = this.modelMapperService.forRequest().map(object, UserSaveRequest.class);
-            return createUser(userSaveRequest);
-        } else if ("update".equalsIgnoreCase(action)) {
-            UserUpdateRequest userUpdateRequest = this.modelMapperService.forRequest().map(object, UserUpdateRequest.class);
-            return updateUser(userUpdateRequest);
-        } else {
-            throw new IllegalArgumentException("Invalid action type");
-        }
-    }
 
     @Override
     public  Map<String, Object>  getAllUsers() {
