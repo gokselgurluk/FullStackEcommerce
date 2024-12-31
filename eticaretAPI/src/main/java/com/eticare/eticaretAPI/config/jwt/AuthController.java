@@ -46,11 +46,6 @@ public class AuthController {
         // Kullanıcı detaylarını yükle
         final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
 
-        // Şifreyi doğrula
-        boolean isPasswordValid = checkPassword(authenticationRequest.getPassword(), userDetails.getPassword());
-        if (!isPasswordValid) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
-        }
 
         // JWT token üretme
         final String token = jwtTokenUtil.generateToken(userDetails.getUsername());
@@ -59,12 +54,6 @@ public class AuthController {
         return ResponseEntity.ok(new AuthenticationResponse(token, userDetails.getUsername(), userDetails.getAuthorities()));
     }
 
-    /**
-     * Şifreyi doğrulama
-     */
-    public boolean checkPassword(String rawPassword, String encodedPassword) {
-        return bCryptPasswordEncoder.matches(rawPassword, encodedPassword);
-    }
 
     /**
      * Kullanıcı adı ve şifre ile kimlik doğrulaması yapma

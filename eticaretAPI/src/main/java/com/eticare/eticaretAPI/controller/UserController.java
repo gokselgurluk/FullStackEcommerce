@@ -40,6 +40,8 @@ public class UserController {
     }
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()") // Sadece giriş yapmış kullanıcılar
+
     public ResponseEntity<Map<String, Object>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }

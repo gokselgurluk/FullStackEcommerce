@@ -21,23 +21,24 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserDetailsService userDetailsService;
-    private  final  PasswordEncoder passwordEncoder ;
+    private final PasswordEncoder passwordEncoder;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
+                          UserDetailsService userDetailsService,
+                          PasswordEncoder passwordEncoder) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
     }
 
-    // Security filter chain configuration
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-            http.csrf(csrf -> csrf.disable())
-                .authorizeRequests()
-                .requestMatchers("/auth/login", "/api/users/register").permitAll()  // Permit login and register endpoints
-                .anyRequest().authenticated()  // All other requests need authentication
-                .and()
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);  // JWT filter
+        http .csrf(csrf -> csrf.disable())  // CSRF korumasını devre dışı bırak
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/auth/login", "/api/users/register", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**", "/Message").permitAll()  // "Message" endpoint'ini herkesin erişmesine izin ver
+                        .anyRequest().authenticated()  // Diğer endpoint'ler için doğrulama gerekli
+                )
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // JWT doğrulama filtresi
 
         return http.build();
     }
