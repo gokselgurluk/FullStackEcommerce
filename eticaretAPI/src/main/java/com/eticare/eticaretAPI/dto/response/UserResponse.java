@@ -22,4 +22,5 @@ public class UserResponse {
     private Date createdAt;
     private Date lastLogin;
     //private boolean active;
+    private String token;
 }

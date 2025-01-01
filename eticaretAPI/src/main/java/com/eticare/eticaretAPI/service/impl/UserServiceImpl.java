@@ -2,6 +2,7 @@ package com.eticare.eticaretAPI.service.impl;
 
 import com.eticare.eticaretAPI.config.exeption.EmailAlreadyRegisteredException;
 import com.eticare.eticaretAPI.config.exeption.NotFoundException;
+import com.eticare.eticaretAPI.config.jwt.AuthenticationService;
 import com.eticare.eticaretAPI.config.modelMapper.IModelMapperService;
 import com.eticare.eticaretAPI.dto.request.User.UserSaveRequest;
 import com.eticare.eticaretAPI.dto.request.User.UserUpdateRequest;
@@ -27,11 +28,14 @@ public class UserServiceImpl implements UserService {
     private final IModelMapperService modelMapperService;
 
     private final PasswordEncoder passwordEncoder;
+    private final AuthenticationService authenticationService;
 
-    public UserServiceImpl(IUserRepository userRepository, IModelMapperService modelMapperService, PasswordEncoder passwordEncoder) {
+
+    public UserServiceImpl(IUserRepository userRepository, IModelMapperService modelMapperService, PasswordEncoder passwordEncoder, AuthenticationService authenticationService) {
         this.userRepository = userRepository;
         this.modelMapperService = modelMapperService;
         this.passwordEncoder = passwordEncoder;
+        this.authenticationService = authenticationService;
     }
     @Override
     public UserResponse createUser(@Valid UserSaveRequest userSaveRequest) {
@@ -40,6 +44,9 @@ public class UserServiceImpl implements UserService {
         }
         User user = this.modelMapperService.forRequest().map(userSaveRequest, User.class);
         user.setPassword(passwordEncoder.encode(userSaveRequest.getPassword()));
+
+
+
         return saveUserAndReturnResponse(user);
     }
     @Override
@@ -57,6 +64,7 @@ public class UserServiceImpl implements UserService {
         // Kullanıcı oluşturma veya güncelleme
         User savedUser = userRepository.save(user);
         // User -> UserResponse dönüşümü
+
         return modelMapperService.forResponse().map(savedUser, UserResponse.class);
     }
 

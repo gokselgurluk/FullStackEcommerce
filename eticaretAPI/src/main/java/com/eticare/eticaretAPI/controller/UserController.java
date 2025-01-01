@@ -1,5 +1,6 @@
 package com.eticare.eticaretAPI.controller;
-
+import com.eticare.eticaretAPI.entity.User;
+import com.eticare.eticaretAPI.config.jwt.AuthenticationService;
 import com.eticare.eticaretAPI.config.modelMapper.IModelMapperService;
 import com.eticare.eticaretAPI.config.result.Result;
 import com.eticare.eticaretAPI.config.result.ResultData;
@@ -8,6 +9,7 @@ import com.eticare.eticaretAPI.dto.request.User.UserSaveRequest;
 import com.eticare.eticaretAPI.dto.request.User.UserUpdateRequest;
 import com.eticare.eticaretAPI.dto.response.UserResponse;
 import com.eticare.eticaretAPI.service.UserService;
+import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -19,15 +21,21 @@ import java.util.Map;
 public class UserController {
     private final UserService userService;
     private final IModelMapperService modelMapperService;
-
-    public UserController(UserService userService, IModelMapperService modelMapperService) {
+    private final AuthenticationService authenticationService;
+    private  final ModelMapper modelMapper ;
+    public UserController(UserService userService, IModelMapperService modelMapperService, AuthenticationService authenticationService, ModelMapper modelMapper) {
         this.userService = userService;
         this.modelMapperService = modelMapperService;
+        this.authenticationService = authenticationService;
+        this.modelMapper = modelMapper;
     }
 
     @PostMapping("/register")
     public ResultData<UserResponse> createUser(@RequestBody UserSaveRequest request) {
         UserResponse userResponse =   userService.createUser(request);
+        User user = modelMapper.map(userResponse, User.class);
+        String token= authenticationService.register(user);
+        userResponse.setToken(token);
         return ResultHelper.created(userResponse);
         // UserServise sınıfında user sınıfı maplenıyor metot tıpı  UserResponse donuyor bu yuzden burada maplemedık maplemedık
     }
@@ -36,6 +44,7 @@ public class UserController {
     @PreAuthorize("isAuthenticated()") // Sadece giriş yapmış kullanıcılar
     public ResultData<UserResponse> updateUser(@RequestBody UserUpdateRequest request) {
         UserResponse userResponse =  userService.updateUser(request);
+
         return ResultHelper.success(userResponse);
     }
 
