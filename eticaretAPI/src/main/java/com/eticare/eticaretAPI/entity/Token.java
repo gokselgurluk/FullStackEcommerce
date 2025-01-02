@@ -43,7 +43,7 @@ public class Token {
 
     private boolean expired; // Token süresi doldu mu?
 
-    @ManyToOne(fetch =FetchType.LAZY)
+    @ManyToOne(fetch =FetchType.EAGER)
     @JoinColumn(name = "user_id")
     private  User user ;
 

@@ -18,35 +18,44 @@ public class JwtService {
 
     @Value("${jwt.secret}")
     private String SECRET_KEY ;
-    private final long expiredTime = 15 * 60 * 1000; // 15 dakika
+    private static final long ACCESS_TOKEN_EXPIRATION = 1000 * 60 * 2; // 15 dakika
+   // private static final long REFRESH_TOKEN_EXPIRATION = 1000 * 60 * 60 * 24 * 7; // 7 gün
+    private static final long REFRESH_TOKEN_EXPIRATION = 1000 * 60 * 3; // 3 dk
 
-    public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
+
+
+
+    public String generateRefreshToken(String username) {
+        return Jwts.builder()
+                .setSubject(username)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION)) // 7 gün geçerli
+                .signWith(SignatureAlgorithm.HS256,getSigningKey())
+                .compact();
     }
+    // Access Token oluşturma
+    public String generateAccessToken(String username) {
+        return Jwts.builder()
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION))
+                .signWith(SignatureAlgorithm.HS256, getSigningKey())
+                .compact();
+    }
+
+
+
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
-
-    public String generateToken(Map<String, Object> extraClaims, String username) {
-        return Jwts.builder()
-                .setClaims(extraClaims)
-                .setSubject(username)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + expiredTime)) // 15 dk geçerli
-                .signWith(SignatureAlgorithm.HS256,getSigningKey())
-                .compact();
-    }
-
-    public String generateToken(String username) {
-        return generateToken(new HashMap<>(), username);
-    }
-
     public boolean isTokenValid(String token, String username) {
         return extractUsername(token).equals(username) && !isTokenExpired(token);
     }
-
+    public String extractUsername(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
     private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }

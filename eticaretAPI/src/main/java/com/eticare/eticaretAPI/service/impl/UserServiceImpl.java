@@ -7,7 +7,10 @@ import com.eticare.eticaretAPI.config.modelMapper.IModelMapperService;
 import com.eticare.eticaretAPI.dto.request.User.UserSaveRequest;
 import com.eticare.eticaretAPI.dto.request.User.UserUpdateRequest;
 import com.eticare.eticaretAPI.dto.response.UserResponse;
+import com.eticare.eticaretAPI.entity.Token;
 import com.eticare.eticaretAPI.entity.User;
+import com.eticare.eticaretAPI.entity.enums.TokenType;
+import com.eticare.eticaretAPI.repository.ITokenRepository;
 import com.eticare.eticaretAPI.repository.IUserRepository;
 import com.eticare.eticaretAPI.service.UserService;
 import jakarta.validation.Valid;
@@ -30,12 +33,15 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationService authenticationService;
 
+    private final ITokenRepository tokenRepository;
 
-    public UserServiceImpl(IUserRepository userRepository, IModelMapperService modelMapperService, PasswordEncoder passwordEncoder, AuthenticationService authenticationService) {
+
+    public UserServiceImpl(IUserRepository userRepository, IModelMapperService modelMapperService, PasswordEncoder passwordEncoder, AuthenticationService authenticationService, ITokenRepository tokenRepository) {
         this.userRepository = userRepository;
         this.modelMapperService = modelMapperService;
         this.passwordEncoder = passwordEncoder;
         this.authenticationService = authenticationService;
+        this.tokenRepository = tokenRepository;
     }
     @Override
     public UserResponse createUser(@Valid UserSaveRequest userSaveRequest) {
@@ -71,13 +77,41 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public  Map<String, Object>  getAllUsers() {
+    public Map<String, Object> getAllUsers() {
+        // Kullanıcıları al
         List<User> users = userRepository.findAll();
-        List<UserResponse> response =users.stream().map(user->this.modelMapperService.forResponse().map(user,UserResponse.class)).collect(Collectors.toList());
+
+        // Her kullanıcı için ilgili token'ları yükle
+        List<UserResponse> response = users.stream().map(user -> {
+            // Kullanıcıya ait token'ları bul
+            List<Token> userTokens = tokenRepository.findAllByUserId(user.getId());
+
+            // Kullanıcıyı maple
+            UserResponse userResponse = this.modelMapperService.forResponse().map(user, UserResponse.class);
+
+            // Token'ları UserResponse'a ekle
+            List<String> accessTokens = userTokens.stream()
+                    .filter(token -> token.getTokenType().equals(TokenType.ACCESS)) // ACCESS token'ları
+                    .map(Token::getToken)
+                    .collect(Collectors.toList());
+
+            List<String> refreshTokens = userTokens.stream()
+                    .filter(token -> token.getTokenType().equals(TokenType.REFRESH)) // REFRESH token'ları
+                    .map(Token::getToken)
+                    .collect(Collectors.toList());
+
+            userResponse.setAccessTokens(accessTokens);
+            userResponse.setRefreshTokens(refreshTokens);
+
+            return userResponse;
+        }).collect(Collectors.toList());
+
+        // Response Body oluştur
         Map<String, Object> responseBody = new HashMap<>();
         responseBody.put("status", "success");
         responseBody.put("users", response);
         responseBody.put("total", response.size());
+
         return responseBody;
     }
 

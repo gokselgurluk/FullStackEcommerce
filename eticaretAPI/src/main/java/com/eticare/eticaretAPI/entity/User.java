@@ -1,6 +1,8 @@
 package com.eticare.eticaretAPI.entity;
 
+import com.eticare.eticaretAPI.dto.response.UserResponse;
 import com.eticare.eticaretAPI.entity.enums.Role;
+import com.eticare.eticaretAPI.entity.enums.TokenType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -65,9 +67,11 @@ public class User {
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CMS> cmsContent;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true )
+    private List<Token> tokens ;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Payment> payments = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Token> tokens = new ArrayList<>();
+
 }

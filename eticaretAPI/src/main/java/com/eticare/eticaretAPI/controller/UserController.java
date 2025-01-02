@@ -14,7 +14,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+
+
 
 @RestController
 @RequestMapping("/api/users")
@@ -35,7 +40,8 @@ public class UserController {
         UserResponse userResponse =   userService.createUser(request);
         User user = modelMapper.map(userResponse, User.class);
         String token= authenticationService.register(user);
-        userResponse.setToken(token);
+        userResponse.setRefreshTokens(Collections.singletonList(token));
+
         return ResultHelper.created(userResponse);
         // UserServise sınıfında user sınıfı maplenıyor metot tıpı  UserResponse donuyor bu yuzden burada maplemedık maplemedık
     }
