@@ -1,9 +1,15 @@
 package com.eticare.eticaretAPI.config.jwt;
 
+import com.eticare.eticaretAPI.config.result.ResultData;
+import com.eticare.eticaretAPI.config.result.ResultHelper;
 import com.eticare.eticaretAPI.dto.request.AuthRequest.AuthenticationRequest;
+import com.eticare.eticaretAPI.dto.request.User.UserSaveRequest;
 import com.eticare.eticaretAPI.dto.response.AuthenticationResponse;
+import com.eticare.eticaretAPI.dto.response.UserResponse;
 import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.repository.IUserRepository;
+import com.eticare.eticaretAPI.service.UserService;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.Optional;
 
@@ -37,9 +44,24 @@ public class AuthController {
 
     @Autowired
     private IUserRepository userRepository;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private ModelMapper modelMapper;
     /**
      * Login endpoint: Kullanıcı adı ve şifre ile kimlik doğrulaması yapılır
      */
+    @PostMapping("/register")
+    public ResultData<UserResponse> createUser(@RequestBody UserSaveRequest request) {
+        UserResponse userResponse =   userService.createUser(request);
+        User user = modelMapper.map(userResponse, User.class);
+        String token= authenticationService.register(user);
+        userResponse.setRefreshTokens(Collections.singletonList(token));
+
+        return ResultHelper.created(userResponse);
+        // UserServise sınıfında user sınıfı maplenıyor metot tıpı  UserResponse donuyor bu yuzden burada maplemedık maplemedık
+    }
+
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponse> createAuthToken(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
 

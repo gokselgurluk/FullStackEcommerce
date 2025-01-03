@@ -35,16 +35,6 @@ public class UserController {
         this.modelMapper = modelMapper;
     }
 
-    @PostMapping("/register")
-    public ResultData<UserResponse> createUser(@RequestBody UserSaveRequest request) {
-        UserResponse userResponse =   userService.createUser(request);
-        User user = modelMapper.map(userResponse, User.class);
-        String token= authenticationService.register(user);
-        userResponse.setRefreshTokens(Collections.singletonList(token));
-
-        return ResultHelper.created(userResponse);
-        // UserServise sınıfında user sınıfı maplenıyor metot tıpı  UserResponse donuyor bu yuzden burada maplemedık maplemedık
-    }
 
     @PostMapping("/update")
     @PreAuthorize("isAuthenticated()") // Sadece giriş yapmış kullanıcılar
