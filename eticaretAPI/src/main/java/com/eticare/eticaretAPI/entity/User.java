@@ -46,7 +46,7 @@ public class User {
 
 
     @Enumerated(EnumType.STRING)
-    private Role roleEnum;
+    private Role roleEnum=Role.USER;
 
 
     @Temporal(TemporalType.TIMESTAMP)

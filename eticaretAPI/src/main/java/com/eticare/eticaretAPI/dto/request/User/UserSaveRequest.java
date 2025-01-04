@@ -24,7 +24,7 @@ public class UserSaveRequest {
     private String email;
 
 
-    @NotBlank(message = "Rol cannot be empty or blank")
-    @Enumerated(EnumType.STRING)
-    private Role roleEnum;
+//    @NotBlank(message = "Rol cannot be empty or blank")
+//    @Enumerated(EnumType.STRING)
+//    private Role roleEnum;
 }
