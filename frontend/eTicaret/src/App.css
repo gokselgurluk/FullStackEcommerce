@@ -1,0 +1,98 @@
+/* Genel stil ayarları */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f4f4f4;
+}
+
+/* Form stili */
+form {
+  width: 100%; /* Form genişliği sayfa genişliğine göre ayarlanır */
+  max-width: 600px; /* Çok geniş ekranlarda sınır koymak için */
+  margin: 20px auto; /* Formu yatayda ve dikeyde ortalamak için */
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: white;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+form h2 {
+  color: #007bff;
+  text-align: center; /* Başlık merkezi hizalanır */
+}
+
+/* Buton stili */
+button {
+  display: block; /* Butonu tam genişlikte ortalamak için */
+  margin: 20px auto;
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+/*Modal sınıf*/
+/* Modal çerçeve boyutunu ve konumunu belirleme */
+.custom-modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50%; /* Ekranın %50 genişliği */
+  max-width: 400px; /* Maksimum genişlik */
+  max-height: 300px; /* Maksimum yükseklik */
+  padding: 20px;
+  border-radius: 20px;
+  background-color: white; /* Arka plan rengi */
+  font-size: 14px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Hafif gölge efekti */
+  text-align: center;
+  overflow: auto; /* İçerik taşarsa kaydırılabilir */
+}
+
+.custom-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7); /* Şeffaf siyah arka plan */
+  z-index: 1000;
+}
+
+
+
+.modal-message {
+  font-size: 16px;
+}
+
+.modal-message.success {
+  color: green;
+}
+
+.modal-message.error {
+  color: red;
+}
+
+.nav-links {
+  margin-left: auto;
+}
+.login-link {
+  margin-left: auto; /* Login butonunu sağa kaydırır */
+}
+.custom-navbar .nav-links {
+  display: flex;
+  width: 100%;
+}
+
+.custom-navbar .nav-links .login-link {
+  margin-left: auto; /* Login'i sağ tarafa iter */
+}
