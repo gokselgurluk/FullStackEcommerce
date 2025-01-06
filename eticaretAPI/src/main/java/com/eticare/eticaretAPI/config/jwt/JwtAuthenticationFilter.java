@@ -5,9 +5,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -36,7 +33,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
-        final String username;
+        final String email;
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
@@ -44,11 +41,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         jwt = authHeader.substring(7);
-        username = jwtService.extractUsername(jwt);
+        email = jwtService.extractEmail(jwt);
 
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            boolean isTokenValid = jwtService.isTokenValid(jwt, userDetails.getUsername());
+        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+            boolean isTokenValid = jwtService.isTokenValid(jwt, email);
 
             if (isTokenValid) {
                 // Token valid, set authentication
@@ -60,7 +57,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String refreshToken = request.getHeader("Refresh-Token");
                 if (refreshToken != null && jwtService.isTokenValid(refreshToken, userDetails.getUsername())) {
                     // Refresh token valid, create new access token
-                    String newAccessToken = jwtService.generateAccessToken(username);
+                    String newAccessToken = jwtService.generateAccessToken(email);
 
                     // Send new access token in response
                     response.setHeader("New-Access-Token", newAccessToken);

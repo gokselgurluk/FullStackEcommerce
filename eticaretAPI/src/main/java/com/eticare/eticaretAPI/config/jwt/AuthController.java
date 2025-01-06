@@ -69,12 +69,12 @@ public class AuthController {
         authenticationService.checkAndUpdateExpiredTokens();
 
         // Kullanıcıyı doğrula ve token üret
-        String token = authenticationService.authenticate(authenticationRequest.getUsername(), authenticationRequest.getPassword());
+        String token = authenticationService.authenticate(authenticationRequest.getEmail(), authenticationRequest.getPassword());
 
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
+        final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getEmail());
 
 // Kullanıcıyı username ile bul
-        Optional<User> user = userRepository.findByUsername(userDetails.getUsername());
+        Optional<User> user = userRepository.findByEmail(userDetails.getUsername());
 
 // Kullanıcı varsa, lastLogin bilgisini güncelle
         user.ifPresent(userEntity -> {

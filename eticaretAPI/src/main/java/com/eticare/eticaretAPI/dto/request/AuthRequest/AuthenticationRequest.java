@@ -8,7 +8,7 @@ import lombok.Data;
 public class AuthenticationRequest {
     @NotNull
     @Size(min = 3, max = 50)
-    private String username;
+    private String email;
 
     @NotNull
     @Size(min = 6, max = 100)

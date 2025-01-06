@@ -9,8 +9,6 @@ import org.springframework.stereotype.Service;
 
 import java.security.Key;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Function;
 
 @Service
@@ -25,18 +23,18 @@ public class JwtService {
 
 
 
-    public String generateRefreshToken(String username) {
+    public String generateRefreshToken(String email) {
         return Jwts.builder()
-                .setSubject(username)
+                .setSubject(email)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION)) // 7 gün geçerli
                 .signWith(SignatureAlgorithm.HS256,getSigningKey())
                 .compact();
     }
     // Access Token oluşturma
-    public String generateAccessToken(String username) {
+    public String generateAccessToken(String email) {
         return Jwts.builder()
-                .setSubject(username)
+                .setSubject(email)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION))
                 .signWith(SignatureAlgorithm.HS256, getSigningKey())
@@ -50,10 +48,10 @@ public class JwtService {
         Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
-    public boolean isTokenValid(String token, String username) {
-        return extractUsername(token).equals(username) && !isTokenExpired(token);
+    public boolean isTokenValid(String token, String email) {
+        return extractEmail(token).equals(email) && !isTokenExpired(token);
     }
-    public String extractUsername(String token) {
+    public String extractEmail(String token) {
         return extractClaim(token, Claims::getSubject);
     }
     private boolean isTokenExpired(String token) {

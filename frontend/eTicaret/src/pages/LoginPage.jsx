@@ -8,8 +8,11 @@ const LoginPage = () => {
   const navigate = useNavigate();
 
   // Form ve kullanıcı verileri
-  const [formData, setFormData] = useState({ username: '', password: '' });
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [userData, setUserData] = useState(null);
+
+  // Şifre görünürlüğü kontrolü
+  const [showPassword, setShowPassword] = useState(false);
 
   // Modal yönetimi
   const [modalData, setModalData] = useState({
@@ -22,6 +25,11 @@ const LoginPage = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+  };
+
+  // Şifre görünürlüğü toggle
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
   };
 
   // Giriş işlemini gönder
@@ -52,27 +60,27 @@ const LoginPage = () => {
     } catch (error) {
       if (error.response) {
         // Eğer backend'den gelen bir yanıt varsa
-        console.error("Backend hatası:", error.response.data);  // Hata detaylarını konsola yazdır
+        console.error('Backend hatası:', error.response.data);
         setModalData({
           isOpen: true,
-          message: error.response.data.data || "Bir hata oluştu. Lütfen tekrar deneyin.",
-          type: "error",
+          message: error.response.data.data || 'Bir hata oluştu. Lütfen tekrar deneyin.',
+          type: 'error',
         });
       } else if (error.request) {
         // Eğer istek gönderildi ama yanıt alınamadıysa
-        console.error("İstek hatası:", error.request);
+        console.error('İstek hatası:', error.request);
         setModalData({
           isOpen: true,
-          message: "Sunucuya bağlanılamadı. Lütfen internet bağlantınızı kontrol edin.",
-          type: "error",
+          message: 'Sunucuya bağlanılamadı. Lütfen internet bağlantınızı kontrol edin.',
+          type: 'error',
         });
       } else {
         // Genel bir hata
-        console.error("Hata:", error.message);
+        console.error('Hata:', error.message);
         setModalData({
           isOpen: true,
-          message: "Bilinmeyen bir hata oluştu. Lütfen tekrar deneyin.",
-          type: "error",
+          message: 'Bilinmeyen bir hata oluştu. Lütfen tekrar deneyin.',
+          type: 'error',
         });
       }
     }
@@ -87,13 +95,13 @@ const LoginPage = () => {
     <div style={{ maxWidth: '400px', margin: 'auto', padding: '20px' }}>
       <h3>Login</h3>
       <Form onSubmit={handleSubmit}>
-        <Form.Group className="mb-3" controlId="formBasicUsername">
-          <Form.Label>Username</Form.Label>
+        <Form.Group className="mb-3" controlId="formBasicEmail">
+          <Form.Label>Email</Form.Label>
           <Form.Control
-            type="text"
-            name="username"
-            placeholder="Enter Username"
-            value={formData.username}
+            type="email"
+            name="email"
+            placeholder="Enter email"
+            value={formData.email}
             onChange={handleInputChange}
             required
           />
@@ -102,7 +110,7 @@ const LoginPage = () => {
         <Form.Group className="mb-3" controlId="formBasicPassword">
           <Form.Label>Password</Form.Label>
           <Form.Control
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             name="password"
             placeholder="Enter Password"
             value={formData.password}
@@ -110,10 +118,18 @@ const LoginPage = () => {
             required
           />
         </Form.Group>
-
+        <div  style={{ display: 'flex', justifyContent: 'space-between' }} >
+        <Form.Group className="mb-3" controlId="formShowPasswordCheckbox">
+          <Form.Check
+            type="checkbox"
+            label="Show Password"
+            onChange={togglePasswordVisibility}
+          />
+        </Form.Group>
         <Form.Group className="mb-3" controlId="formBasicCheckbox">
           <Form.Check type="checkbox" label="Remember me" />
         </Form.Group>
+        </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <Button variant="primary" type="submit">

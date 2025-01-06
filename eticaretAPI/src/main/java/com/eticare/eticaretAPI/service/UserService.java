@@ -14,7 +14,7 @@ UserResponse updateUser( UserUpdateRequest userUpdateRequest);
 Map<String, Object> getAllUsers();
 UserResponse getUserById (Long id);
 Optional<User> findByUsername(String username);
-User getUserByMail(String email);
+Optional<User>  getUserByMail(String email);
 void deleteUser(Long id);
 
 

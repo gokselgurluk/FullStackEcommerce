@@ -126,8 +126,9 @@ public class UserServiceImpl implements UserService {
         return Optional.empty();
     }
 
+
     @Override
-    public User getUserByMail(String email) {
+    public Optional<User> getUserByMail(String email) {
         return userRepository.findByEmail(email);
     }
 

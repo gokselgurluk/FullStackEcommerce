@@ -1,5 +1,6 @@
 package com.eticare.eticaretAPI.config.jwt;
 
+import com.eticare.eticaretAPI.config.exeption.NotFoundException;
 import com.eticare.eticaretAPI.entity.Token;
 import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.entity.enums.TokenType;
@@ -7,9 +8,15 @@ import com.eticare.eticaretAPI.repository.ITokenRepository;
 import com.eticare.eticaretAPI.repository.IUserRepository;
 
 import io.jsonwebtoken.Claims;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -24,13 +31,15 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
 
     private final IUserRepository userRepository;
+    private  final PasswordEncoder passwordEncoder;
 
     public AuthenticationService(ITokenRepository tokenRepository, JwtService jwtService,
-                                 AuthenticationManager authenticationManager, IUserRepository userRepository) {
+                                 AuthenticationManager authenticationManager, IUserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.tokenRepository = tokenRepository;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public String register(User user) {
@@ -51,23 +60,38 @@ public class AuthenticationService {
     }
 
     // Kullanıcı doğrulama ve token üretme
-    public String authenticate(String username, String password) throws Exception {
+    public String authenticate(String email, String password) throws NotFoundException {
         // Kullanıcıyı doğrula
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
-        // User'ı DB'den al
-        Optional<User> user = userRepository.findByUsername(username);
-        List<Token> tokens = tokenRepository.findAllValidTokensByUser(user.get().getId());
-        tokens.forEach(t -> t.setRevoked(true));
-        tokenRepository.saveAll(tokens);
+        try {
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
+        } catch (BadCredentialsException e) {
+            throw new NotFoundException("Kullanıcı adı veya şifre hatalı.");
+        } catch (AuthenticationException e) {
+            throw new NotFoundException("Kimlik doğrulama sırasında bir hata oluştu.");
+        }        // User'ı DB'den al
+        Optional<User> user = userRepository.findByEmail(email);
+        if (user.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Kullanıcı bulunamadı "+email);
+        }
 
-        String accessToken = jwtService.generateAccessToken(username);
-        Date expiresAccessToken =(jwtService.extractClaim(accessToken, Claims::getExpiration));
-        String refreshToken = jwtService.generateRefreshToken(username);
-        Date expiresRefreshToken =(jwtService.extractClaim(accessToken, Claims::getExpiration));
-        
-        saveOrUpdateToken(user.get(), accessToken, TokenType.ACCESS,expiresAccessToken);
-        saveOrUpdateToken(user.get(), refreshToken, TokenType.REFRESH,expiresRefreshToken);
-        return accessToken;
+        if (!passwordEncoder.matches(password, user.get().getPassword())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Şifre yanlış");
+        }
+            List<Token> tokens = tokenRepository.findAllValidTokensByUser(user.get().getId());
+            tokens.forEach(t -> t.setRevoked(true));
+            tokenRepository.saveAll(tokens);
+
+            String accessToken = jwtService.generateAccessToken(email);
+            Date expiresAccessToken =(jwtService.extractClaim(accessToken, Claims::getExpiration));
+            String refreshToken = jwtService.generateRefreshToken(email);
+            Date expiresRefreshToken =(jwtService.extractClaim(accessToken, Claims::getExpiration));
+
+            saveOrUpdateToken(user.get(), accessToken, TokenType.ACCESS,expiresAccessToken);
+            saveOrUpdateToken(user.get(), refreshToken, TokenType.REFRESH,expiresRefreshToken);
+            return accessToken;
+
+
+
 
 
 
@@ -103,9 +127,9 @@ public class AuthenticationService {
         tokenRepository.save(token);
     }
 
-    private void saveOrUpdateToken(User user, String token, TokenType tokenType, Date expiresAt) {
+    private void saveOrUpdateToken(User email, String token, TokenType tokenType, Date expiresAt) {
 
-        Optional<Token> existingToken = tokenRepository.findByUserAndTokenType(user, tokenType);
+        Optional<Token> existingToken = tokenRepository.findByUserAndTokenType(email, tokenType);
 
         if (existingToken.isPresent()) {
             // Mevcut token'ı güncelle
@@ -118,7 +142,7 @@ public class AuthenticationService {
         } else {
 
             Token newToken = Token.builder()
-                    .user(user)
+                    .user(email)
                     .token(token)
                     .tokenType(tokenType)
                     .created_at(new Date())
