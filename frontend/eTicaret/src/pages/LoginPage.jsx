@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Modal, Form, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useAuth } from '../context/AuthContext'; // AuthContext'e erişim
+import axiosInstance from '../api/axiosInstance'; // axios instance kullanımı
 import ModalComponent from '../components/ModalComponent'; // Modal bileşeni
 
 const LoginPage = () => {
+  const { login } = useAuth(); // Global login fonksiyonu
   const navigate = useNavigate();
 
   // Form ve kullanıcı verileri
@@ -36,30 +38,36 @@ const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:8080/auth/login', formData);
+      const response = await axiosInstance.post('/auth/login', formData);
+      console.log(response.data); // Backend'den gelen yanıtı konsola yazdırın
+  
+      // accessTokens yerine accessToken'ı alıyoruz
       const { accessTokens, username, roles } = response.data;
-
-      // Token'ı localStorage'a kaydet
-      localStorage.setItem('accessToken', accessTokens);
-
-      // Kullanıcı bilgilerini güncelle
+      console.log('AccessToken:', accessTokens); // Burada accessToken'ı kontrol edin
+  
+      if (accessTokens) {
+        localStorage.setItem('accessToken', accessTokens); // Token'ı localStorage'a kaydediyoruz
+        console.log('Token kaydedildi:', localStorage.getItem('accessToken'));
+      } else {
+        console.error('Access token is undefined or null');
+      }
+  
+      // Diğer işlemler
       setUserData({ username, roles });
-
-      // Başarı modalını aç
+      login(accessTokens);
       setModalData({
         isOpen: true,
         message: `Giriş başarılı! Hoşgeldiniz, ${username}.`,
         type: 'success',
       });
-
-      // Başarı durumunda yönlendirme
+  
       setTimeout(() => {
-        setModalData({ isOpen: false }); // Modal'ı kapat
-        navigate('/'); // Ana sayfaya yönlendir
+        setModalData({ isOpen: false });
+        navigate('/');
       }, 2000);
+  
     } catch (error) {
       if (error.response) {
-        // Eğer backend'den gelen bir yanıt varsa
         console.error('Backend hatası:', error.response.data);
         setModalData({
           isOpen: true,
@@ -67,7 +75,6 @@ const LoginPage = () => {
           type: 'error',
         });
       } else if (error.request) {
-        // Eğer istek gönderildi ama yanıt alınamadıysa
         console.error('İstek hatası:', error.request);
         setModalData({
           isOpen: true,
@@ -75,7 +82,6 @@ const LoginPage = () => {
           type: 'error',
         });
       } else {
-        // Genel bir hata
         console.error('Hata:', error.message);
         setModalData({
           isOpen: true,
@@ -85,7 +91,7 @@ const LoginPage = () => {
       }
     }
   };
-
+  
   // Modal kapatma
   const closeModal = () => {
     setModalData({ isOpen: false, message: '', type: '' });
@@ -118,17 +124,17 @@ const LoginPage = () => {
             required
           />
         </Form.Group>
-        <div  style={{ display: 'flex', justifyContent: 'space-between' }} >
-        <Form.Group className="mb-3" controlId="formShowPasswordCheckbox">
-          <Form.Check
-            type="checkbox"
-            label="Show Password"
-            onChange={togglePasswordVisibility}
-          />
-        </Form.Group>
-        <Form.Group className="mb-3" controlId="formBasicCheckbox">
-          <Form.Check type="checkbox" label="Remember me" />
-        </Form.Group>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Form.Group className="mb-3" controlId="formShowPasswordCheckbox">
+            <Form.Check
+              type="checkbox"
+              label="Show Password"
+              onChange={togglePasswordVisibility}
+            />
+          </Form.Group>
+          <Form.Group className="mb-3" controlId="formBasicCheckbox">
+            <Form.Check type="checkbox" label="Remember me" />
+          </Form.Group>
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>

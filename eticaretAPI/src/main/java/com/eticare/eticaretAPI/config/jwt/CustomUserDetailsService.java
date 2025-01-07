@@ -20,16 +20,15 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-
-        // Kullanıcıyı email ile getir
+        System.out.println("loadUserByUsername çağrıldı: " + email);
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Kullanıcı bulunamadı: " + email));
 
-        // UserDetails nesnesini döndür
-        return new org.springframework.security.core.userdetails.User(
+        System.out.println("Kullanıcı bulundu: " + user.getEmail());
+        return new CustomUserDetails(
                 user.getEmail(),
                 user.getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority(user.getRoleEnum().name())) // Role ekleniyor
+                Collections.singletonList(new SimpleGrantedAuthority(user.getRoleEnum().name()))
         );
     }
 

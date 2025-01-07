@@ -1,6 +1,5 @@
 package com.eticare.eticaretAPI.config.jwt;
 
-import com.eticare.eticaretAPI.repository.ITokenRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,12 +18,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
-    private final ITokenRepository tokenRepository;
 
-    public JwtAuthenticationFilter(JwtService jwtService, UserDetailsService userDetailsService, ITokenRepository tokenRepository) {
+    public JwtAuthenticationFilter(JwtService jwtService, UserDetailsService userDetailsService) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
-        this.tokenRepository = tokenRepository;
     }
 
     @Override
@@ -35,37 +32,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt;
         final String email;
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+        // Access token kontrolü
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            jwt = authHeader.substring(7);
+            email = jwtService.extractEmail(jwt);
 
-        jwt = authHeader.substring(7);
-        email = jwtService.extractEmail(jwt);
+            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                System.out.println("JWT ile çıkarılan email: " + email);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+                System.out.println("Kullanıcı detayları yüklendi: " + userDetails.getUsername());
 
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-            boolean isTokenValid = jwtService.isTokenValid(jwt, email);
-
-            if (isTokenValid) {
-                // Token valid, set authentication
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-            } else {
-                // Access token expired, check refresh token
-                String refreshToken = request.getHeader("Refresh-Token");
-                if (refreshToken != null && jwtService.isTokenValid(refreshToken, userDetails.getUsername())) {
-                    // Refresh token valid, create new access token
-                    String newAccessToken = jwtService.generateAccessToken(email);
-
-                    // Send new access token in response
-                    response.setHeader("New-Access-Token", newAccessToken);
+                if (jwtService.isTokenValid(jwt, email)) {
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                    System.out.println("Authentication ayarlandı: " + userDetails.getUsername());
                 } else {
-                    // Refresh token expired, force login
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write("Refresh token expired, please login again.");
-                    return;
+                    System.out.println("JWT geçersiz.");
                 }
             }
         }
@@ -73,41 +56,3 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 }
-
-
-
-
-/*
-@Configuration
-public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
-    private final JwtService jwtService;
-
-    public JwtAuthenticationFilter(JwtService jwtService) {
-        this.jwtService = jwtService;
-    }
-
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
-
-        final String token = extractToken(request);
-
-        if (token != null && jwtService.isTokenValid(token, jwtService.extractUsername(token))) {
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    jwtService.extractUsername(token), null, null
-            );
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-        }
-
-        filterChain.doFilter(request, response);
-    }
-
-    private String extractToken(HttpServletRequest request) {
-        String token = request.getHeader("Authorization");
-        if (token != null && token.startsWith("Bearer ")) {
-            return token.substring(7);
-        }
-        return null;
-    }
-}*/

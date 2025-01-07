@@ -1,24 +1,28 @@
-import React from 'react';
-import { AuthProvider } from './AuthContext';
-import Navbars from './components/Navbar';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import HomePage from './pages/HomePage';
+import { AuthProvider } from './context/AuthContext';
+import NavbarComponent from './components/Navbar';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import HomePage from './pages/HomePage';
+import PrivateRoute from './components/PrivateRoute'; // PrivateRoute'i import ediyoruz
+import ProfilePage from './pages/ProfilePage';
 import 'bootstrap/dist/css/bootstrap.min.css';
-function App() {
+
+const App = () => {
   return (
     <AuthProvider>
       <Router>
-        <Navbars />
+        <NavbarComponent />
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/Register" element={<RegisterPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          {/* ProfilePage, PrivateRoute ile korunmuş */}
+          <Route path="/profile" element={<PrivateRoute element={<ProfilePage />} />} />
         </Routes>
       </Router>
     </AuthProvider>
   );
-}
+};
 
 export default App;

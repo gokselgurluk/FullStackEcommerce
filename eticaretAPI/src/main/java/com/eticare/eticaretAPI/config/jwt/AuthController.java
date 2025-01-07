@@ -9,6 +9,7 @@ import com.eticare.eticaretAPI.dto.response.UserResponse;
 import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.repository.IUserRepository;
 import com.eticare.eticaretAPI.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,10 +21,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.token.TokenService;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
@@ -48,6 +46,8 @@ public class AuthController {
     private UserService userService;
     @Autowired
     private ModelMapper modelMapper;
+    @Autowired
+    private  JwtService jwtService;
     /**
      * Login endpoint: Kullanıcı adı ve şifre ile kimlik doğrulaması yapılır
      */
@@ -89,5 +89,26 @@ public class AuthController {
         // Yanıt olarak token ve kullanıcı bilgilerini gönderme
         return ResponseEntity.ok(new AuthenticationResponse(token, userDetails.getUsername(), userDetails.getAuthorities()));
     }
+    // Refresh token endpoint
+    @PostMapping("/refresh-token")
+    public void refreshToken(@RequestHeader("Refresh-Token") String refreshToken, HttpServletResponse response) {
+        // Refresh token geçerli mi kontrol et
+        String email = jwtService.extractEmail(refreshToken);
 
+        if (email != null && jwtService.isTokenValid(refreshToken, email)) {
+            // Yeni access token oluştur
+            String newAccessToken = jwtService.generateAccessToken(email);
+
+            // Yeni access token'ı header'a ekle
+            response.setHeader("New-Access-Token", newAccessToken);
+        } else {
+            // Refresh token geçerli değilse, yetkisiz erişim hatası ver
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            try {
+                response.getWriter().write("Refresh token is invalid or expired. Please login again.");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }

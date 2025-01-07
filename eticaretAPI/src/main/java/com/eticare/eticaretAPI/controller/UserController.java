@@ -1,24 +1,22 @@
 package com.eticare.eticaretAPI.controller;
-import com.eticare.eticaretAPI.entity.User;
+import com.eticare.eticaretAPI.config.jwt.CustomUserDetails;
 import com.eticare.eticaretAPI.config.jwt.AuthenticationService;
 import com.eticare.eticaretAPI.config.modelMapper.IModelMapperService;
 import com.eticare.eticaretAPI.config.result.Result;
 import com.eticare.eticaretAPI.config.result.ResultData;
 import com.eticare.eticaretAPI.config.result.ResultHelper;
-import com.eticare.eticaretAPI.dto.request.User.UserSaveRequest;
 import com.eticare.eticaretAPI.dto.request.User.UserUpdateRequest;
 import com.eticare.eticaretAPI.dto.response.UserResponse;
+import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.service.UserService;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
-
+import java.util.Optional;
 
 
 @RestController
@@ -35,6 +33,22 @@ public class UserController {
         this.modelMapper = modelMapper;
     }
 
+
+    // Bu endpoint'e yalnızca giriş yapmış kullanıcılar erişebilir.
+    @GetMapping("/profile")
+    @PreAuthorize("isAuthenticated()")
+    public ResultData<String> getUserProfile(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            return ResultHelper.Error500("User details are null. Authentication failed.");
+        }
+        Optional<User> user = userService.getUserByMail(userDetails.getUsername());
+        if (user.isEmpty()) {
+            return ResultHelper.Error500("No user found with email: " + userDetails.getUsername());
+        }
+        return ResultHelper.success("Kullanıcı Profili: " + user.get().getId()+"\n"
+                                                                 + user.get().getUsername()+"\n"
+                                                                    +user.get().getRoleEnum()+"\n");
+    }
 
     @PostMapping("/update")
     @PreAuthorize("isAuthenticated()") // Sadece giriş yapmış kullanıcılar

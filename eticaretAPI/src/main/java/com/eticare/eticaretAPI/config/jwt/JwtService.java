@@ -49,7 +49,10 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
     public boolean isTokenValid(String token, String email) {
-        return extractEmail(token).equals(email) && !isTokenExpired(token);
+        String tokenEmail = extractEmail(token);
+        System.out.println("Token'dan çıkarılan email: " + tokenEmail);
+        System.out.println("Verilen email: " + email);
+        return tokenEmail.equals(email) && !isTokenExpired(token);
     }
     public String extractEmail(String token) {
         return extractClaim(token, Claims::getSubject);
