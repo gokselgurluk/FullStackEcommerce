@@ -12,7 +12,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @ControllerAdvice
@@ -30,6 +32,7 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(ResultHelper.validationError(validationErrorList),HttpStatus.BAD_REQUEST);
     }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Result> handleRuntimeException(RuntimeException e){
         return new ResponseEntity<>(ResultHelper.Error500(e.getMessage()),HttpStatus.INTERNAL_SERVER_ERROR);

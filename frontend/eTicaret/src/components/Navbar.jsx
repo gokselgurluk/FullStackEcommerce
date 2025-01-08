@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Navbar, Nav, Container, Button } from 'react-bootstrap';
 
 const Navbars = () => {
-  const { isAuth, logout } = useAuth(); // isAuth'i kullanıyoruz
+  const { isAuth, logout } = useAuth(); // isAuth'i ve logout fonksiyonunu alıyoruz
 
   return (
     <Navbar bg="dark" variant="dark">

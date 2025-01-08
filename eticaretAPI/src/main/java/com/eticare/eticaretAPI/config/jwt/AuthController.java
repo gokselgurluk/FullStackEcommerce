@@ -33,7 +33,6 @@ import java.util.Optional;
 public class AuthController {
 
 
-
     @Autowired
     private CustomUserDetailsService userDetailsService;
 
@@ -47,19 +46,18 @@ public class AuthController {
     @Autowired
     private ModelMapper modelMapper;
     @Autowired
-    private  JwtService jwtService;
+    private JwtService jwtService;
+
     /**
      * Login endpoint: Kullanıcı adı ve şifre ile kimlik doğrulaması yapılır
      */
     @PostMapping("/register")
     public ResultData<UserResponse> createUser(@RequestBody UserSaveRequest request) {
-        UserResponse userResponse =   userService.createUser(request);
+        UserResponse userResponse = userService.createUser(request);
         User user = modelMapper.map(userResponse, User.class);
-        String token= authenticationService.register(user);
-        userResponse.setRefreshTokens(Collections.singletonList(token));
-
+        authenticationService.register(user);
         return ResultHelper.created(userResponse);
-        // UserServise sınıfında user sınıfı maplenıyor metot tıpı  UserResponse donuyor bu yuzden burada maplemedık maplemedık
+        // UserServise sınıfında user sınıfı maplenıyor metot tıpı  UserResponse donuyor bu yuzden burada maplemedık
     }
 
     @PostMapping("/login")
@@ -73,22 +71,23 @@ public class AuthController {
 
         final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getEmail());
 
-// Kullanıcıyı username ile bul
+        // Kullanıcıyı username(email) ile bul
         Optional<User> user = userRepository.findByEmail(userDetails.getUsername());
 
-// Kullanıcı varsa, lastLogin bilgisini güncelle
+        // Kullanıcı varsa, lastLogin bilgisini güncelle
         user.ifPresent(userEntity -> {
             userEntity.setLastLogin(new Date());
             userRepository.save(userEntity); // sadece ilgili kullanıcıyı kaydediyor
         });
 
-// Kullanıcı bulunamazsa hata fırlat
+        // Kullanıcı bulunamazsa hata fırlat
         if (user.isEmpty()) {
             throw new RuntimeException("User not found");
         }
         // Yanıt olarak token ve kullanıcı bilgilerini gönderme
         return ResponseEntity.ok(new AuthenticationResponse(token, userDetails.getUsername(), userDetails.getAuthorities()));
     }
+
     // Refresh token endpoint
     @PostMapping("/refresh-token")
     public void refreshToken(@RequestHeader("Refresh-Token") String refreshToken, HttpServletResponse response) {

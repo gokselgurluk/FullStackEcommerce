@@ -45,7 +45,7 @@ const RegisterPage = () => {
           console.error("Backend hatası:", error.response.data);  // Hata detaylarını konsola yazdır
           setModalData({
             isOpen: true,
-            message: error.response.data.data || "Bir hata oluştu. Lütfen tekrar deneyin.",
+            message: error.response.data.data =="500" ? "Bir hata oluştu. Lütfen tekrar deneyin.":"Boş Alanları doldurun"+"\n"+error.response.data.message,
             type: "error",
           });
         } else if (error.request) {

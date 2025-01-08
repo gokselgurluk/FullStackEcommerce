@@ -44,10 +44,6 @@ public class AuthenticationService {
 
     public String register(User user) {
         // Save User in DB
-
-        //String accessToken = jwtService.generateAccessToken(user.getUsername());
-        //Date expiresAccessToken =(jwtService.extractClaim(accessToken, Claims::getExpiration));
-
         String refreshToken = jwtService.generateRefreshToken(user.getUsername());
         Date expiresRefreshToken =(jwtService.extractClaim(refreshToken, Claims::getExpiration));
 
@@ -90,22 +86,6 @@ public class AuthenticationService {
             saveOrUpdateToken(user.get(), refreshToken, TokenType.REFRESH,expiresRefreshToken);
             return accessToken;
 
-
-
-
-
-
-       /* // Eğer geçerli bir token varsa, onu döndür
-        if (!tokens.isEmpty()) {
-            Token token = tokens.get(0); // İlk token'ı al
-            if (!token.isExpired() && !token.isRevoked()) {
-                return token.getToken();
-            }
-        }
-        // Eğer geçerli token yoksa, yeni token oluştur ve veritabanına kaydet
-        String token = jwtService.generateRefreshToken(username);
-        saveUserToken(user.get(), token, TokenType.ACCESS);
-        return token;*/
 
     }
 

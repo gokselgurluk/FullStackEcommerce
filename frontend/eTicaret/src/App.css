@@ -96,3 +96,13 @@ button:hover {
 .custom-navbar .nav-links .login-link {
   margin-left: auto; /* Login'i sağ tarafa iter */
 }
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 8px;
+  text-align: left;
+  border: 1px solid #ddd;
+}

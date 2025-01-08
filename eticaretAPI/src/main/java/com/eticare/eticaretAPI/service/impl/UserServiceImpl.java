@@ -4,6 +4,7 @@ import com.eticare.eticaretAPI.config.exeption.EmailAlreadyRegisteredException;
 import com.eticare.eticaretAPI.config.exeption.NotFoundException;
 import com.eticare.eticaretAPI.config.jwt.AuthenticationService;
 import com.eticare.eticaretAPI.config.modelMapper.IModelMapperService;
+import com.eticare.eticaretAPI.config.result.ResultHelper;
 import com.eticare.eticaretAPI.dto.request.User.UserSaveRequest;
 import com.eticare.eticaretAPI.dto.request.User.UserUpdateRequest;
 import com.eticare.eticaretAPI.dto.response.UserResponse;
@@ -14,6 +15,7 @@ import com.eticare.eticaretAPI.repository.ITokenRepository;
 import com.eticare.eticaretAPI.repository.IUserRepository;
 import com.eticare.eticaretAPI.service.UserService;
 import jakarta.validation.Valid;
+import jakarta.validation.ValidationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -27,7 +29,7 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
 
-    private final  IUserRepository userRepository;
+    private final IUserRepository userRepository;
     private final IModelMapperService modelMapperService;
 
     private final PasswordEncoder passwordEncoder;
@@ -43,26 +45,24 @@ public class UserServiceImpl implements UserService {
         this.authenticationService = authenticationService;
         this.tokenRepository = tokenRepository;
     }
+
     @Override
     public UserResponse createUser(@Valid UserSaveRequest userSaveRequest) {
+
         if (userRepository.existsByEmail(userSaveRequest.getEmail())) {
             throw new EmailAlreadyRegisteredException("Email daha önce kayıtedilmiş");
         }
         User user = this.modelMapperService.forRequest().map(userSaveRequest, User.class);
         user.setPassword(passwordEncoder.encode(userSaveRequest.getPassword()));
-
-
-
         return saveUserAndReturnResponse(user);
     }
+
     @Override
     public UserResponse updateUser(@Valid UserUpdateRequest userUpdateRequest) {
         User user = this.modelMapperService.forRequest().map(userUpdateRequest, User.class);
-
         if (userUpdateRequest.getPassword() != null && !userUpdateRequest.getPassword().isBlank()) {
             user.setPassword(passwordEncoder.encode(userUpdateRequest.getPassword()));
         }
-
         return saveUserAndReturnResponse(user);
     }
 
@@ -70,38 +70,26 @@ public class UserServiceImpl implements UserService {
         // Kullanıcı oluşturma veya güncelleme
         User savedUser = userRepository.save(user);
         // User -> UserResponse dönüşümü
-
         return modelMapperService.forResponse().map(savedUser, UserResponse.class);
     }
-
 
 
     @Override
     public Map<String, Object> getAllUsers() {
         // Kullanıcıları al
         List<User> users = userRepository.findAll();
-
         // Her kullanıcı için ilgili token'ları yükle
         List<UserResponse> response = users.stream().map(user -> {
             // Kullanıcıya ait token'ları bul
             List<Token> userTokens = tokenRepository.findAllByUserId(user.getId());
-
             // Kullanıcıyı maple
             UserResponse userResponse = this.modelMapperService.forResponse().map(user, UserResponse.class);
-
             // Token'ları UserResponse'a ekle
             List<String> accessTokens = userTokens.stream()
                     .filter(token -> token.getTokenType().equals(TokenType.ACCESS)) // ACCESS token'ları
                     .map(Token::getToken)
                     .collect(Collectors.toList());
-
-            List<String> refreshTokens = userTokens.stream()
-                    .filter(token -> token.getTokenType().equals(TokenType.REFRESH)) // REFRESH token'ları
-                    .map(Token::getToken)
-                    .collect(Collectors.toList());
-
             userResponse.setAccessTokens(accessTokens);
-            userResponse.setRefreshTokens(refreshTokens);
 
             return userResponse;
         }).collect(Collectors.toList());
@@ -117,8 +105,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse getUserById(Long id) {
-        User user=userRepository.findById(id).orElseThrow(()->new NotFoundException("User not found with id :" +id));
-        return this.modelMapperService.forResponse().map(user,UserResponse.class);
+        User user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("User not found with id :" + id));
+        return this.modelMapperService.forResponse().map(user, UserResponse.class);
     }
 
     @Override
@@ -134,10 +122,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUser(Long id) {
-        if(userRepository.existsById(id)){
+        if (userRepository.existsById(id)) {
             userRepository.deleteById(id);
-        }else{
-          throw new NotFoundException("User not found with id :" +id);
+        } else {
+            throw new NotFoundException("User not found with id :" + id);
         }
 
     }

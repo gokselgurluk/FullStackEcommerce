@@ -26,5 +26,5 @@ public class UserResponse {
     private Date lastLogin;
     private boolean active;
     private List<String> AccessTokens;
-    private List<String> RefreshTokens;
+
 }

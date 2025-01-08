@@ -37,7 +37,7 @@ public class UserController {
     // Bu endpoint'e yalnızca giriş yapmış kullanıcılar erişebilir.
     @GetMapping("/profile")
     @PreAuthorize("isAuthenticated()")
-    public ResultData<String> getUserProfile(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ResultData<?> getUserProfile(@AuthenticationPrincipal CustomUserDetails userDetails) {
         if (userDetails == null) {
             return ResultHelper.Error500("User details are null. Authentication failed.");
         }
@@ -45,9 +45,8 @@ public class UserController {
         if (user.isEmpty()) {
             return ResultHelper.Error500("No user found with email: " + userDetails.getUsername());
         }
-        return ResultHelper.success("Kullanıcı Profili: " + user.get().getId()+"\n"
-                                                                 + user.get().getUsername()+"\n"
-                                                                    +user.get().getRoleEnum()+"\n");
+        UserResponse userResponse =this.modelMapperService.forResponse().map(user,UserResponse.class);
+        return ResultHelper.success(userResponse);
     }
 
     @PostMapping("/update")
@@ -60,7 +59,6 @@ public class UserController {
 
     @GetMapping
     @PreAuthorize("isAuthenticated()") // Sadece giriş yapmış kullanıcılar
-
     public ResponseEntity<Map<String, Object>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }

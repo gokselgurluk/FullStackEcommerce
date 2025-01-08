@@ -40,32 +40,31 @@ const LoginPage = () => {
     try {
       const response = await axiosInstance.post('/auth/login', formData);
       console.log(response.data); // Backend'den gelen yanıtı konsola yazdırın
-  
+
       // accessTokens yerine accessToken'ı alıyoruz
       const { accessTokens, username, roles } = response.data;
       console.log('AccessToken:', accessTokens); // Burada accessToken'ı kontrol edin
-  
+
       if (accessTokens) {
-        localStorage.setItem('accessToken', accessTokens); // Token'ı localStorage'a kaydediyoruz
-        console.log('Token kaydedildi:', localStorage.getItem('accessToken'));
+        // AccessToken'ı AuthContext üzerinden login fonksiyonuna gönderiyoruz
+        login(accessTokens); // Token'ı AuthContext üzerinden kaydediyoruz
       } else {
         console.error('Access token is undefined or null');
       }
-  
+
       // Diğer işlemler
       setUserData({ username, roles });
-      login(accessTokens);
       setModalData({
         isOpen: true,
         message: `Giriş başarılı! Hoşgeldiniz, ${username}.`,
         type: 'success',
       });
-  
+
       setTimeout(() => {
         setModalData({ isOpen: false });
         navigate('/');
       }, 2000);
-  
+
     } catch (error) {
       if (error.response) {
         console.error('Backend hatası:', error.response.data);
@@ -91,7 +90,7 @@ const LoginPage = () => {
       }
     }
   };
-  
+
   // Modal kapatma
   const closeModal = () => {
     setModalData({ isOpen: false, message: '', type: '' });
