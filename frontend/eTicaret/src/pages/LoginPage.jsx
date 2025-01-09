@@ -39,20 +39,21 @@ const LoginPage = () => {
     e.preventDefault();
     try {
       const response = await axiosInstance.post('/auth/login', formData);
-      console.log(response.data); // Backend'den gelen yanıtı konsola yazdırın
+      console.log('Backend Response:', response.data); // Backend yanıtını logla
 
-      // accessTokens yerine accessToken'ı alıyoruz
-      const { accessTokens, username, roles } = response.data;
-      console.log('AccessToken:', accessTokens); // Burada accessToken'ı kontrol edin
+      // Backend'den gelen yanıt
+      const { accessTokens, username, roles, email } = response.data;
+      console.log('AccessToken:', accessTokens); // Access token'ı kontrol et
+      console.log('Email:', email); // Email bilgisini kontrol et
 
-      if (accessTokens) {
-        // AccessToken'ı AuthContext üzerinden login fonksiyonuna gönderiyoruz
-        login(accessTokens); // Token'ı AuthContext üzerinden kaydediyoruz
+      if (accessTokens && email) {
+        // AuthContext'e token ve email bilgilerini kaydediyoruz
+        login(accessTokens, email);
       } else {
-        console.error('Access token is undefined or null');
+        console.error('Access token veya email undefined/null');
       }
 
-      // Diğer işlemler
+      // Kullanıcı verisini ayarla
       setUserData({ username, roles });
       setModalData({
         isOpen: true,

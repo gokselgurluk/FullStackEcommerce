@@ -1,75 +1,80 @@
-import React, { useState, useEffect } from 'react';
+// src/components/HomePage.js
+import React from 'react';
+import { Container, Row, Col, Card, Button, Navbar, Nav, NavDropdown } from 'react-bootstrap';
+
+const products = [
+  {
+    id: 1,
+    name: 'Product 1',
+    description: 'Description of Product 1',
+    price: '$10.00',
+    imageUrl: 'https://via.placeholder.com/150'
+  },
+  {
+    id: 2,
+    name: 'Product 2',
+    description: 'Description of Product 2',
+    price: '$20.00',
+    imageUrl: 'https://via.placeholder.com/150'
+  },
+  {
+    id: 3,
+    name: 'Product 3',
+    description: 'Description of Product 3',
+    price: '$30.00',
+    imageUrl: 'https://via.placeholder.com/150'
+  }
+];
 
 const HomePage = () => {
-    const [users, setUsers] = useState([]);
+  return (
+    <div>
+      {/* Navbar */}
+      <Navbar bg="dark" variant="dark" expand="lg">
+        <Container>
+          <Navbar.Brand href="#">E-Shop</Navbar.Brand>
+          <Navbar.Toggle aria-controls="basic-navbar-nav" />
+          <Navbar.Collapse id="basic-navbar-nav">
+            <Nav className="me-auto">
+              <Nav.Link href="#home">Home</Nav.Link>
+              <Nav.Link href="#shop">Shop</Nav.Link>
+              <NavDropdown title="Categories" id="basic-nav-dropdown">
+                <NavDropdown.Item href="#electronics">Electronics</NavDropdown.Item>
+                <NavDropdown.Item href="#clothing">Clothing</NavDropdown.Item>
+                <NavDropdown.Item href="#accessories">Accessories</NavDropdown.Item>
+              </NavDropdown>
+            </Nav>
+          </Navbar.Collapse>
+        </Container>
+      </Navbar>
 
-    useEffect(() => {
-        const fetchUsers = async () => {
-            const token = localStorage.getItem('accessToken');
-            if (!token) {
-                console.error('Token bulunamadı!');
-                return;
-            }
+      {/* Product List */}
+      <Container className="my-4">
+        <Row>
+          {products.map((product) => (
+            <Col key={product.id} sm={12} md={6} lg={4}>
+              <Card className="mb-4">
+                <Card.Img variant="top" src={product.imageUrl} />
+                <Card.Body>
+                  <Card.Title>{product.name}</Card.Title>
+                  <Card.Text>{product.description}</Card.Text>
+                  <Card.Text>
+                    <strong>{product.price}</strong>
+                  </Card.Text>
+                  <Button variant="primary">Add to Cart</Button>
+                </Card.Body>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      </Container>
 
-            try {
-                const response = await fetch('http://localhost:8080/api/users', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`,
-                    },
-                });
-
-                if (response.status === 403) {
-                    console.error('Erişim reddedildi!');
-                    return;
-                }
-
-                const data = await response.json();
-                if (data.status === 'success') {
-                    setUsers(data.users); // Kullanıcıları state'e set ediyoruz
-                }
-            } catch (error) {
-                console.error('Veri çekme hatası:', error);
-            }
-        };
-
-        fetchUsers();
-    }, []);
-
-    return (
-        <div>
-            <h1>Kullanıcılar</h1>
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Ad</th>
-                        <th>Soyad</th>
-                        <th>Email</th>
-                        <th>Rol</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {users.length > 0 ? (
-                        users.map(user => (
-                            <tr key={user.id}>
-                                <td>{user.id}</td>
-                                <td>{user.username}</td>
-                                <td>{user.surname}</td>
-                                <td>{user.email}</td>
-                                <td>{user.roleEnum}</td>
-                            </tr>
-                        ))
-                    ) : (
-                        <tr>
-                            <td colSpan="5">Kullanıcı bulunamadı.</td>
-                        </tr>
-                    )}
-                </tbody>
-            </table>
-        </div>
-    );
+      {/* Footer */}
+      <footer className="bg-dark text-white text-center py-3">
+        <p>&copy; 2025 E-Shop. All rights reserved.</p>
+      </footer>
+    </div>
+  );
 };
 
 export default HomePage;

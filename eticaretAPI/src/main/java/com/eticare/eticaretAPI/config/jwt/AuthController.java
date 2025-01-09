@@ -1,12 +1,16 @@
 package com.eticare.eticaretAPI.config.jwt;
 
+import com.eticare.eticaretAPI.config.exeption.NotFoundException;
 import com.eticare.eticaretAPI.config.result.ResultData;
 import com.eticare.eticaretAPI.config.result.ResultHelper;
 import com.eticare.eticaretAPI.dto.request.AuthRequest.AuthenticationRequest;
 import com.eticare.eticaretAPI.dto.request.User.UserSaveRequest;
 import com.eticare.eticaretAPI.dto.response.AuthenticationResponse;
 import com.eticare.eticaretAPI.dto.response.UserResponse;
+import com.eticare.eticaretAPI.entity.Token;
 import com.eticare.eticaretAPI.entity.User;
+import com.eticare.eticaretAPI.entity.enums.TokenType;
+import com.eticare.eticaretAPI.repository.ITokenRepository;
 import com.eticare.eticaretAPI.repository.IUserRepository;
 import com.eticare.eticaretAPI.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -26,6 +30,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -47,6 +52,8 @@ public class AuthController {
     private ModelMapper modelMapper;
     @Autowired
     private JwtService jwtService;
+    @Autowired
+    private ITokenRepository tokenRepository;
 
     /**
      * Login endpoint: Kullanıcı adı ve şifre ile kimlik doğrulaması yapılır
@@ -90,24 +97,73 @@ public class AuthController {
 
     // Refresh token endpoint
     @PostMapping("/refresh-token")
-    public void refreshToken(@RequestHeader("Refresh-Token") String refreshToken, HttpServletResponse response) {
-        // Refresh token geçerli mi kontrol et
-        String email = jwtService.extractEmail(refreshToken);
+    public ResponseEntity<?> refreshToken(@RequestBody AuthenticationRequest authenticationRequest) {
+        // Kullanıcı kontrolü
+        User user = userRepository.findByEmail(authenticationRequest.getEmail())
+                .orElseThrow(() -> new NotFoundException("Kullanıcı bulunamadı"));
 
-        if (email != null && jwtService.isTokenValid(refreshToken, email)) {
-            // Yeni access token oluştur
-            String newAccessToken = jwtService.generateAccessToken(email);
+        // Kullanıcıya ait refresh token'ı bul
+        Token refreshToken = tokenRepository.findByUserAndTokenType(user, TokenType.REFRESH)
+                .orElseThrow(() -> new NotFoundException("Refresh token bulunamadı"));
 
-            // Yeni access token'ı header'a ekle
-            response.setHeader("New-Access-Token", newAccessToken);
-        } else {
-            // Refresh token geçerli değilse, yetkisiz erişim hatası ver
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            try {
-                response.getWriter().write("Refresh token is invalid or expired. Please login again.");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        // Refresh token doğrulama
+        String token = refreshToken.getToken();
+        String email = jwtService.extractEmail(token);
+
+        if (email == null || !jwtService.isTokenValid(token, email)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Refresh token geçersiz veya süresi dolmuş. Lütfen tekrar giriş yapınız.");
         }
+
+        // Yeni access token oluştur
+        String newAccessToken = jwtService.generateAccessToken(email);
+
+        // Yanıt olarak yeni token'ı döndür
+        return ResponseEntity.ok()
+                .header("New-Access-Token", newAccessToken)
+                .body(Map.of("accessToken", newAccessToken)); // JSON formatında döndürmek
     }
+
+    /*
+     @PostMapping("/refresh-token")
+    public ResponseEntity<?> refreshToken(@RequestBody Map<String, String> requestBody)  {
+        // requestBody'den access token'ı al
+        String accessToken = requestBody.get("accessToken");
+        System.out.println("token " + accessToken);
+        if (accessToken == null || accessToken.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Access token bulunamadı.");
+        }
+        // Access token'dan e-posta adresini çıkar
+        String extractEmail = jwtService.extractEmail(accessToken);
+        if (extractEmail == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Geçersiz token.");
+        }
+        System.out.println("Email from token: " + extractEmail);
+        // Kullanıcı kontrolü
+        User user = userRepository.findByEmail(extractEmail)
+                .orElseThrow(() -> new NotFoundException("Kullanıcı bulunamadı"));
+        System.out.println("Email from token: " + user.getUsername());
+        // Kullanıcıya ait refresh token'ı bul
+        Token refreshToken = tokenRepository.findByUserAndTokenType(user, TokenType.REFRESH)
+                .orElseThrow(() -> new NotFoundException("Refresh token bulunamadı"));
+
+        // Refresh token doğrulama
+        String token = refreshToken.getToken();
+
+
+        if (!jwtService.isTokenValid(token, extractEmail)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Refresh token geçersiz veya süresi dolmuş. Lütfen tekrar giriş yapınız.");
+        }
+
+        // Yeni access token oluştur
+        String newAccessToken = jwtService.generateAccessToken(extractEmail);
+
+        // Yanıt olarak yeni token'ı döndür
+        return ResponseEntity.ok()
+                .header("New-Access-Token", newAccessToken)
+                .body(Map.of("accessToken", newAccessToken)); // JSON formatında döndürmek
+    }
+}
+    * */
 }

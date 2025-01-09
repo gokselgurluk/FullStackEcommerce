@@ -47,8 +47,8 @@ public class AuthenticationService {
         String refreshToken = jwtService.generateRefreshToken(user.getUsername());
         Date expiresRefreshToken =(jwtService.extractClaim(refreshToken, Claims::getExpiration));
 
-        // saveOrUpdateToken(user, accessToken, TokenType.ACCESS,expiresAccessToken);
-        saveOrUpdateToken(user, refreshToken, TokenType.REFRESH,expiresRefreshToken);
+        //saveOrUpdateToken(user, accessToken, TokenType.ACCESS,expiresAccessToken);
+        saveOrUpdateToken(user, refreshToken, TokenType.REFRESH);
 
         return refreshToken;
         // Token'ı veritabanına kaydet
@@ -73,17 +73,17 @@ public class AuthenticationService {
         if (!passwordEncoder.matches(password, user.get().getPassword())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Şifre yanlış");
         }
-            List<Token> tokens = tokenRepository.findAllValidTokensByUser(user.get().getId());
+         /*   List<Token> tokens = tokenRepository.findAllValidTokensByUser(user.get().getId());
             tokens.forEach(t -> t.setRevoked(true));
-            tokenRepository.saveAll(tokens);
+            tokenRepository.saveAll(tokens);*/
 
             String accessToken = jwtService.generateAccessToken(email);
             Date expiresAccessToken =(jwtService.extractClaim(accessToken, Claims::getExpiration));
             String refreshToken = jwtService.generateRefreshToken(email);
             Date expiresRefreshToken =(jwtService.extractClaim(accessToken, Claims::getExpiration));
 
-            saveOrUpdateToken(user.get(), accessToken, TokenType.ACCESS,expiresAccessToken);
-            saveOrUpdateToken(user.get(), refreshToken, TokenType.REFRESH,expiresRefreshToken);
+            saveOrUpdateToken(user.get(), accessToken, TokenType.ACCESS);
+            saveOrUpdateToken(user.get(), refreshToken, TokenType.REFRESH);
             return accessToken;
 
 
@@ -107,25 +107,26 @@ public class AuthenticationService {
         tokenRepository.save(token);
     }
 
-    private void saveOrUpdateToken(User email, String token, TokenType tokenType, Date expiresAt) {
+    private void saveOrUpdateToken(User user, String token, TokenType tokenType) {
 
-        Optional<Token> existingToken = tokenRepository.findByUserAndTokenType(email, tokenType);
+        Optional<Token> existingToken = tokenRepository.findByUserAndTokenType(user, tokenType);
 
         if (existingToken.isPresent()) {
             // Mevcut token'ı güncelle
             Token tokenToUpdate = existingToken.get();
             tokenToUpdate.setToken(token);
-            tokenToUpdate.setExpires_at(expiresAt);
+            tokenToUpdate.setCreated_at((jwtService.extractClaim(token, Claims::getIssuedAt)));
+            tokenToUpdate.setExpires_at((jwtService.extractClaim(token, Claims::getExpiration)));
             tokenToUpdate.setRevoked(false); // Varsayılan olarak revoked false
             tokenToUpdate.setExpired(false); // Varsayılan olarak expired false
             tokenRepository.save(tokenToUpdate);
         } else {
 
             Token newToken = Token.builder()
-                    .user(email)
+                    .user(user)
                     .token(token)
                     .tokenType(tokenType)
-                    .created_at(new Date())
+                    .created_at(jwtService.extractClaim(token, Claims::getIssuedAt))
                     .expires_at(jwtService.extractClaim(token, Claims::getExpiration))
                     .expired(false)
                     .revoked(false)

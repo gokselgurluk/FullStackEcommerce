@@ -35,7 +35,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http .csrf(csrf -> csrf.disable())  // CSRF korumasını devre dışı bırak
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/refresh-token","/auth/login", "/auth/register", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**", "/Message").permitAll()  // "Message" endpoint'ini herkesin erişmesine izin ver
+                        .requestMatchers(   "/auth/refresh-token","/auth/login", "/auth/register", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**", "/Message").permitAll()  // "Message" endpoint'ini herkesin erişmesine izin ver
                         .anyRequest().authenticated()  // Diğer endpoint'ler için doğrulama gerekli
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // JWT doğrulama filtresi

@@ -17,8 +17,8 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String SECRET_KEY ;
     private static final long ACCESS_TOKEN_EXPIRATION = 1000 * 60 * 2; // 15 dakika
-   // private static final long REFRESH_TOKEN_EXPIRATION = 1000 * 60 * 60 * 24 * 7; // 7 gün
-    private static final long REFRESH_TOKEN_EXPIRATION = 1000 * 60 * 3; // 3 dk
+    private static final long REFRESH_TOKEN_EXPIRATION = 1000 * 60 * 60 * 24 * 7; // 7 gün
+
 
 
 
@@ -50,8 +50,6 @@ public class JwtService {
     }
     public boolean isTokenValid(String token, String email) {
         String tokenEmail = extractEmail(token);
-        System.out.println("Token'dan çıkarılan email: " + tokenEmail);
-        System.out.println("Verilen email: " + email);
         return tokenEmail.equals(email) && !isTokenExpired(token);
     }
     public String extractEmail(String token) {
