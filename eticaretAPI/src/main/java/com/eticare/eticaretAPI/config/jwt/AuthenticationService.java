@@ -7,6 +7,7 @@ import com.eticare.eticaretAPI.entity.enums.TokenType;
 import com.eticare.eticaretAPI.repository.ITokenRepository;
 import com.eticare.eticaretAPI.repository.IUserRepository;
 
+import com.eticare.eticaretAPI.service.impl.VerificationTokenServiceImpl;
 import io.jsonwebtoken.Claims;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -33,13 +34,16 @@ public class AuthenticationService {
     private final IUserRepository userRepository;
     private  final PasswordEncoder passwordEncoder;
 
+    private  final VerificationTokenServiceImpl verificationTokenService;
+
     public AuthenticationService(ITokenRepository tokenRepository, JwtService jwtService,
-                                 AuthenticationManager authenticationManager, IUserRepository userRepository, PasswordEncoder passwordEncoder) {
+                                 AuthenticationManager authenticationManager, IUserRepository userRepository, PasswordEncoder passwordEncoder, VerificationTokenServiceImpl verificationTokenService) {
         this.tokenRepository = tokenRepository;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.verificationTokenService = verificationTokenService;
     }
 
     public String register(User user) {
@@ -53,6 +57,18 @@ public class AuthenticationService {
         return refreshToken;
         // Token'ı veritabanına kaydet
 
+    }
+    public boolean activateUser(String email, String code) {
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            if (verificationTokenService.validateVerificationCode(code, user)) {
+                user.setActive(true); // Hesabı aktif et
+                userRepository.save(user);
+                return true;
+            }
+        }
+        return false;
     }
 
     // Kullanıcı doğrulama ve token üretme

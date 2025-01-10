@@ -55,7 +55,7 @@ public class User {
     @Temporal(TemporalType.TIMESTAMP) //Son Giriş Tarihi
     private Date lastLogin;
 
-    private  boolean active =true ;// Varsayılan olarak kullanıcı aktif
+    private  boolean active =false ;// Varsayılan olarak kullanıcı aktif
 
     @OneToMany(mappedBy = "user" ,cascade=CascadeType.ALL,orphanRemoval = true)
     private List<Order> orderList;
