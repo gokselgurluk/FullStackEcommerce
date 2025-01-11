@@ -3,21 +3,26 @@ package com.eticare.eticaretAPI.config.jwt;
 import com.eticare.eticaretAPI.config.exeption.NotFoundException;
 import com.eticare.eticaretAPI.config.result.ResultData;
 import com.eticare.eticaretAPI.config.result.ResultHelper;
+import com.eticare.eticaretAPI.config.result.ResultMessages;
 import com.eticare.eticaretAPI.dto.request.AuthRequest.AuthenticationRequest;
 import com.eticare.eticaretAPI.dto.request.User.UserSaveRequest;
 import com.eticare.eticaretAPI.dto.response.AuthenticationResponse;
 import com.eticare.eticaretAPI.dto.response.UserResponse;
 import com.eticare.eticaretAPI.entity.Token;
 import com.eticare.eticaretAPI.entity.User;
+import com.eticare.eticaretAPI.entity.VerificationToken;
 import com.eticare.eticaretAPI.entity.enums.TokenType;
 import com.eticare.eticaretAPI.repository.ITokenRepository;
 import com.eticare.eticaretAPI.repository.IUserRepository;
+import com.eticare.eticaretAPI.service.EmailService;
 import com.eticare.eticaretAPI.service.UserService;
+import com.eticare.eticaretAPI.service.VerificationTokenService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -55,6 +60,10 @@ public class AuthController {
     @Autowired
     private ITokenRepository tokenRepository;
 
+    @Autowired
+    private EmailService emailService;
+    @Autowired
+    private VerificationTokenService verificationTokenService;
     /**
      * Login endpoint: Kullanıcı adı ve şifre ile kimlik doğrulaması yapılır
      */
@@ -65,6 +74,22 @@ public class AuthController {
         authenticationService.register(user);
         return ResultHelper.created(userResponse);
         // UserServise sınıfında user sınıfı maplenıyor metot tıpı  UserResponse donuyor bu yuzden burada maplemedık
+    }
+
+
+    @PostMapping("/verify")
+    @PreAuthorize("isAuthenticated()")
+    public  ResultData<?> verifyAccount(@RequestParam Map<String,String> params ) {
+        String email = params.get("email");
+        String code = params.get("code");
+        if (email == null || code == null) {
+            return ResultHelper.errorWithData("Email ve doğrulama kodu gereklidir.", params, HttpStatus.BAD_REQUEST);
+        }
+            if (authenticationService.activateUser(email,code)) {
+                return ResultHelper.success("Hesap başarıyla doğrulandı!");
+            } else {
+                return ResultHelper.errorWithData("Kod geçersiz veya süresi dolmuş.", null, HttpStatus.BAD_REQUEST);
+            }
     }
 
     @PostMapping("/login")

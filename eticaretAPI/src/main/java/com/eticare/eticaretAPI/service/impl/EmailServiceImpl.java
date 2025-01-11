@@ -1,5 +1,7 @@
 package com.eticare.eticaretAPI.service.impl;
 
+import com.eticare.eticaretAPI.config.result.ResultData;
+import com.eticare.eticaretAPI.config.result.ResultHelper;
 import com.eticare.eticaretAPI.service.EmailService;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -15,11 +17,15 @@ public class EmailServiceImpl implements EmailService {
     }
 
     @Override
-    public void sendVerificationEmail(String email, String code) {
+    public String sendVerificationEmail(String email, String code) {
         SimpleMailMessage message = new SimpleMailMessage();
+
+        message.setFrom("noreply@springMailService");
         message.setTo(email);
         message.setSubject("Account Verification Code");
-        message.setText("Your verification code is: " + code + "\nThis code is valid for 15 minutes.");
+        message.setText("Your verification code is: " + code + "\nThis code is valid for 2 minutes.");
         javaMailSender.send(message);
+
+        return "Mesaj gönderildi";
     }
 }

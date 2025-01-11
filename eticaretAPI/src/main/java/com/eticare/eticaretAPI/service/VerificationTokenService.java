@@ -8,9 +8,9 @@ public interface VerificationTokenService {
 
     String generateVerificationCode(Integer code);
 
-    VerificationToken createVerificationToken (User user);
+    VerificationToken createVerificationToken (String email);
 
-    Boolean validateVerificationCode(String code ,User user);
+    Boolean validateVerificationCode(User user,String code );
 
 
 }

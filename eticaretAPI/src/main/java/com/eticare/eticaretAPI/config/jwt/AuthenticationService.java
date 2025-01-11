@@ -62,7 +62,7 @@ public class AuthenticationService {
         Optional<User> userOpt = userRepository.findByEmail(email);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            if (verificationTokenService.validateVerificationCode(code, user)) {
+            if (verificationTokenService.validateVerificationCode(user, code)) {
                 user.setActive(true); // Hesabı aktif et
                 userRepository.save(user);
                 return true;

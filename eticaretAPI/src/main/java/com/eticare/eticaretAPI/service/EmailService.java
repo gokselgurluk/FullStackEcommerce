@@ -1,6 +1,9 @@
 package com.eticare.eticaretAPI.service;
 
+import com.eticare.eticaretAPI.config.result.ResultData;
+import com.eticare.eticaretAPI.entity.VerificationToken;
+
 public interface EmailService {
-    void sendVerificationEmail(String email, String code) ;
+    String sendVerificationEmail(String email, String code) ;
 
 }
