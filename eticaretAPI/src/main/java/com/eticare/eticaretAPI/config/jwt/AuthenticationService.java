@@ -59,7 +59,11 @@ public class AuthenticationService {
 
     }
     public boolean activateUser(String email, String code) {
+
         Optional<User> userOpt = userRepository.findByEmail(email);
+        if(userOpt.get().isActive()){
+            throw new NotFoundException("Bu hesap zaten aktif");
+        }
         if (userOpt.isPresent()) {
             User user = userOpt.get();
             if (verificationTokenService.validateVerificationCode(user, code)) {

@@ -82,6 +82,7 @@ public class AuthController {
     public  ResultData<?> verifyAccount(@RequestParam Map<String,String> params ) {
         String email = params.get("email");
         String code = params.get("code");
+
         if (email == null || code == null) {
             return ResultHelper.errorWithData("Email ve doğrulama kodu gereklidir.", params, HttpStatus.BAD_REQUEST);
         }

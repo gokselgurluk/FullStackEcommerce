@@ -45,12 +45,13 @@ public class EmailSendController {
             throw new RuntimeException("Token olsuturulamadı");
         }
         // Doğrulama kodunu e-posta ile gönder
-        emailService.sendVerificationEmail(email,verificationToken.getCode());
+        emailService.createImageAndSendEmail(email,verificationToken.getCode());
         // Detaylı bilgi için bir map oluştur
         Map<String,Object> responseToken = new HashMap<>();
         responseToken.put("message","Doğrulama kodu e-posta ile gönderildi.");
-        responseToken.put("verificationCode",verificationToken.getCode());
+        responseToken.put("verificationCode",verificationToken.getCode());//test için code alıyoruz normalde code u gostermeyecegız
         responseToken.put("expiryDate",verificationToken.getCodeExpiryDate());
+        responseToken.put("sendCount",verificationToken.getSendCount());
         // Başarı mesajı ile birlikte ek bilgileri döndür
         return   ResultHelper.success(responseToken);
     }
