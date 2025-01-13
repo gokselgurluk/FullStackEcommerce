@@ -45,7 +45,7 @@ public class EmailSendController {
             throw new RuntimeException("Token olsuturulamadı");
         }
         // Doğrulama kodunu e-posta ile gönder
-        emailService.createImageAndSendEmail(email,verificationToken.getCode());
+        emailService.sendVerificationEmail(email,verificationToken.getCode());
         // Detaylı bilgi için bir map oluştur
         Map<String,Object> responseToken = new HashMap<>();
         responseToken.put("message","Doğrulama kodu e-posta ile gönderildi.");

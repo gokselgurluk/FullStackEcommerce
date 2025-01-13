@@ -33,10 +33,10 @@ public class VerificationTokenServiceImpl implements com.eticare.eticaretAPI.ser
     public String generateVerificationCode(Integer code) {
         Random random = new Random();
         StringBuilder stringBuilder = new StringBuilder();
-
+        String charPool = "123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         for (int i = 0; i < code; i++) {
-            int digit = random.nextInt(10);
-            stringBuilder.append(digit);
+            int index = random.nextInt(charPool.length());
+            stringBuilder.append(charPool.charAt(index));
         }
         return stringBuilder.toString();
     }
@@ -90,17 +90,18 @@ public class VerificationTokenServiceImpl implements com.eticare.eticaretAPI.ser
 
         return token;
     }
-        @Override
-        public Boolean validateVerificationCode (User user, String code){
 
-            Optional<VerificationToken> tokenOtp = verificationTokenRepository.findByUserAndCode(user, code);
+    @Override
+    public Boolean validateVerificationCode(User user, String code) {
 
-            if (tokenOtp.isPresent()) {
-                // Kodun geçerliliğini kontrol et
-                LocalDateTime expiryDate = tokenOtp.get().getCodeExpiryDate();
-                return expiryDate.isAfter(LocalDateTime.now());
-            }
+        Optional<VerificationToken> tokenOtp = verificationTokenRepository.findByUserAndCode(user, code);
 
-            throw new NotFoundException("Verification code not found for user: " + user.getEmail() + " with code: " + code);
+        if (tokenOtp.isPresent()) {
+            // Kodun geçerliliğini kontrol et
+            LocalDateTime expiryDate = tokenOtp.get().getCodeExpiryDate();
+            return expiryDate.isAfter(LocalDateTime.now());
         }
+
+        throw new NotFoundException("Verification code not found for user: " + user.getEmail() + " with code: " + code);
     }
+}
