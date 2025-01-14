@@ -7,19 +7,18 @@ import com.eticare.eticaretAPI.entity.enums.TokenType;
 import com.eticare.eticaretAPI.repository.ITokenRepository;
 import com.eticare.eticaretAPI.repository.IUserRepository;
 
-import com.eticare.eticaretAPI.service.impl.VerificationTokenServiceImpl;
+import com.eticare.eticaretAPI.service.VerificationService;
+import com.eticare.eticaretAPI.service.impl.VerificationServiceImpl;
 import io.jsonwebtoken.Claims;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -30,21 +29,17 @@ public class AuthenticationService {
     private final ITokenRepository tokenRepository;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
-
     private final IUserRepository userRepository;
     private  final PasswordEncoder passwordEncoder;
 
-    private  final VerificationTokenServiceImpl verificationTokenService;
-
-    public AuthenticationService(ITokenRepository tokenRepository, JwtService jwtService,
-                                 AuthenticationManager authenticationManager, IUserRepository userRepository, PasswordEncoder passwordEncoder, VerificationTokenServiceImpl verificationTokenService) {
+    public AuthenticationService(ITokenRepository tokenRepository, JwtService jwtService, AuthenticationManager authenticationManager, IUserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.tokenRepository = tokenRepository;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.verificationTokenService = verificationTokenService;
     }
+
 
     public String register(User user) {
         // Save User in DB
@@ -58,22 +53,7 @@ public class AuthenticationService {
         // Token'ı veritabanına kaydet
 
     }
-    public boolean activateUser(String email, String code) {
 
-        Optional<User> userOpt = userRepository.findByEmail(email);
-        if(userOpt.get().isActive()){
-            throw new NotFoundException("Bu hesap zaten aktif");
-        }
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            if (verificationTokenService.validateVerificationCode(user, code)) {
-                user.setActive(true); // Hesabı aktif et
-                userRepository.save(user);
-                return true;
-            }
-        }
-        return false;
-    }
 
     // Kullanıcı doğrulama ve token üretme
     public String authenticate(String email, String password) throws NotFoundException {

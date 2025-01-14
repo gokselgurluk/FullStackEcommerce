@@ -8,6 +8,7 @@ import com.eticare.eticaretAPI.repository.IUserRepository;
 import com.eticare.eticaretAPI.service.EmailService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 
@@ -90,14 +91,14 @@ public class EmailServiceImpl implements EmailService {
             saveImage(codeImage, outputPath);
 
             // Görseli e-posta ile gönder
-            sendVerificationEmailWithImage(email, outputPath);
+            sendVerificationEmailWithMedia(email, outputPath);
         } catch (IOException e) {
             throw new RuntimeException("Görsel oluşturulurken hata oluştu", e);
         }
     }
 
     @Override
-    public void sendVerificationEmailWithImage(String toEmail, String imagePath) {
+    public void sendVerificationEmailWithMedia(String toEmail, String code) {
         try {
             MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message,true);
@@ -105,13 +106,28 @@ public class EmailServiceImpl implements EmailService {
             helper.setFrom("noreply@springMailService");
             helper.setTo(toEmail);
             helper.setSubject("Account Verification Code");
-            helper.setText("Your verification code is attached as an image.\nThis code is valid for 2 minutes.");
+            // HTML formatında içerik
+            String htmlContent = "<html><body style='background-color: #f0f0f0; font-family: Arial, sans-serif; text-align: center; padding: 20px;'>"
+                    + "<div style='background-color: #ffffff; padding: 40px; border-radius: 8px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); width: 90%; max-width: 600px; margin: 0 auto;'>"
+                    + "<h2>Your Verification Code</h2>"
+                    + "<h3><b>Code:</b> " + code + "</h3>"
+                    + "<p>This code is valid for 2 minutes.</p>"
+                    + "<p><a href='https://your-site.com/verify?code=" + code + "' style='color: #007BFF; text-decoration: none;'>Click here to verify your account</a></p>"
+                    + "<br>"
+                    // Marka logosunu ekleyin
+                    + "<img src='cid:logoImage' alt='Brand Logo' style='width: 150px; height: auto;' />"
+                    + "</div>"
+                    + "</body></html>";
 
-            // Görseli ekle
-            File file = new File(imagePath);
-            helper.addAttachment("verification_code.png", file);
+            // HTML içeriği e-postaya ekle
+            helper.setText(htmlContent, true); // true parametresi HTML içeriği olduğunu belirtir
+            // Marka logosunu e-posta ile birlikte gömülü olarak ekle
 
+            helper.addInline("logoImage", new File("src\\main\\resources\\images\\logo.png"));
+
+            // E-posta gönder
             javaMailSender.send(message);
+
         } catch (MessagingException e) {
             throw new RuntimeException("E-posta gönderimi sırasında hata oluştu", e);
         }

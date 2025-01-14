@@ -1,36 +1,56 @@
 package com.eticare.eticaretAPI.service.impl;
 
 import com.eticare.eticaretAPI.config.exeption.NotFoundException;
+import com.eticare.eticaretAPI.config.jwt.CustomUserDetails;
 import com.eticare.eticaretAPI.entity.User;
-import com.eticare.eticaretAPI.entity.VerificationToken;
+import com.eticare.eticaretAPI.entity.VerifyCode;
 import com.eticare.eticaretAPI.repository.ITokenRepository;
 import com.eticare.eticaretAPI.repository.IUserRepository;
 import com.eticare.eticaretAPI.repository.IVerificationTokenRepository;
+import com.eticare.eticaretAPI.service.EmailService;
+import com.eticare.eticaretAPI.service.VerificationService;
+import jakarta.transaction.Transactional;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
 import static org.apache.commons.lang3.time.DateUtils.isSameDay;
 
 
 @Service
-public class VerificationTokenServiceImpl implements com.eticare.eticaretAPI.service.VerificationTokenService {
+public class VerificationServiceImpl implements VerificationService {
 
     private final IVerificationTokenRepository verificationTokenRepository;
     private final IUserRepository userRepository;
 
-    public VerificationTokenServiceImpl(ITokenRepository tokenRepository, IVerificationTokenRepository verificationTokenRepository, IUserRepository userRepository) {
-        this.verificationTokenRepository = verificationTokenRepository;
+    private  final EmailService emailService;
 
+    public VerificationServiceImpl(IVerificationTokenRepository verificationTokenRepository, IUserRepository userRepository, EmailService emailService) {
+        this.verificationTokenRepository = verificationTokenRepository;
         this.userRepository = userRepository;
+        this.emailService = emailService;
     }
 
+
     @Override
-    public String generateVerificationCode(Integer code) {
+    public boolean activateUser(String email, String code) {
+
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if(userOpt.get().isActive()){
+            throw new NotFoundException("Bu hesap zaten aktif");
+        }
+        User user = userOpt.get();
+        if (isValidateCode(user, code)) {
+            user.setActive(true); // Hesabı aktif et
+            userRepository.save(user);
+            return true;
+        }
+        return false;
+    }
+    @Override
+    public String generateCode(Integer code) {
         Random random = new Random();
         StringBuilder stringBuilder = new StringBuilder();
         String charPool = "123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -42,7 +62,7 @@ public class VerificationTokenServiceImpl implements com.eticare.eticaretAPI.ser
     }
 
     @Override
-    public VerificationToken createVerificationToken(String email) {
+    public VerifyCode createVerifyCode(String email) {
         // Kullanıcıyı e-posta ile al
         Optional<User> user = userRepository.findByEmail(email);
 
@@ -51,11 +71,11 @@ public class VerificationTokenServiceImpl implements com.eticare.eticaretAPI.ser
         }
 
         // Yeni doğrulama kodu oluştur
-        String code = generateVerificationCode(6);
+        String code = generateCode(6);
 
         // Kullanıcı için var olan doğrulama token'ını kontrol et
-        Optional<VerificationToken> existingToken = verificationTokenRepository.findByUser(user.get());
-        VerificationToken token;
+        Optional<VerifyCode> existingToken = verificationTokenRepository.findByUser(user.get());
+        VerifyCode token;
 
         if (existingToken.isPresent()) {
             token = existingToken.get();
@@ -77,7 +97,7 @@ public class VerificationTokenServiceImpl implements com.eticare.eticaretAPI.ser
 
         } else {
             // Yeni token oluştur
-            token = new VerificationToken();
+            token = new VerifyCode();
             token.setUser(user.get()); // Kullanıcıyı set et
             token.setSendCount(1);
             token.setCode(code);
@@ -92,9 +112,9 @@ public class VerificationTokenServiceImpl implements com.eticare.eticaretAPI.ser
     }
 
     @Override
-    public Boolean validateVerificationCode(User user, String code) {
+    public Boolean isValidateCode(User user, String code) {
 
-        Optional<VerificationToken> tokenOtp = verificationTokenRepository.findByUserAndCode(user, code);
+        Optional<VerifyCode> tokenOtp = verificationTokenRepository.findByUserAndCode(user, code);
 
         if (tokenOtp.isPresent()) {
             // Kodun geçerliliğini kontrol et
@@ -103,5 +123,24 @@ public class VerificationTokenServiceImpl implements com.eticare.eticaretAPI.ser
         }
 
         throw new NotFoundException("Verification code not found for user: " + user.getEmail() + " with code: " + code);
+    }
+
+    @Override
+    @Transactional
+    public VerifyCode sendVerifyCodeAndEmail(CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new RuntimeException("Authentication failed. User is not logged in.");
+        }
+        // Yeni bir doğrulama token'ı oluştur
+        VerifyCode verifyCode = createVerifyCode(userDetails.getUsername());
+        if (verifyCode == null) {
+            throw new RuntimeException("Token olsuturulamadı");
+        }
+
+
+        // Doğrulama kodunu e-posta ile gönder
+        emailService.sendVerificationEmailWithMedia(userDetails.getUsername(),verifyCode.getCode());
+
+        return verifyCode;
     }
 }

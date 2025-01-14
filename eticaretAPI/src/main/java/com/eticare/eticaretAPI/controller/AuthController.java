@@ -1,39 +1,33 @@
-package com.eticare.eticaretAPI.config.jwt;
+package com.eticare.eticaretAPI.controller;
 
 import com.eticare.eticaretAPI.config.exeption.NotFoundException;
+import com.eticare.eticaretAPI.config.jwt.AuthenticationService;
+import com.eticare.eticaretAPI.config.jwt.CustomUserDetails;
+import com.eticare.eticaretAPI.config.jwt.CustomUserDetailsService;
+import com.eticare.eticaretAPI.config.jwt.JwtService;
 import com.eticare.eticaretAPI.config.result.ResultData;
 import com.eticare.eticaretAPI.config.result.ResultHelper;
-import com.eticare.eticaretAPI.config.result.ResultMessages;
 import com.eticare.eticaretAPI.dto.request.AuthRequest.AuthenticationRequest;
 import com.eticare.eticaretAPI.dto.request.User.UserSaveRequest;
 import com.eticare.eticaretAPI.dto.response.AuthenticationResponse;
 import com.eticare.eticaretAPI.dto.response.UserResponse;
 import com.eticare.eticaretAPI.entity.Token;
 import com.eticare.eticaretAPI.entity.User;
-import com.eticare.eticaretAPI.entity.VerificationToken;
 import com.eticare.eticaretAPI.entity.enums.TokenType;
 import com.eticare.eticaretAPI.repository.ITokenRepository;
 import com.eticare.eticaretAPI.repository.IUserRepository;
 import com.eticare.eticaretAPI.service.EmailService;
 import com.eticare.eticaretAPI.service.UserService;
-import com.eticare.eticaretAPI.service.VerificationTokenService;
-import jakarta.servlet.http.HttpServletResponse;
+import com.eticare.eticaretAPI.service.VerificationService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DisabledException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.token.TokenService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
@@ -63,7 +57,7 @@ public class AuthController {
     @Autowired
     private EmailService emailService;
     @Autowired
-    private VerificationTokenService verificationTokenService;
+    private VerificationService verificationService;
     /**
      * Login endpoint: Kullanıcı adı ve şifre ile kimlik doğrulaması yapılır
      */
@@ -79,14 +73,13 @@ public class AuthController {
 
     @PostMapping("/verify")
     @PreAuthorize("isAuthenticated()")
-    public  ResultData<?> verifyAccount(@RequestParam Map<String,String> params ) {
-        String email = params.get("email");
-        String code = params.get("code");
+    public  ResultData<?> verifyAccount(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam String code) {
 
-        if (email == null || code == null) {
-            return ResultHelper.errorWithData("Email ve doğrulama kodu gereklidir.", params, HttpStatus.BAD_REQUEST);
+
+        if (userDetails == null || code == null) {
+            return ResultHelper.errorWithData("Email ve doğrulama kodu gereklidir.", userDetails, HttpStatus.BAD_REQUEST);
         }
-            if (authenticationService.activateUser(email,code)) {
+            if (verificationService.activateUser(userDetails.getUsername(),code)) {
                 return ResultHelper.success("Hesap başarıyla doğrulandı!");
             } else {
                 return ResultHelper.errorWithData("Kod geçersiz veya süresi dolmuş.", null, HttpStatus.BAD_REQUEST);

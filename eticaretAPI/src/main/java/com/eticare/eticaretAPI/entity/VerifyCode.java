@@ -15,8 +15,8 @@ import java.util.Date;
 @NoArgsConstructor
 @Builder
 
-@Table(name="VerificationTokens")
-public class VerificationToken {
+@Table(name="VerifyCode")
+public class VerifyCode {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private  Long id;
