@@ -10,7 +10,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
 
   // Form ve kullanıcı verileri
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [formData, setFormData] = useState({ username: '', password: '' });
   const [userData, setUserData] = useState(null);
 
   // Şifre görünürlüğü kontrolü
@@ -42,13 +42,13 @@ const LoginPage = () => {
       console.log('Backend Response:', response.data); // Backend yanıtını logla
 
       // Backend'den gelen yanıt
-      const { accessTokens, username, roles, email } = response.data;
+      const { accessTokens, username, roles } = response.data;
       console.log('AccessToken:', accessTokens); // Access token'ı kontrol et
-      console.log('Email:', email); // Email bilgisini kontrol et
+      console.log('Email:', username); // Email bilgisini kontrol et
 
-      if (accessTokens && email) {
+      if (accessTokens && username) {
         // AuthContext'e token ve email bilgilerini kaydediyoruz
-        login(accessTokens, email);
+        login(accessTokens, username);
       } else {
         console.error('Access token veya email undefined/null');
       }
@@ -57,7 +57,7 @@ const LoginPage = () => {
       setUserData({ username, roles });
       setModalData({
         isOpen: true,
-        message: `Giriş başarılı! Hoşgeldiniz, ${username}.`,
+        message: 'Giriş başarılı!',
         type: 'success',
       });
 

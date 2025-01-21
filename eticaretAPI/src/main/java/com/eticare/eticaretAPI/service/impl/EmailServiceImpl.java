@@ -123,7 +123,7 @@ public class EmailServiceImpl implements EmailService {
             helper.setText(htmlContent, true); // true parametresi HTML içeriği olduğunu belirtir
             // Marka logosunu e-posta ile birlikte gömülü olarak ekle
 
-            helper.addInline("logoImage", new File("src\\main\\resources\\images\\logo.png"));
+            helper.addInline("logoImage", new File("C:\\Users\\Asus\\Desktop\\eticaretAPI\\eticaretAPI\\src\\main\\resources\\images\\logo.png"));
 
             // E-posta gönder
             javaMailSender.send(message);

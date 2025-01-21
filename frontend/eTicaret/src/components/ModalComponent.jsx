@@ -2,7 +2,7 @@ import React from 'react';
 import Modal from 'react-modal';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
-
+import { AiOutlineCheckCircle, AiOutlineCloseCircle } from 'react-icons/ai';
 // Modal'ın kök elementini ayarlama
 Modal.setAppElement('#root');
 
@@ -15,14 +15,38 @@ const ModalComponent = ({ isOpen, onRequestClose, message, type }) => {
     className="custom-modal"
     overlayClassName="custom-overlay"
   >
-  <div>
-        {/* message'i satırlara ayırıp her birini ayrı <p> etiketiyle göstereceğiz */}
-        {message.split("\n").map((line, index) => (
-          <p key={index} style={{ margin: '5px 0', fontSize: '14px', color: type === 'success' ? 'green' : 'red' }}>
-            {line}
-          </p>
-        ))}
-      </div>
+ 
+<div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+  {message.split("\n").map((line, index) => (
+    <div
+      key={index}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px', // İkon ve metin arasındaki boşluk
+      }}
+    >
+      {/* İkon */}
+      {type === 'success' ? (
+        <AiOutlineCheckCircle style={{ color: 'green', fontSize: '50px' }} />
+      ) : (
+        <AiOutlineCloseCircle style={{ color: 'red', fontSize: '50px' }} />
+      )}
+
+      {/* Mesaj */}
+      <p
+        style={{
+          margin: 0,
+          fontSize: '20px',
+          fontWeight: 'bold', // Font kalınlığı
+          color: type === 'success' ? 'green' : 'red',
+        }}
+      >
+        {line}
+      </p>
+    </div>
+  ))}
+</div>
     <Stack
       direction="row"
       spacing={2}
