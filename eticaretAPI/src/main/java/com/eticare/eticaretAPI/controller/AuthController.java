@@ -11,14 +11,18 @@ import com.eticare.eticaretAPI.dto.request.AuthRequest.AuthenticationRequest;
 import com.eticare.eticaretAPI.dto.request.User.UserSaveRequest;
 import com.eticare.eticaretAPI.dto.response.AuthenticationResponse;
 import com.eticare.eticaretAPI.dto.response.UserResponse;
+import com.eticare.eticaretAPI.entity.Session;
 import com.eticare.eticaretAPI.entity.Token;
 import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.entity.enums.TokenType;
 import com.eticare.eticaretAPI.repository.ITokenRepository;
 import com.eticare.eticaretAPI.repository.IUserRepository;
 import com.eticare.eticaretAPI.service.EmailService;
+import com.eticare.eticaretAPI.service.SessionService;
 import com.eticare.eticaretAPI.service.UserService;
 import com.eticare.eticaretAPI.service.VerificationService;
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -29,6 +33,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -58,6 +63,9 @@ public class AuthController {
     private EmailService emailService;
     @Autowired
     private VerificationService verificationService;
+
+    @Autowired
+    private SessionService sessionService;
     /**
      * Login endpoint: Kullanıcı adı ve şifre ile kimlik doğrulaması yapılır
      */
@@ -87,31 +95,43 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthenticationResponse> createAuthToken(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
+    public ResponseEntity<AuthenticationResponse> createAuthToken(
+            @RequestBody AuthenticationRequest authenticationRequest,
+            HttpServletRequest httpRequest
+    ) throws Exception {
 
         // Süresi dolmuş token'ları kontrol et ve güncelle
         authenticationService.checkAndUpdateExpiredTokens();
 
         // Kullanıcıyı doğrula ve token üret
-        String token = authenticationService.authenticate(authenticationRequest.getEmail(), authenticationRequest.getPassword());
+        List<Token> tokens = authenticationService.authenticate(authenticationRequest.getEmail(), authenticationRequest.getPassword());
+        Token refreshToken = tokens.get(0); // İlk eleman (Refresh Token)
+        Token accessToken = tokens.get(1); // İkinci eleman (Access Token)
 
         final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getEmail());
 
         // Kullanıcıyı username(email) ile bul
         Optional<User> user = userRepository.findByEmail(userDetails.getUsername());
 
-        // Kullanıcı varsa, lastLogin bilgisini güncelle
-        user.ifPresent(userEntity -> {
-            userEntity.setLastLogin(new Date());
-            userRepository.save(userEntity); // sadece ilgili kullanıcıyı kaydediyor
-        });
-
         // Kullanıcı bulunamazsa hata fırlat
         if (user.isEmpty()) {
             throw new RuntimeException("User not found");
         }
-        // Yanıt olarak token ve kullanıcı bilgilerini gönderme
-        return ResponseEntity.ok(new AuthenticationResponse(token, userDetails.getUsername(), userDetails.getAuthorities()));
+
+        // IP adresi ve cihaz bilgisi alınır
+        String ipAddress = httpRequest.getRemoteAddr();
+        String deviceInfo = httpRequest.getHeader("User-Agent");
+
+        // Session oluşturulur
+        Session session = sessionService.createSession(
+                user.get(),
+                refreshToken,
+                ipAddress,
+                deviceInfo
+        );
+
+        // Yanıt olarak token ve kullanıcı bilgilerini gönder
+        return ResponseEntity.ok(new AuthenticationResponse(accessToken.getToken(), userDetails.getUsername(), userDetails.getAuthorities()));
     }
 
     // Refresh token endpoint
