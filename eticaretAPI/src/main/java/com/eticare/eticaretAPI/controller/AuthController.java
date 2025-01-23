@@ -14,14 +14,15 @@ import com.eticare.eticaretAPI.dto.response.UserResponse;
 import com.eticare.eticaretAPI.entity.Session;
 import com.eticare.eticaretAPI.entity.Token;
 import com.eticare.eticaretAPI.entity.User;
-import com.eticare.eticaretAPI.entity.enums.TokenType;
+import com.eticare.eticaretAPI.repository.ISessionRepository;
 import com.eticare.eticaretAPI.repository.ITokenRepository;
 import com.eticare.eticaretAPI.repository.IUserRepository;
 import com.eticare.eticaretAPI.service.EmailService;
 import com.eticare.eticaretAPI.service.SessionService;
 import com.eticare.eticaretAPI.service.UserService;
 import com.eticare.eticaretAPI.service.VerificationService;
-import io.jsonwebtoken.Claims;
+import com.eticare.eticaretAPI.utils.DeviceUtils;
+import com.eticare.eticaretAPI.utils.IpUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +33,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -66,6 +66,9 @@ public class AuthController {
 
     @Autowired
     private SessionService sessionService;
+
+    @Autowired
+    private ISessionRepository sessionRepository;
     /**
      * Login endpoint: Kullanıcı adı ve şifre ile kimlik doğrulaması yapılır
      */
@@ -95,7 +98,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthenticationResponse> createAuthToken(
+    public ResponseEntity<?> createAuthToken(
             @RequestBody AuthenticationRequest authenticationRequest,
             HttpServletRequest httpRequest
     ) throws Exception {
@@ -109,26 +112,22 @@ public class AuthController {
         Token accessToken = tokens.get(1); // İkinci eleman (Access Token)
 
         final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getEmail());
-
         // Kullanıcıyı username(email) ile bul
-        Optional<User> user = userRepository.findByEmail(userDetails.getUsername());
+       User user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow(()->new RuntimeException("User dulunamadı"));
+       // Kullanıcı bulunamazsa hata fırlat
+            if(!user.isActive())
+            {
+               return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Hesap Aktif Degil");
+            }
 
-        // Kullanıcı bulunamazsa hata fırlat
-        if (user.isEmpty()) {
-            throw new RuntimeException("User not found");
-        }
 
         // IP adresi ve cihaz bilgisi alınır
-        String ipAddress = httpRequest.getRemoteAddr();
-        String deviceInfo = httpRequest.getHeader("User-Agent");
+        String ipAddress = IpUtils.getClientIp(httpRequest);
+        Map<String ,String> deviceInfo = DeviceUtils.getUserAgent(httpRequest);
+
 
         // Session oluşturulur
-        Session session = sessionService.createSession(
-                user.get(),
-                refreshToken,
-                ipAddress,
-                deviceInfo
-        );
+        sessionService.createSession(user, refreshToken, ipAddress, deviceInfo);
 
         // Yanıt olarak token ve kullanıcı bilgilerini gönder
         return ResponseEntity.ok(new AuthenticationResponse(accessToken.getToken(), userDetails.getUsername(), userDetails.getAuthorities()));
@@ -136,26 +135,38 @@ public class AuthController {
 
     // Refresh token endpoint
     @PostMapping("/refresh-token")
-    public ResponseEntity<?> refreshToken(@RequestBody AuthenticationRequest authenticationRequest) {
+    public ResponseEntity<?> refreshToken(@RequestBody AuthenticationRequest authenticationRequest ,HttpServletRequest httpServletRequest) {
         // Kullanıcı kontrolü
         User user = userRepository.findByEmail(authenticationRequest.getEmail())
                 .orElseThrow(() -> new NotFoundException("Kullanıcı bulunamadı"));
 
         // Kullanıcıya ait refresh token'ı bul
-        Token refreshToken = tokenRepository.findByUserAndTokenType(user, TokenType.REFRESH)
+      /*  Token refreshToken = tokenRepository.findByUserAndTokenType(user, TokenType.REFRESH)
                 .orElseThrow(() -> new NotFoundException("Refresh token bulunamadı"));
-
-        // Refresh token doğrulama
+  // Refresh token doğrulama
         String token = refreshToken.getToken();
         String email = jwtService.extractEmail(token);
+    */
 
-        if (email == null || !jwtService.isTokenValid(token, email)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Refresh token geçersiz veya süresi dolmuş. Lütfen tekrar giriş yapınız.");
+        Session session = sessionRepository.findByRefreshToken(authenticationRequest.getEmail()).orElseThrow(()-> new RuntimeException("Session bilgisi bulunamadı"));
+
+        if(sessionService.isValidSession(session.getEmail(),session.getIpAddress(),session.getDevice()))
+        {
+            if(session.getIpAddress().equalsIgnoreCase(IpUtils.getClientIp(httpServletRequest))
+                && session.getDevice().equalsIgnoreCase(DeviceUtils.getUserAgent(httpServletRequest).get("Device"))) {
+                if (session.getEmail() == null || !jwtService.isTokenValid(session.getRefreshToken(), session.getEmail())) {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                            .body("Refresh token geçersiz veya süresi dolmuş. Lütfen tekrar giriş yapınız.");
+                }
+                return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Oturum bilgisi dogrulanamadı");
+
+            }
+            return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Oturum bilgisi bulunamadı");
         }
 
+
         // Yeni access token oluştur
-        String newAccessToken = jwtService.generateAccessToken(email);
+        String newAccessToken = jwtService.generateAccessToken(session.getEmail());
 
         // Yanıt olarak yeni token'ı döndür
         return ResponseEntity.ok()
@@ -163,46 +174,4 @@ public class AuthController {
                 .body(Map.of("accessToken", newAccessToken)); // JSON formatında döndürmek
     }
 
-    /*
-     @PostMapping("/refresh-token")
-    public ResponseEntity<?> refreshToken(@RequestBody Map<String, String> requestBody)  {
-        // requestBody'den access token'ı al
-        String accessToken = requestBody.get("accessToken");
-        System.out.println("token " + accessToken);
-        if (accessToken == null || accessToken.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Access token bulunamadı.");
-        }
-        // Access token'dan e-posta adresini çıkar
-        String extractEmail = jwtService.extractEmail(accessToken);
-        if (extractEmail == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Geçersiz token.");
-        }
-        System.out.println("Email from token: " + extractEmail);
-        // Kullanıcı kontrolü
-        User user = userRepository.findByEmail(extractEmail)
-                .orElseThrow(() -> new NotFoundException("Kullanıcı bulunamadı"));
-        System.out.println("Email from token: " + user.getUsername());
-        // Kullanıcıya ait refresh token'ı bul
-        Token refreshToken = tokenRepository.findByUserAndTokenType(user, TokenType.REFRESH)
-                .orElseThrow(() -> new NotFoundException("Refresh token bulunamadı"));
-
-        // Refresh token doğrulama
-        String token = refreshToken.getToken();
-
-
-        if (!jwtService.isTokenValid(token, extractEmail)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Refresh token geçersiz veya süresi dolmuş. Lütfen tekrar giriş yapınız.");
-        }
-
-        // Yeni access token oluştur
-        String newAccessToken = jwtService.generateAccessToken(extractEmail);
-
-        // Yanıt olarak yeni token'ı döndür
-        return ResponseEntity.ok()
-                .header("New-Access-Token", newAccessToken)
-                .body(Map.of("accessToken", newAccessToken)); // JSON formatında döndürmek
-    }
-}
-    * */
 }

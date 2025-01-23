@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+
 @Service
 public class SessionServiceImpl implements SessionService {
     private final ISessionRepository sessionRepository;
@@ -21,12 +23,14 @@ public class SessionServiceImpl implements SessionService {
     }
 
     @Override
-    public Session createSession(User user, Token token,String ipAddress, String deviceInfo) {
+    public Session createSession(User user, Token token,String ipAddress, Map<String,String> deviceInfo) {
         Session session = new Session();
         session.setEmail(user.getEmail());
         session.setRefreshToken(token.getToken());
         session.setIpAddress(ipAddress);
-        session.setDeviceInfo(deviceInfo);
+        session.setBrowser(deviceInfo.get("Browser"));
+        session.setOs(deviceInfo.get("OS"));
+        session.setDevice(deviceInfo.get("Device"));
         session.setCreatedAt(new Date());
         session.setExpiresAt(token.getExpires_at()); //  oturum süresi
         session.setToken(token); // Burada token nesnesini sağlamalısınız
@@ -67,7 +71,7 @@ public class SessionServiceImpl implements SessionService {
         return sessions.stream()
                 .anyMatch(session ->
                         session.getIpAddress().equals(ipAddress) &&
-                                session.getDeviceInfo().equals(deviceInfo));
+                                session.getDevice().equals(deviceInfo));
     }
 
 

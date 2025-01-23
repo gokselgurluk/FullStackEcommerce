@@ -27,8 +27,9 @@ public class Session {
     @Column(nullable = false)
     private String ipAddress;
 
-    @Column(nullable = false)
-    private String deviceInfo;
+    private String browser; // Tarayıcı bilgisi
+    private String os;      // İşletim sistemi bilgisi
+    private String device;  // Cihaz türü bilgisi
 
     @Column(name = "session_created_at", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)

@@ -108,6 +108,13 @@
 			<artifactId>twilio</artifactId>
 			<version>8.31.1</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.github.ua-parser/uap-java -->
+		<dependency>
+			<groupId>com.github.ua-parser</groupId>
+			<artifactId>uap-java</artifactId>
+			<version>1.6.1</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>
