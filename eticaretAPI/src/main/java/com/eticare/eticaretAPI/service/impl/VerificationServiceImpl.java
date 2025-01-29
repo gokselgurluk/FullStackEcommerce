@@ -11,6 +11,7 @@ import com.eticare.eticaretAPI.service.EmailService;
 import com.eticare.eticaretAPI.service.VerificationService;
 import jakarta.transaction.Transactional;
 import org.apache.commons.lang3.time.DateUtils;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -67,52 +68,56 @@ public class VerificationServiceImpl implements VerificationService {
         Optional<User> user = userRepository.findByEmail(email);
 
         if (user.isEmpty()) {
-            throw new NotFoundException("User not found for email: " + email); // Kullanıcı bulunamazsa hata fırlat
+            throw new NotFoundException("Kullanıcı email bilgisi bulunamadı: " + email); // Kullanıcı bulunamazsa hata fırlat
         }
 
         // Yeni doğrulama kodu oluştur
-        String code = generateCode(6);
+        String newCode = generateCode(6);
 
-        // Kullanıcı için var olan doğrulama token'ını kontrol et
-        Optional<VerifyCode> existingToken = verificationTokenRepository.findByUser(user.get());
-        VerifyCode token;
+        // Kullanıcı için var olan doğrulama verifyCode'ını kontrol et
+        Optional<VerifyCode> optionalVerifyCode = verificationTokenRepository.findByUser(user.get());
+        VerifyCode verifyCode;
 
-        if (existingToken.isPresent()) {
-            token = existingToken.get();
-
+        if (optionalVerifyCode.isPresent()) {
+            verifyCode = optionalVerifyCode.get();
+            if(LocalDateTime.now().isAfter(verifyCode.getCodeExpiryDate())){
             // Aynı gün ve maksimum gönderim sınırına ulaşıldıysa hata fırlat
-            if (DateUtils.isSameDay(token.getLastSendDate(), new Date())) {
-                if (token.getSendCount() >= 3) {
-                    throw new IllegalStateException("Bugün için maksimum doğrulama kodu gönderim sınırına ulaşıldı.");
+            if (DateUtils.isSameDay(verifyCode.getLastSendDate(), new Date())) {
+                if (verifyCode.getSendCount() >= 3) {
+                    throw new IllegalStateException("Bugün için maksimum doğrulama kodu oluşturma sınırına ulaşıldı.");
                 }
-                token.setSendCount(token.getSendCount() + 1);
+                verifyCode.setSendCount(verifyCode.getSendCount() + 1);
             } else {
                 // Yeni güne geçilmiş, sayaç sıfırlanır
-                token.setSendCount(1);
+                verifyCode.setSendCount(1);
+            }
+            }else {
+                throw new IllegalStateException("Code geçerliligini koruyor");
             }
 
-            token.setCode(code);
-            token.setLastSendDate(new Date());
-            token.setCodeExpiryDate(LocalDateTime.now().plusMinutes(2)); // Yeni geçerlilik süresi
+            verifyCode.setCode(newCode);
+            verifyCode.setLastSendDate(new Date());
+            verifyCode.setCodeExpiryDate(LocalDateTime.now().plusMinutes(2)); // Yeni geçerlilik süresi
 
         } else {
-            // Yeni token oluştur
-            token = new VerifyCode();
-            token.setUser(user.get()); // Kullanıcıyı set et
-            token.setSendCount(1);
-            token.setCode(code);
-            token.setLastSendDate(new Date());
-            token.setCodeExpiryDate(LocalDateTime.now().plusMinutes(2)); // Geçerlilik süresi
+            // Yeni verifyCode oluştur
+            verifyCode = new VerifyCode();
+            verifyCode.setUser(user.get()); // Kullanıcıyı set et
+            verifyCode.setSendCount(1);
+            verifyCode.setCode(newCode);
+            verifyCode.setLastSendDate(new Date());
+            verifyCode.setCodeExpiryDate(LocalDateTime.now().plusMinutes(2)); // Geçerlilik süresi
         }
 
-        // Token'ı veritabanına kaydet
-        verificationTokenRepository.save(token);
+        // Code'u veritabanına kaydet
+        verificationTokenRepository.save(verifyCode);
 
-        return token;
+        return verifyCode;
     }
 
     @Override
     public Boolean isValidateCode(User user, String code) {
+
 
         Optional<VerifyCode> tokenOtp = verificationTokenRepository.findByUserAndCode(user, code);
 
@@ -122,21 +127,22 @@ public class VerificationServiceImpl implements VerificationService {
             return expiryDate.isAfter(LocalDateTime.now());
         }
 
-        throw new NotFoundException("Verification code not found for user: " + user.getEmail() + " with code: " + code);
+        throw new NotFoundException("Verification code not found for user: " + user.getEmail() + " Gecersiz code: " + code);
     }
 
     @Override
     @Transactional
     public VerifyCode sendVerifyCodeAndEmail(CustomUserDetails userDetails) {
         if (userDetails == null) {
-            throw new RuntimeException("Authentication failed. User is not logged in.");
-        }
-        // Yeni bir doğrulama token'ı oluştur
-        VerifyCode verifyCode = createVerifyCode(userDetails.getUsername());
-        if (verifyCode == null) {
-            throw new RuntimeException("Token olsuturulamadı");
+            throw new IllegalStateException("Authentication hatası. kullanıcı giriş yapmamış.");
         }
 
+        // Yeni bir doğrulama codu'ı oluştur
+        VerifyCode verifyCode = createVerifyCode(userDetails.getUsername());
+
+        if (verifyCode == null) {
+            throw new IllegalStateException("Doğrulama kodu oluşturulamadı.");
+        }
 
         // Doğrulama kodunu e-posta ile gönder
         emailService.sendVerificationEmailWithMedia(userDetails.getUsername(),verifyCode.getCode());

@@ -7,6 +7,7 @@ import com.eticare.eticaretAPI.entity.VerifyCode;
 public interface VerificationService {
 
     boolean activateUser(String email, String code);
+
     String generateCode(Integer code);
 
     VerifyCode createVerifyCode(String email);

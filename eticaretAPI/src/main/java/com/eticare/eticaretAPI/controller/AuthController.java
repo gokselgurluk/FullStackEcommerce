@@ -77,24 +77,35 @@ public class AuthController {
         UserResponse userResponse = userService.createUser(request);
         User user = modelMapper.map(userResponse, User.class);
         authenticationService.register(user);
+        // Doğrulama kodu oluştur ve kullanıcıya gönder
+
+
         return ResultHelper.created(userResponse);
         // UserServise sınıfında user sınıfı maplenıyor metot tıpı  UserResponse donuyor bu yuzden burada maplemedık
     }
 
 
-    @PostMapping("/verify")
+    @PostMapping("/verifyAccount")
     @PreAuthorize("isAuthenticated()")
     public  ResultData<?> verifyAccount(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam String code) {
 
+        try {
 
         if (userDetails == null || code == null) {
-            return ResultHelper.errorWithData("Email ve doğrulama kodu gereklidir.", userDetails, HttpStatus.BAD_REQUEST);
-        }
-            if (verificationService.activateUser(userDetails.getUsername(),code)) {
-                return ResultHelper.success("Hesap başarıyla doğrulandı!");
-            } else {
-                return ResultHelper.errorWithData("Kod geçersiz veya süresi dolmuş.", null, HttpStatus.BAD_REQUEST);
+            throw new IllegalStateException("Email veya doğrulama kodu eksik.");
             }
+        boolean isVerification =verificationService.activateUser(userDetails.getUsername(),code);
+            if (isVerification) {
+                return ResultHelper.successWithData("Hesap Dogrulama Başarılı: ",userDetails.getUsername(),HttpStatus.OK);
+            } else {
+                //return ResultHelper.errorWithData("Kod geçersiz veya süresi dolmuş.", null, HttpStatus.BAD_REQUEST);
+                throw new IllegalStateException("Kod geçersiz veya süresi dolmuş  ");
+            }
+        }catch (Exception e){
+            return ResultHelper.errorWithData("Hesap Dogrulanama Başarısız: ",e.getMessage(),HttpStatus.BAD_REQUEST);
+
+        }
+
     }
 
     @PostMapping("/login")
@@ -105,7 +116,7 @@ public class AuthController {
 
         // Süresi dolmuş token'ları kontrol et ve güncelle
         authenticationService.checkAndUpdateExpiredTokens();
-
+        System.out.println(authenticationRequest.getEmail());
         // Kullanıcıyı doğrula ve token üret
         List<Token> tokens = authenticationService.authenticate(authenticationRequest.getEmail(), authenticationRequest.getPassword());
         Token refreshToken = tokens.get(0); // İlk eleman (Refresh Token)
@@ -113,13 +124,12 @@ public class AuthController {
 
         final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getEmail());
         // Kullanıcıyı username(email) ile bul
-       User user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow(()->new RuntimeException("User dulunamadı"));
-       // Kullanıcı bulunamazsa hata fırlat
+       User user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow(()->new RuntimeException("User bulunamadı"));
+      /* // Kullanıcı bulunamazsa hata fırlat
             if(!user.isActive())
             {
-               return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Hesap Aktif Degil");
-            }
-
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Hesap Aktif Değil");
+            }*/
 
         // IP adresi ve cihaz bilgisi alınır
         String ipAddress = IpUtils.getClientIp(httpRequest);
@@ -130,7 +140,7 @@ public class AuthController {
         sessionService.createSession(user, refreshToken, ipAddress, deviceInfo);
 
         // Yanıt olarak token ve kullanıcı bilgilerini gönder
-        return ResponseEntity.ok(new AuthenticationResponse(accessToken.getToken(), userDetails.getUsername(), userDetails.getAuthorities()));
+        return ResponseEntity.ok(new AuthenticationResponse(accessToken.getToken(), userDetails.getUsername(), userDetails.getAuthorities(),user.isActive()));
     }
 
     // Refresh token endpoint
@@ -163,7 +173,6 @@ public class AuthController {
             }
             return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Oturum bilgisi bulunamadı");
         }
-
 
         // Yeni access token oluştur
         String newAccessToken = jwtService.generateAccessToken(session.getEmail());

@@ -6,8 +6,10 @@ import com.eticare.eticaretAPI.config.result.Result;
 import com.eticare.eticaretAPI.config.result.ResultData;
 import com.eticare.eticaretAPI.config.result.ResultHelper;
 import com.eticare.eticaretAPI.dto.request.User.UserUpdateRequest;
+import com.eticare.eticaretAPI.dto.response.AuthenticationResponse;
 import com.eticare.eticaretAPI.dto.response.UserResponse;
 import com.eticare.eticaretAPI.entity.User;
+import com.eticare.eticaretAPI.entity.enums.TokenType;
 import com.eticare.eticaretAPI.service.UserService;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +36,19 @@ public class UserController {
     }
 
 
+
+    @GetMapping("/getUserInfo")
+    public ResultData<?> getUserInfo(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            return ResultHelper.Error500("User details are null. Authentication failed.");
+        }
+        Optional<User> user = userService.getUserByMail(userDetails.getUsername());
+        if (user.isEmpty()) {
+            return ResultHelper.Error500("No user found with email: " + userDetails.getUsername());
+        }
+            // return ResponseEntity.ok(new AuthenticationResponse("accessToken", userDetails.getUsername(), userDetails.getAuthorities(),user.isActive())); // Kullanıcı bilgilerini döndür
+            return ResultHelper.success(this.modelMapperService.forResponse().map(user, AuthenticationResponse.class));
+    }
     // Bu endpoint'e yalnızca giriş yapmış kullanıcılar erişebilir.
     @GetMapping("/profile")
     @PreAuthorize("isAuthenticated()")

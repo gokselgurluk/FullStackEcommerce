@@ -23,6 +23,9 @@ const Navbars = () => {
               <Nav.Link as={Link} to="/profile" className="profile-link">
                 <BsPersonCircle style={{ fontSize: "24px" }} />
               </Nav.Link>
+              <Nav.Link as={Link} to="/Info" className="/Info-link">
+                <BsPersonCircle style={{ fontSize: "24px" }} />
+              </Nav.Link>
               <Button
                 variant="outline-light"
                 style={{ display: 'flex', alignItems: 'center', gap: '5px' }}

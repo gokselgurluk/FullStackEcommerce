@@ -10,7 +10,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.sql.Time;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name="Token")
@@ -43,8 +45,22 @@ public class Token {
 
     private boolean expired; // Token süresi doldu mu?
 
-    @ManyToOne(fetch =FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private  User user ;
 
+    @OneToMany(mappedBy = "token", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Session> sessions = new ArrayList<>();
+    @Override
+    public String toString() {
+        return "Token{" +
+                "id=" + id +
+                ", token='" + token + '\'' +
+                ", created_at=" + created_at +
+                ", expires_at=" + expires_at +
+                ", tokenType=" + tokenType +
+                ", revoked=" + revoked +
+                ", expired=" + expired +
+                '}';
+    }
 }

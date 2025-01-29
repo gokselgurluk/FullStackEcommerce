@@ -7,6 +7,7 @@ import com.eticare.eticaretAPI.entity.VerifyCode;
 import com.eticare.eticaretAPI.service.EmailService;
 import com.eticare.eticaretAPI.service.SmsService;
 import com.eticare.eticaretAPI.service.VerificationService;
+import org.apache.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,22 +33,24 @@ public class EmailSendController {
         this.smsService = smsService;
     }
 
-    @PostMapping("/mail-send")
+    @PostMapping("/mail-send-verification-code")
     @PreAuthorize("isAuthenticated()")
     public ResultData<?> emailSend(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        try {
+            VerifyCode verifyCode = verificationService.sendVerifyCodeAndEmail(userDetails);
 
-        VerifyCode verifyCode =verificationService.sendVerifyCodeAndEmail(userDetails);
+            Map<String, Object> responseCode = new HashMap<>();
+            responseCode.put("message", "Doğrulama kodu e-posta ile gönderildi.");
+            responseCode.put("verificationCode", verifyCode.getCode());
+            responseCode.put("expiryTime", verifyCode.getCodeExpiryDate());
+            responseCode.put("sendCount", verifyCode.getSendCount());
 
-        // Detaylı bilgi için bir map oluştur
-
-        Map<String,Object> responseToken = new HashMap<>();
-        responseToken.put("message","Doğrulama kodu e-posta ile gönderildi.");
-        responseToken.put("verificationCode", verifyCode.getCode());//test için code alıyoruz normalde code u gostermeyecegız
-        responseToken.put("expiryDate", verifyCode.getCodeExpiryDate());
-        responseToken.put("sendCount", verifyCode.getSendCount());
-        // Başarı mesajı ile birlikte ek bilgileri döndür
-        return   ResultHelper.success(responseToken);
+            return ResultHelper.success(responseCode);
+        } catch (Exception e) {
+            return ResultHelper.notFound("E-posta gönderilirken bir hata oluştu"+ e.getMessage());
+        }
     }
+
     @PostMapping("/sms-send")
     @PreAuthorize("isAuthenticated()")
     public ResultData<?> smsSend(
@@ -61,12 +64,12 @@ public class EmailSendController {
         // Doğrulama kodunu e-posta ile gönder
         smsService.sendSms(phoneNumber,verificationCode);
         // Detaylı bilgi için bir map oluştur
-        Map<String,Object> responseToken = new HashMap<>();
-        responseToken.put("message","Doğrulama kodu sms ile gönderildi.");
-        responseToken.put("verificationCode",verificationCode);//test için code alıyoruz normalde code u gostermeyecegız
+        Map<String,Object> responseCode = new HashMap<>();
+        responseCode.put("message","Doğrulama kodu sms ile gönderildi.");
+        responseCode.put("verificationCode",verificationCode);//test için code alıyoruz normalde code u gostermeyecegız
 
 
         // Başarı mesajı ile birlikte ek bilgileri döndür
-        return   ResultHelper.success(responseToken);
+        return   ResultHelper.success(responseCode);
     }
 }

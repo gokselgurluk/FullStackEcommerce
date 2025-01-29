@@ -28,7 +28,7 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id ;
+    private Long id;
 
     @NotBlank(message = "Name cannot be empty or blank")
     private String username;
@@ -36,7 +36,7 @@ public class User {
     @NotBlank(message = "Surname cannot be empty or blank")
     private String surname;
 
-    @NotBlank(message ="Password cannot be empty or blank")
+    @NotBlank(message = "Password cannot be empty or blank")
     private String password;// Şifre saklanmadan önce hashlenmeli
 
     @Email(message = "Email must be a valid format")
@@ -46,7 +46,7 @@ public class User {
 
 
     @Enumerated(EnumType.STRING)
-    private Role roleEnum=Role.USER;
+    private Role roleEnum = Role.USER;
 
 
     @Temporal(TemporalType.TIMESTAMP)
@@ -55,9 +55,9 @@ public class User {
     @Temporal(TemporalType.TIMESTAMP) //Son Giriş Tarihi
     private Date lastLogin;
 
-    private  boolean active =false ;// Varsayılan olarak kullanıcı aktif
+    private boolean active = false;// Varsayılan olarak kullanıcı de aktif
 
-    @OneToMany(mappedBy = "user" ,cascade=CascadeType.ALL,orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Order> orderList;
 
 
@@ -67,12 +67,21 @@ public class User {
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CMS> cmsContent;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true )
-    private List<Token> tokens ;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Token> tokens;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Payment> payments = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Session> sessions = new ArrayList<>();
+
+    // toString methodu, döngüyü önlemek için Token nesnelerini dışarıda tutar
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", email='" + email + '\'' +
+                '}';
+    }
 }

@@ -6,12 +6,11 @@ import lombok.*;
 import java.util.Date;
 
 @Entity
-@Table(name = "sessions")
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(exclude = {"user", "token"}) // Döngüsel referansı dışarıda bırakır
+@Table(name = "sessions")
 public class Session {
 
     @Id
@@ -21,7 +20,7 @@ public class Session {
     @Column(nullable = false)
     private String email;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String refreshToken;
 
     @Column(nullable = false)
@@ -43,7 +42,7 @@ public class Session {
     @JoinColumn(name = "user_id", nullable = false)
     private User user; // Oturumun sahibi kullanıcı
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "token_id", nullable = false)
     private Token token; // Oturumun ilgili Refresh Token'ı
 }

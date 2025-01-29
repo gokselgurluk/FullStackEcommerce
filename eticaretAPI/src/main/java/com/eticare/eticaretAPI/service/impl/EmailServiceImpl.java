@@ -4,8 +4,11 @@ import com.eticare.eticaretAPI.config.exeption.NotFoundException;
 import com.eticare.eticaretAPI.config.result.ResultData;
 import com.eticare.eticaretAPI.config.result.ResultHelper;
 import com.eticare.eticaretAPI.entity.User;
+import com.eticare.eticaretAPI.entity.enums.TokenType;
+import com.eticare.eticaretAPI.repository.ITokenRepository;
 import com.eticare.eticaretAPI.repository.IUserRepository;
 import com.eticare.eticaretAPI.service.EmailService;
+import com.eticare.eticaretAPI.service.UserService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.core.io.FileSystemResource;
@@ -30,11 +33,15 @@ public class EmailServiceImpl implements EmailService {
 
     private  final JavaMailSender javaMailSender;
     private  final IUserRepository userRepository;
-    private static final String IMAGE_PATH = "C:/Users/Asus/Desktop/eticaretAPI/src/main/resources/images/";
+    private final UserService userService;
+    private final   ITokenRepository tokenRepository;
+    private static final String IMAGE_PATH = "C:\\Users\\ASUS\\IdeaProjects\\eticaretAPI\\eticaretAPI\\src\\main\\resources\\images\\logo.png";
 
-    public EmailServiceImpl(JavaMailSender javaMailSender, IUserRepository userRepository) {
+    public EmailServiceImpl(JavaMailSender javaMailSender, IUserRepository userRepository, UserService userService, ITokenRepository tokenRepository) {
         this.javaMailSender = javaMailSender;
         this.userRepository = userRepository;
+        this.userService = userService;
+        this.tokenRepository = tokenRepository;
     }
 
     @Override
@@ -99,11 +106,15 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     public void sendVerificationEmailWithMedia(String toEmail, String code) {
+        Optional<User> user = userService.getUserByMail(toEmail);
+        String token = String.valueOf(tokenRepository.findByUserAndTokenType(user.get(), TokenType.ACCESS));
+        String link ="http://localhost:5173/email-verify?token=" + token + "&email=" + toEmail;  // Access token ve email'i URL'ye ekliyoruz.
+
         try {
             MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message,true);
 
-            helper.setFrom("noreply@springMailService");
+            helper.setFrom("noreply@e-TicaretMailDogrulamaService");
             helper.setTo(toEmail);
             helper.setSubject("Account Verification Code");
             // HTML formatında içerik
@@ -112,7 +123,8 @@ public class EmailServiceImpl implements EmailService {
                     + "<h2>Your Verification Code</h2>"
                     + "<h3><b>Code:</b> " + code + "</h3>"
                     + "<p>This code is valid for 2 minutes.</p>"
-                    + "<p><a href='https://your-site.com/verify?code=" + code + "' style='color: #007BFF; text-decoration: none;'>Click here to verify your account</a></p>"
+                    // URL'yi ekledik
+                    + "<p><a href='http://localhost:8080/auth/verifyAccount?code=" + code + "' style='color: #007BFF; text-decoration: none;'>Click here to verify your account</a></p>"
                     + "<br>"
                     // Marka logosunu ekleyin
                     + "<img src='cid:logoImage' alt='Brand Logo' style='width: 150px; height: auto;' />"
@@ -123,7 +135,7 @@ public class EmailServiceImpl implements EmailService {
             helper.setText(htmlContent, true); // true parametresi HTML içeriği olduğunu belirtir
             // Marka logosunu e-posta ile birlikte gömülü olarak ekle
 
-            helper.addInline("logoImage", new File("C:\\Users\\Asus\\Desktop\\eticaretAPI\\eticaretAPI\\src\\main\\resources\\images\\logo.png"));
+            helper.addInline("logoImage", new File(IMAGE_PATH));
 
             // E-posta gönder
             javaMailSender.send(message);

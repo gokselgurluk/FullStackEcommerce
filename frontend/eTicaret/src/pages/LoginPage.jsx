@@ -7,11 +7,10 @@ import ModalComponent from '../components/ModalComponent'; // Modal bileşeni
 
 const LoginPage = () => {
   const { login } = useAuth(); // Global login fonksiyonu
-  const navigate = useNavigate();
-
+  const navigate = useNavigate(); // Yönlendirme işlemi için useNavigate hook'u
+ const [userInfo, setUserInfo] = useState(null); // Kullanıcı bilgilerini tutacak state
   // Form ve kullanıcı verileri
-  const [formData, setFormData] = useState({ username: '', password: '' });
-  const [userData, setUserData] = useState(null);
+  const [formData, setFormData] = useState({ email: '', password: '' });
 
   // Şifre görünürlüğü kontrolü
   const [showPassword, setShowPassword] = useState(false);
@@ -39,59 +38,54 @@ const LoginPage = () => {
     e.preventDefault();
     try {
       const response = await axiosInstance.post('/auth/login', formData);
-      console.log('Backend Response:', response.data); // Backend yanıtını logla
-
-      // Backend'den gelen yanıt
-      const { accessTokens, username, roles } = response.data;
-      console.log('AccessToken:', accessTokens); // Access token'ı kontrol et
-      console.log('Email:', username); // Email bilgisini kontrol et
-
-      if (accessTokens && username) {
-        // AuthContext'e token ve email bilgilerini kaydediyoruz
-        login(accessTokens, username);
+      const userData = response.data; // Gelen veriyi direkt değişkene al
+  
+      console.log('Backend Response:', userData); // Doğrudan veriyi logla
+  
+      if (userData?.accessToken) {
+        localStorage.setItem('accessToken', userData.accessToken);
+        login(userData.accessToken);
+  
+        if (userData.active) {
+          setModalData({
+            isOpen: true,
+            message: 'Giriş başarılı!',
+            type: 'success',
+          });
+  
+          setTimeout(() => {
+            setModalData({ isOpen: false });
+            navigate('/');
+          }, 2000);
+        } else {
+          setModalData({
+            isOpen: true,
+            message: 'Hesabınız Inactive. Lütfen e-posta doğrulaması yapın.',
+            type: 'error',
+          });
+          setTimeout(() => {
+            setModalData({ isOpen: false });
+            navigate('/email-verify');
+          }, 2000);
+        }
       } else {
-        console.error('Access token veya email undefined/null');
+        setModalData({
+          isOpen: true,
+          message: 'Giriş başarısız. Yanıt eksik!',
+          type: 'error',
+        });
       }
-
-      // Kullanıcı verisini ayarla
-      setUserData({ username, roles });
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || 'Giriş işlemi sırasında bir hata oluştu.';
       setModalData({
         isOpen: true,
-        message: 'Giriş başarılı!',
-        type: 'success',
+        message: errorMessage,
+        type: 'error',
       });
-
-      setTimeout(() => {
-        setModalData({ isOpen: false });
-        navigate('/');
-      }, 2000);
-
-    } catch (error) {
-      if (error.response) {
-        console.error('Backend hatası:', error.response.data);
-        setModalData({
-          isOpen: true,
-          message: error.response.data.data || 'Bir hata oluştu. Lütfen tekrar deneyin.',
-          type: 'error',
-        });
-      } else if (error.request) {
-        console.error('İstek hatası:', error.request);
-        setModalData({
-          isOpen: true,
-          message: 'Sunucuya bağlanılamadı. Lütfen internet bağlantınızı kontrol edin.',
-          type: 'error',
-        });
-      } else {
-        console.error('Hata:', error.message);
-        setModalData({
-          isOpen: true,
-          message: 'Bilinmeyen bir hata oluştu. Lütfen tekrar deneyin.',
-          type: 'error',
-        });
-      }
     }
   };
-
+  
   // Modal kapatma
   const closeModal = () => {
     setModalData({ isOpen: false, message: '', type: '' });
@@ -105,7 +99,7 @@ const LoginPage = () => {
           <Form.Label>Email</Form.Label>
           <Form.Control
             type="email"
-            name="email"
+            name="email" // 'email' olarak güncellendi
             placeholder="Enter email"
             value={formData.email}
             onChange={handleInputChange}

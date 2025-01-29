@@ -34,9 +34,8 @@ public class SessionServiceImpl implements SessionService {
         session.setCreatedAt(new Date());
         session.setExpiresAt(token.getExpires_at()); //  oturum süresi
         session.setToken(token); // Burada token nesnesini sağlamalısınız
-        session.setUser(user); // Burada token nesnesini sağlamalısınız
-        // Session nesnesini konsola yazdırmak
-        System.out.println("Created Session: " + session);
+        session.setUser(user); // Burada user nesnesini sağlamalısınız
+
         return sessionRepository.save(session);
 
     }

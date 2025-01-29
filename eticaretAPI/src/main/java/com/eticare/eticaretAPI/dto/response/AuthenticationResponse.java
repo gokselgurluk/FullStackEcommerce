@@ -1,20 +1,21 @@
 package com.eticare.eticaretAPI.dto.response;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Collection;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
     public class AuthenticationResponse {
-        private String accessTokens;;
-        private String username;
+        private String accessToken;;
+        private String email;
         private Collection<?> roles;
+        private boolean isActive;
 
         // Constructor, getter, setter
-
-    public AuthenticationResponse(String token, String username, Collection<?> roles) {
-        this.accessTokens = token;
-        this.username = username;
-        this.roles = roles;
-    }
 }
