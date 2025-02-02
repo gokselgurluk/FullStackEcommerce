@@ -1,14 +1,14 @@
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext'; // AuthContext'ten isAuth değerini almak için hook
 
-const ProtectedRoute = ({ children }) => {
-  const { isAuth } = useAuth();
+const PrivateRoute = ({ children }) => {
+  const { isAuth } = useAuth(); // Kullanıcının kimlik doğrulama durumunu kontrol et
 
   if (!isAuth) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" />; // Eğer kullanıcı doğrulanmamışsa, login sayfasına yönlendir
   }
 
-  return children;
+  return children; // Eğer kullanıcı doğrulanmışsa, korunan bileşeni göster
 };
 
-export default ProtectedRoute;
+export default PrivateRoute;

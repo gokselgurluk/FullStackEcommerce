@@ -8,7 +8,7 @@ import ModalComponent from '../components/ModalComponent'; // Modal bileşeni
 const LoginPage = () => {
   const { login } = useAuth(); // Global login fonksiyonu
   const navigate = useNavigate(); // Yönlendirme işlemi için useNavigate hook'u
- const [userInfo, setUserInfo] = useState(null); // Kullanıcı bilgilerini tutacak state
+  const [userInfo, setUserInfo] = useState(null); // Kullanıcı bilgilerini tutacak state
   // Form ve kullanıcı verileri
   const [formData, setFormData] = useState({ email: '', password: '' });
 
@@ -32,27 +32,32 @@ const LoginPage = () => {
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
-
+  const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
   // Giriş işlemini gönder
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const response = await axiosInstance.post('/auth/login', formData);
       const userData = response.data; // Gelen veriyi direkt değişkene al
-  
+      // Login sayfasında, sayfa yüklendiğinde
+    
+      if (token) {
+        sessionStorage.setItem('activationToken', token);
+      }
       console.log('Backend Response:', userData); // Doğrudan veriyi logla
-  
+
       if (userData?.accessToken) {
         localStorage.setItem('accessToken', userData.accessToken);
         login(userData.accessToken);
-  
+
         if (userData.active) {
           setModalData({
             isOpen: true,
             message: 'Giriş başarılı!',
             type: 'success',
           });
-  
+
           setTimeout(() => {
             setModalData({ isOpen: false });
             navigate('/');
@@ -85,7 +90,7 @@ const LoginPage = () => {
       });
     }
   };
-  
+
   // Modal kapatma
   const closeModal = () => {
     setModalData({ isOpen: false, message: '', type: '' });

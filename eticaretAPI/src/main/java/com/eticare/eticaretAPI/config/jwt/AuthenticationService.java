@@ -77,7 +77,7 @@ public class AuthenticationService {
 
         List<Token> tokens = new ArrayList<>();;
         tokens.add(refreshToken(email,user.get()));
-        tokens.add(accessToken(email,user.get()));
+        tokens.add(accessToken(user.get()));
         return  tokens;
     }
     public Token refreshToken(String email,User user){
@@ -86,8 +86,8 @@ public class AuthenticationService {
         return saveOrUpdateToken(user, refreshToken, TokenType.REFRESH);
     }
 
-    public Token accessToken(String email,User user){
-        String accessToken = jwtService.generateAccessToken(email);
+    public Token accessToken(User user){
+        String accessToken = jwtService.generateAccessToken(user);
         Date expiresAccessToken =(jwtService.extractClaim(accessToken, Claims::getExpiration));
         return saveOrUpdateToken(user, accessToken, TokenType.ACCESS);
     }

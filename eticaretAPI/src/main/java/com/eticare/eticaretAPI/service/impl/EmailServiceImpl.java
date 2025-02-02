@@ -1,6 +1,7 @@
 package com.eticare.eticaretAPI.service.impl;
 
 import com.eticare.eticaretAPI.config.exeption.NotFoundException;
+import com.eticare.eticaretAPI.config.jwt.JwtService;
 import com.eticare.eticaretAPI.config.result.ResultData;
 import com.eticare.eticaretAPI.config.result.ResultHelper;
 import com.eticare.eticaretAPI.entity.User;
@@ -35,16 +36,18 @@ public class EmailServiceImpl implements EmailService {
     private  final IUserRepository userRepository;
     private final UserService userService;
     private final   ITokenRepository tokenRepository;
+    private final JwtService jwtService;
     private static final String IMAGE_PATH = "C:\\Users\\ASUS\\IdeaProjects\\eticaretAPI\\eticaretAPI\\src\\main\\resources\\images\\logo.png";
 
-    public EmailServiceImpl(JavaMailSender javaMailSender, IUserRepository userRepository, UserService userService, ITokenRepository tokenRepository) {
+    public EmailServiceImpl(JavaMailSender javaMailSender, IUserRepository userRepository, UserService userService, ITokenRepository tokenRepository, JwtService jwtService) {
         this.javaMailSender = javaMailSender;
         this.userRepository = userRepository;
         this.userService = userService;
         this.tokenRepository = tokenRepository;
+        this.jwtService = jwtService;
     }
 
-    @Override
+    /*@Override
     public BufferedImage generateCodeImage(String code)throws IOException {
         int width = 0;
         int height = 0;
@@ -87,9 +90,9 @@ public class EmailServiceImpl implements EmailService {
 
         // Görseli kaydet
         ImageIO.write(image, "png", outputFile);
-    }
+    }*/
 
-    @Override
+   /* @Override
     public void createImageAndSendEmail(String email, String code) {
         try {
             // Doğrulama kodu için görsel oluştur
@@ -102,29 +105,28 @@ public class EmailServiceImpl implements EmailService {
         } catch (IOException e) {
             throw new RuntimeException("Görsel oluşturulurken hata oluştu", e);
         }
-    }
+    }*/
 
     @Override
-    public void sendVerificationEmailWithMedia(String toEmail, String code) {
-        Optional<User> user = userService.getUserByMail(toEmail);
-        String token = String.valueOf(tokenRepository.findByUserAndTokenType(user.get(), TokenType.ACCESS));
-        String link ="http://localhost:5173/email-verify?token=" + token + "&email=" + toEmail;  // Access token ve email'i URL'ye ekliyoruz.
+    public void sendVerificationEmailWithMedia(User user, String code) {
+        String email = user.getEmail();
+        String activationToken = jwtService.generateActivationToken(user,code);
+        String activationLink = "http://localhost:5173/login?token=" + activationToken; /*+"&email=" + email*/;
 
         try {
             MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message,true);
-
             helper.setFrom("noreply@e-TicaretMailDogrulamaService");
-            helper.setTo(toEmail);
+            helper.setTo(email);
             helper.setSubject("Account Verification Code");
             // HTML formatında içerik
             String htmlContent = "<html><body style='background-color: #f0f0f0; font-family: Arial, sans-serif; text-align: center; padding: 20px;'>"
                     + "<div style='background-color: #ffffff; padding: 40px; border-radius: 8px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); width: 90%; max-width: 600px; margin: 0 auto;'>"
                     + "<h2>Your Verification Code</h2>"
-                    + "<h3><b>Code:</b> " + code + "</h3>"
-                    + "<p>This code is valid for 2 minutes.</p>"
+                    + "<p>This token is valid for 2 minutes.</p>"
                     // URL'yi ekledik
-                    + "<p><a href='http://localhost:8080/auth/verifyAccount?code=" + code + "' style='color: #007BFF; text-decoration: none;'>Click here to verify your account</a></p>"
+                    + "<p><a href='"+ activationLink + "' style='color: #007BFF; text-decoration: none;'>Click here to verify your account</a></p>"
+                    + "<h3><b>Code:</b> " + activationToken + "</h3>"
                     + "<br>"
                     // Marka logosunu ekleyin
                     + "<img src='cid:logoImage' alt='Brand Logo' style='width: 150px; height: auto;' />"
@@ -141,7 +143,7 @@ public class EmailServiceImpl implements EmailService {
             javaMailSender.send(message);
 
         } catch (MessagingException e) {
-            throw new RuntimeException("E-posta gönderimi sırasında hata oluştu", e);
+            throw new RuntimeException("Email içerigi oluşturulamadı");
         }
     }
 

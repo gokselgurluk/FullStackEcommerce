@@ -1,7 +1,6 @@
 package com.eticare.eticaretAPI.config.result;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 
 import java.util.List;
 
@@ -20,7 +19,9 @@ public class ResultHelper {
     public static<T> ResultData<T> notFound(T data) {
         return new ResultData<>(false, ResultMessages.NOT_FOUND, 404,data);
     }
-
+    public static <T> ResultData<T> expiredJwtException(T data) {
+        return new ResultData<>(false, ResultMessages.UNAUTHORIZED,401,data);
+    }
     public static <T> ResultData<T> success(T data) {
         return new ResultData<>(true, ResultMessages.OK, 200, data);
     }
@@ -31,6 +32,7 @@ public class ResultHelper {
     public static <T> ResultData<T> successWithData(String message, T data, HttpStatus status) {
         return new ResultData<>(true, message, status.value(), data);
     }
+
     public static Result Ok(){
         return new ResultData<>(true,ResultMessages.OK,200,null);
     }

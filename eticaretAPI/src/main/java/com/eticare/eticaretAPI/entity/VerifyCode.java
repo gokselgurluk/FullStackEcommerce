@@ -26,7 +26,8 @@ public class VerifyCode {
 
     private LocalDateTime codeExpiryDate;
 
-    private Integer sendCount = 0;
+
+    private Integer remainingAttempts;
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date lastSendDate = new Date();

@@ -1,6 +1,7 @@
 package com.eticare.eticaretAPI.config.result;
 
 import lombok.Getter;
+import org.springframework.http.HttpStatusCode;
 
 @Getter
 public class ResultData<T> extends Result {
@@ -15,4 +16,5 @@ public class ResultData<T> extends Result {
         this.data=data;
 
     }
+
 }

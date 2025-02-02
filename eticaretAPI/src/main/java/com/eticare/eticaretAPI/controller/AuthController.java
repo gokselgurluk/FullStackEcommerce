@@ -23,7 +23,9 @@ import com.eticare.eticaretAPI.service.UserService;
 import com.eticare.eticaretAPI.service.VerificationService;
 import com.eticare.eticaretAPI.utils.DeviceUtils;
 import com.eticare.eticaretAPI.utils.IpUtils;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.SneakyThrows;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -69,6 +71,7 @@ public class AuthController {
 
     @Autowired
     private ISessionRepository sessionRepository;
+
     /**
      * Login endpoint: Kullanıcı adı ve şifre ile kimlik doğrulaması yapılır
      */
@@ -84,34 +87,8 @@ public class AuthController {
         // UserServise sınıfında user sınıfı maplenıyor metot tıpı  UserResponse donuyor bu yuzden burada maplemedık
     }
 
-
-    @PostMapping("/verifyAccount")
-    @PreAuthorize("isAuthenticated()")
-    public  ResultData<?> verifyAccount(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam String code) {
-
-        try {
-
-        if (userDetails == null || code == null) {
-            throw new IllegalStateException("Email veya doğrulama kodu eksik.");
-            }
-        boolean isVerification =verificationService.activateUser(userDetails.getUsername(),code);
-            if (isVerification) {
-                return ResultHelper.successWithData("Hesap Dogrulama Başarılı: ",userDetails.getUsername(),HttpStatus.OK);
-            } else {
-                //return ResultHelper.errorWithData("Kod geçersiz veya süresi dolmuş.", null, HttpStatus.BAD_REQUEST);
-                throw new IllegalStateException("Kod geçersiz veya süresi dolmuş  ");
-            }
-        }catch (Exception e){
-            return ResultHelper.errorWithData("Hesap Dogrulanama Başarısız: ",e.getMessage(),HttpStatus.BAD_REQUEST);
-
-        }
-
-    }
-
     @PostMapping("/login")
-    public ResponseEntity<?> createAuthToken(
-            @RequestBody AuthenticationRequest authenticationRequest,
-            HttpServletRequest httpRequest
+    public ResponseEntity<?> createAuthToken(@RequestBody AuthenticationRequest authenticationRequest, HttpServletRequest httpRequest
     ) throws Exception {
 
         // Süresi dolmuş token'ları kontrol et ve güncelle
@@ -124,7 +101,7 @@ public class AuthController {
 
         final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getEmail());
         // Kullanıcıyı username(email) ile bul
-       User user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow(()->new RuntimeException("User bulunamadı"));
+        User user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow(() -> new RuntimeException("User bulunamadı"));
       /* // Kullanıcı bulunamazsa hata fırlat
             if(!user.isActive())
             {
@@ -133,19 +110,75 @@ public class AuthController {
 
         // IP adresi ve cihaz bilgisi alınır
         String ipAddress = IpUtils.getClientIp(httpRequest);
-        Map<String ,String> deviceInfo = DeviceUtils.getUserAgent(httpRequest);
+        Map<String, String> deviceInfo = DeviceUtils.getUserAgent(httpRequest);
 
 
         // Session oluşturulur
         sessionService.createSession(user, refreshToken, ipAddress, deviceInfo);
 
         // Yanıt olarak token ve kullanıcı bilgilerini gönder
-        return ResponseEntity.ok(new AuthenticationResponse(accessToken.getToken(), userDetails.getUsername(), userDetails.getAuthorities(),user.isActive()));
+        return ResponseEntity.ok(new AuthenticationResponse(accessToken.getToken(), userDetails.getUsername(), userDetails.getAuthorities(), user.isActive()));
     }
+
+
+    @PostMapping("/activate-account")
+    public ResultData<?> verificationAccount(@AuthenticationPrincipal HttpServletRequest httpServletRequest) {
+
+        String activationToken = jwtService.extractTokenFromHttpRequest(httpServletRequest);
+
+        String email = jwtService.extractEmail(activationToken);
+        boolean expiredToken = jwtService.isTokenExpired(activationToken);
+        String code = jwtService.extractCode(activationToken);
+        boolean isVerification = verificationService.activateUser(email,code);
+
+        try {
+            if (email.isBlank() || code.isBlank()) {
+                throw new IllegalStateException("Email veya doğrulama kodu eksik.");
+            }
+            if (expiredToken) {
+                throw new IllegalStateException("Aktivasyon tokenın süresi dolmuş.");
+            }
+            if (isVerification) {
+                return ResultHelper.successWithData("Hesap Dogrulama Başarılı: ", email, HttpStatus.OK);
+            } else {
+                throw new IllegalStateException("Code geçersiz veya suresi dolmuş");
+            }
+
+        } catch (Exception e) {
+            return ResultHelper.errorWithData("Hesap Dogrulanama Başarısız: ", e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+
+    }
+
+
+  /*  @PostMapping("/verifyAccount")
+    @PreAuthorize("isAuthenticated()")
+    public ResultData<?> verifyAccount(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam String code) {
+
+        try {
+
+            if (userDetails == null || code == null) {
+
+            }
+            boolean isVerification = verificationService.activateUser(userDetails.getUsername(), code);
+            if (isVerification) {
+                return ResultHelper.successWithData("Hesap Dogrulama Başarılı: ", userDetails.getUsername(), HttpStatus.OK);
+            } else {
+                //return ResultHelper.errorWithData("Kod geçersiz veya süresi dolmuş.", null, HttpStatus.BAD_REQUEST);
+                throw new IllegalStateException("Kod geçersiz veya süresi dolmuş  ");
+            }
+        } catch (Exception e) {
+            return ResultHelper.errorWithData("Hesap Dogrulanama Başarısız: ", e.getMessage(), HttpStatus.BAD_REQUEST);
+
+        }
+
+    }*/
+
+
 
     // Refresh token endpoint
     @PostMapping("/refresh-token")
-    public ResponseEntity<?> refreshToken(@RequestBody AuthenticationRequest authenticationRequest ,HttpServletRequest httpServletRequest) {
+    public ResponseEntity<?> refreshToken(@RequestBody AuthenticationRequest authenticationRequest, HttpServletRequest httpServletRequest) {
         // Kullanıcı kontrolü
         User user = userRepository.findByEmail(authenticationRequest.getEmail())
                 .orElseThrow(() -> new NotFoundException("Kullanıcı bulunamadı"));
@@ -158,24 +191,23 @@ public class AuthController {
         String email = jwtService.extractEmail(token);
     */
 
-        Session session = sessionRepository.findByRefreshToken(authenticationRequest.getEmail()).orElseThrow(()-> new RuntimeException("Session bilgisi bulunamadı"));
+        Session session = sessionRepository.findByRefreshToken(user.getEmail()).orElseThrow(() -> new RuntimeException("Session bilgisi bulunamadı"));
 
-        if(sessionService.isValidSession(session.getEmail(),session.getIpAddress(),session.getDevice()))
-        {
-            if(session.getIpAddress().equalsIgnoreCase(IpUtils.getClientIp(httpServletRequest))
-                && session.getDevice().equalsIgnoreCase(DeviceUtils.getUserAgent(httpServletRequest).get("Device"))) {
+        if (sessionService.isValidSession(session.getEmail(), session.getIpAddress(), session.getDevice())) {
+            if (session.getIpAddress().equalsIgnoreCase(IpUtils.getClientIp(httpServletRequest))
+                    && session.getDevice().equalsIgnoreCase(DeviceUtils.getUserAgent(httpServletRequest).get("Device"))) {
                 if (session.getEmail() == null || !jwtService.isTokenValid(session.getRefreshToken(), session.getEmail())) {
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                             .body("Refresh token geçersiz veya süresi dolmuş. Lütfen tekrar giriş yapınız.");
                 }
-                return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Oturum bilgisi dogrulanamadı");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Oturum bilgisi dogrulanamadı");
 
             }
-            return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Oturum bilgisi bulunamadı");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Oturum bilgisi bulunamadı");
         }
 
         // Yeni access token oluştur
-        String newAccessToken = jwtService.generateAccessToken(session.getEmail());
+        String newAccessToken = jwtService.generateAccessToken(userService.getUserByMail(session.getEmail()).get());
 
         // Yanıt olarak yeni token'ı döndür
         return ResponseEntity.ok()

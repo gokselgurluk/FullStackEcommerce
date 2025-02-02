@@ -1,5 +1,6 @@
 package com.eticare.eticaretAPI.config.jwt;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,29 +28,65 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
         final String email;
+        boolean isActive;
+        // 🔹 Endpoint kontrolü: Sadece "/send-activation-email" endpoint'ine gelen isteği kontrol et
+        boolean isResendActivationRequest = request.getRequestURI().contains("/send-activation-email");
+        boolean isActivateAccountRequest = request.getRequestURI().contains("/activate-account");
 
-        // Access token kontrolü
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             jwt = authHeader.substring(7);
             email = jwtService.extractEmail(jwt);
+            try {
 
-            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                System.out.println("JWT ile çıkarılan email: " + email);
-                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-                System.out.println("Kullanıcı detayları yüklendi: " + userDetails.getUsername());
+                if (email != null) {
+                    isActive = jwtService.isUserActive(jwt);
+                    System.out.println("JWT ile çıkarılan hesap aktiflik durumu: " + isActive);
+                    // Kullanıcı aktif değilse 423 gönder ve işlemi sonlandır
+                     if (!isActive && isResendActivationRequest || !isActive && isActivateAccountRequest) {
+                        System.out.println("Deactive bilgisi içeren token ile işlem devam etti.");
+                        if (jwtService.isTokenValid(jwt, email)) {
+                            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+                            System.out.println("Kullanıcı detayları yüklendi: " + userDetails.getUsername());
 
-                if (jwtService.isTokenValid(jwt, email)) {
-                    UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
-                    System.out.println("Authentication ayarlandı: " + userDetails.getUsername());
-                } else {
-                    System.out.println("JWT geçersiz.");
+                            UsernamePasswordAuthenticationToken authenticationToken =
+                                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+
+
+                            System.out.println("Authentication ayarlandı: " + userDetails.getUsername());
+
+                        } else {
+                            System.out.println("JWT geçersiz.");
+                        }
+                    } else if (isActive) {
+
+                        if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+                            System.out.println("Kullanıcı detayları yüklendi: " + userDetails.getUsername());
+
+                            if (jwtService.isTokenValid(jwt, email)) {
+                                UsernamePasswordAuthenticationToken authToken =
+                                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                                SecurityContextHolder.getContext().setAuthentication(authToken);
+                                System.out.println("Authentication ayarlandı: " + userDetails.getUsername());
+                            } else {
+                                System.out.println("JWT geçersiz.");
+                            }
+                        }
+                    }
+                    else {
+                        response.setStatus(423);
+                        response.getWriter().write("Hesap Aktif Degil");
+                        return;
+                    }
                 }
+            } catch (ExpiredJwtException e) {
+                // JWT süresi dolmuşsa, 403 status kodu döner
+                response.setStatus(403);
+                System.out.println(e.getMessage());
             }
         }
 

@@ -5,7 +5,7 @@ import { Navbar, Nav, Container, Button } from "react-bootstrap";
 import { BsPersonCircle } from "react-icons/bs";
 import { FaSignOutAlt } from 'react-icons/fa';
 import { FaSignInAlt } from 'react-icons/fa';
-
+import { BsCart } from "react-icons/bs";
 const Navbars = () => {
   const { isAuth, logout } = useAuth(); // isAuth'i ve logout fonksiyonunu alıyoruz
 
@@ -23,8 +23,8 @@ const Navbars = () => {
               <Nav.Link as={Link} to="/profile" className="profile-link">
                 <BsPersonCircle style={{ fontSize: "24px" }} />
               </Nav.Link>
-              <Nav.Link as={Link} to="/Info" className="/Info-link">
-                <BsPersonCircle style={{ fontSize: "24px" }} />
+              <Nav.Link as={Link} to="/cart" className="/Info-link">
+                <BsCart style={{ fontSize: "24px" }} />
               </Nav.Link>
               <Button
                 variant="outline-light"

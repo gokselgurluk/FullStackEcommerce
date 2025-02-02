@@ -23,4 +23,6 @@ public class UserSaveRequest {
     @NotBlank(message = "Email cannot be empty or blank")
     private String email;
 
-}
+
+
+};;

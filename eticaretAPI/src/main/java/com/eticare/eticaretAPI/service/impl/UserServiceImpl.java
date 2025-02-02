@@ -31,18 +31,14 @@ public class UserServiceImpl implements UserService {
 
     private final IUserRepository userRepository;
     private final IModelMapperService modelMapperService;
-
     private final PasswordEncoder passwordEncoder;
-    private final AuthenticationService authenticationService;
-
     private final ITokenRepository tokenRepository;
 
 
-    public UserServiceImpl(IUserRepository userRepository, IModelMapperService modelMapperService, PasswordEncoder passwordEncoder, AuthenticationService authenticationService, ITokenRepository tokenRepository) {
+    public UserServiceImpl(IUserRepository userRepository, IModelMapperService modelMapperService, PasswordEncoder passwordEncoder, ITokenRepository tokenRepository) {
         this.userRepository = userRepository;
         this.modelMapperService = modelMapperService;
         this.passwordEncoder = passwordEncoder;
-        this.authenticationService = authenticationService;
         this.tokenRepository = tokenRepository;
     }
 

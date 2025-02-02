@@ -47,9 +47,10 @@ const EmailVerifyPage = () => {
 
   const sendVerificationCode = async () => {
     try {
-      const response = await axiosInstance.post("/api/mail-send-verification-code", {}, {
+      const response = await axiosInstance.post("/api/send-activation-email", {}, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
+      console.log("mail send info : ",response);
       if (response.status === 200) {
         const expirySeconds = response.data.expiryTime || 120;
         setExpiryTime(Date.now() + expirySeconds * 1000);
@@ -81,33 +82,34 @@ const EmailVerifyPage = () => {
 // send kod gonderımı bu kısım da
 
 
-  const handleVerify = async () => {
-    if (!code) {
-      setMessage("Lütfen bir kod girin.");
-      return;
-    }
-    try {
-      const response = await axiosInstance.post(
-        `/auth/verifyAccount?code=${code}`,{
-          headers: { 
-            Authorization: `Bearer ${accessToken}` 
-          },
-        }
-      );
-     console.log("code dogrulama response: ",response.data.data)
-     if (response.data.message === "Hesap Dogrulama Başarılı: ") {
-        setModalData({ isOpen: true, message: "Email başarıyla doğrulandı!", type: "success" });
+const handleVerify = async () => {
+  if (!code) {
+    setMessage("Lütfen bir kod girin.");
+    return;
+  }
+  try {
+    const response = await axiosInstance.post(
+      `/auth/verifyAccount?code=${code}`,
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
       }
-      if (response.data.message === "Hesap Dogrulanama Başarısız: ") {
-        setModalData({ isOpen: true, message: "Email başarıyla doğrulandı!", type: "success" });
-      }
-    } catch (error) {
+    );
+
+    console.log("code dogrulama response: ", response.data.message);
+
+    if (response.data.message.trim() === "Hesap Dogrulama Başarılı:") {
+      setModalData({ isOpen: true, message: "Email başarıyla doğrulandı!", type: "success" });
+    } else {
       setModalData({ isOpen: true, message: "Doğrulama başarısız oldu. Lütfen tekrar deneyin.", type: "error" });
     }
-  };
-  const closeModal = () => {
-    setModalData({ isOpen: false, message: "", type: "" });
-  };
+  } catch (error) {
+    setModalData({ isOpen: true, message: "Doğrulama başarısız oldu. Lütfen tekrar deneyin.", type: "error" });
+  }
+};
+
+const closeModal = () => {
+  setModalData({ isOpen: false, message: "", type: "" });
+};
 
   return (
     <div style={{ maxWidth: "400px", margin: "auto", padding: "20px" }}>
