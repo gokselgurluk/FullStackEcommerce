@@ -1,6 +1,7 @@
 package com.eticare.eticaretAPI.service;
 
 import com.eticare.eticaretAPI.entity.User;
+import com.eticare.eticaretAPI.entity.VerifyCode;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -12,5 +13,5 @@ public interface EmailService {
 
    // void createImageAndSendEmail(String email, String code);
 
-    void sendVerificationEmailWithMedia(User user , String imagePath);
+    void sendVerificationEmailWithMedia(User user , VerifyCode verifyCode);
 }

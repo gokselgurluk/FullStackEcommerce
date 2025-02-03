@@ -37,7 +37,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ResultData<String>> handleRuntimeException(RuntimeException e){
-        return new ResponseEntity<>(ResultHelper.Error500(e.getMessage()),HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(ResultHelper.Error500(e.getMessage()),HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(IllegalStateException.class)

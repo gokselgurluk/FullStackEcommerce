@@ -2,11 +2,11 @@ package com.eticare.eticaretAPI.controller;
 
 import com.eticare.eticaretAPI.config.exeption.NotFoundException;
 import com.eticare.eticaretAPI.config.jwt.AuthenticationService;
-import com.eticare.eticaretAPI.config.jwt.CustomUserDetails;
 import com.eticare.eticaretAPI.config.jwt.CustomUserDetailsService;
 import com.eticare.eticaretAPI.config.jwt.JwtService;
 import com.eticare.eticaretAPI.config.result.ResultData;
 import com.eticare.eticaretAPI.config.result.ResultHelper;
+import com.eticare.eticaretAPI.dto.request.ActivatedAccount.VerifyCodeRequest;
 import com.eticare.eticaretAPI.dto.request.AuthRequest.AuthenticationRequest;
 import com.eticare.eticaretAPI.dto.request.User.UserSaveRequest;
 import com.eticare.eticaretAPI.dto.response.AuthenticationResponse;
@@ -23,21 +23,16 @@ import com.eticare.eticaretAPI.service.UserService;
 import com.eticare.eticaretAPI.service.VerificationService;
 import com.eticare.eticaretAPI.utils.DeviceUtils;
 import com.eticare.eticaretAPI.utils.IpUtils;
-import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.SneakyThrows;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/auth")
@@ -122,22 +117,20 @@ public class AuthController {
 
 
     @PostMapping("/activate-account")
-    public ResultData<?> verificationAccount(@AuthenticationPrincipal HttpServletRequest httpServletRequest) {
-
-        String activationToken = jwtService.extractTokenFromHttpRequest(httpServletRequest);
-
-        String email = jwtService.extractEmail(activationToken);
-        boolean expiredToken = jwtService.isTokenExpired(activationToken);
-        String code = jwtService.extractCode(activationToken);
-        boolean isVerification = verificationService.activateUser(email,code);
-
+    public ResultData<?> activateAccount(@RequestBody VerifyCodeRequest verifyCodeRequest) {
+        String token =verifyCodeRequest.getVerifyToken();
+        System.out.println(token);
         try {
+            String email = jwtService.extractEmail(token);
+            boolean expiredToken = jwtService.isTokenExpired(token);
+            String code = jwtService.extractCode(token);
             if (email.isBlank() || code.isBlank()) {
                 throw new IllegalStateException("Email veya doğrulama kodu eksik.");
             }
             if (expiredToken) {
                 throw new IllegalStateException("Aktivasyon tokenın süresi dolmuş.");
             }
+            boolean isVerification = verificationService.activateUser(email,code);
             if (isVerification) {
                 return ResultHelper.successWithData("Hesap Dogrulama Başarılı: ", email, HttpStatus.OK);
             } else {

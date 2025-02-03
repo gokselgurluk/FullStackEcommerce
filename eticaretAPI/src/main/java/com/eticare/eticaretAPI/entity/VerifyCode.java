@@ -24,6 +24,8 @@ public class VerifyCode {
     @Column(unique = true,nullable = false)
     private  String code;
 
+    private  String verifyToken;
+
     private LocalDateTime codeExpiryDate;
 
 

@@ -17,4 +17,10 @@ public class ResultData<T> extends Result {
 
     }
 
+    public ResultData(boolean status,String message, String httpCode) {
+        super(status, message, httpCode);
+        this.data=data;
+
+    }
+
 }

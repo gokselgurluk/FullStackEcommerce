@@ -5,8 +5,8 @@ import org.springframework.http.HttpStatus;
 import java.util.List;
 
 public class ResultHelper {
-    public static <T> ResultData<T> Error500(T data){
-        return  new ResultData<>(true,ResultMessages.VALIDATION_ERROR,500,data);
+    public static <T> ResultData<T> Error500(String message){
+        return  new ResultData<>(false, message, "500");
     }
 
     public static <T> ResultData<T> created(T data) {

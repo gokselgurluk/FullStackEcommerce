@@ -62,8 +62,9 @@ public class EmailSendController {
         Map<String, Object> responseCode = new HashMap<>();
         responseCode.put("mail", verifyCode.getUser().getEmail());
         responseCode.put("verificationCode", verifyCode.getCode());
+        responseCode.put("verifyToken", verifyCode.getVerifyToken());
         responseCode.put("expiryTime", verifyCode.getCodeExpiryDate());
-        responseCode.put("sendCount", verifyCode.getRemainingAttempts());
+        responseCode.put("remainingAttempts", verifyCode.getRemainingAttempts());
         return ResultHelper.successWithData("Doğrulama kodu gönderildi",responseCode,HttpStatus.CREATED);
     } catch (Exception e) {
         return ResultHelper.errorWithData(e.getMessage(),null, HttpStatus.BAD_REQUEST);

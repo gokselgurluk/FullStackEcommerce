@@ -78,7 +78,7 @@ public class VerificationServiceImpl implements VerificationService {
 
         // Yeni doğrulama kodu oluştur
         String newCode = generateCode(6);
-
+        String activationToken = jwtService.generateActivationToken(user, newCode);
         // Kullanıcı için var olan doğrulama verifyCode'ını kontrol et
         Optional<VerifyCode> optionalVerifyCode = verificationTokenRepository.findByUser(user);
         VerifyCode verifyCode;
@@ -104,7 +104,7 @@ public class VerificationServiceImpl implements VerificationService {
             verifyCode.setCode(newCode);
             verifyCode.setLastSendDate(new Date());
             verifyCode.setCodeExpiryDate(LocalDateTime.now().plusMinutes(2)); // Yeni geçerlilik süresi
-
+            verifyCode.setVerifyToken(activationToken);
         } else {
             // Yeni verifyCode oluştur
             verifyCode = new VerifyCode();
@@ -113,9 +113,10 @@ public class VerificationServiceImpl implements VerificationService {
             verifyCode.setCode(newCode);
             verifyCode.setLastSendDate(new Date());
             verifyCode.setCodeExpiryDate(LocalDateTime.now().plusMinutes(2)); // Geçerlilik süresi
+            verifyCode.setVerifyToken(activationToken);
         }
 
-        // Code'u veritabanına kaydet
+        // onaykodu'u bilgilerini veritabanına kaydet
         verificationTokenRepository.save(verifyCode);
 
         return verifyCode;
@@ -164,7 +165,7 @@ public class VerificationServiceImpl implements VerificationService {
         }
 
         // Doğrulama kodunu e-posta ile gönder
-       emailService.sendVerificationEmailWithMedia(user.get(),verifyCode.getCode());
+       emailService.sendVerificationEmailWithMedia(user.get(),verifyCode);
 
         return verifyCode;
     }

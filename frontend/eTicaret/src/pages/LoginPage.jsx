@@ -21,7 +21,30 @@ const LoginPage = () => {
     message: '',
     type: '', // 'success' veya 'error'
   });
+  const closeModal = () => {
+    setModalData({ isOpen: false, message: "", type: "" });
 
+    // Modal kapandıktan sonra yönlendirme işlemi
+    if (modalData.type === "success") {
+        setTimeout(() => {
+            navigate("/"); // Yönlendirme yapılacak sayfa
+        
+        }, 500); // Modalın kapanmasını bekleyin (500ms gibi)
+    }
+
+    if (modalData.type === "error") {
+        setTimeout(() => {
+            logout();  // Kullanıcıyı çıkış yapmaya yönlendir
+            navigate("/login"); // Yönlendirme yapılacak sayfa
+        }, 500);
+    }
+
+    if (modalData.type === "warring") {
+        setTimeout(() => {
+            navigate("/email-verify"); // Yönlendirme yapılacak sayfa
+        }, 500);
+    }
+};
   // Giriş alanlarının değişimini takip et
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -32,8 +55,7 @@ const LoginPage = () => {
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
-  const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('token');
+  
   // Giriş işlemini gönder
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -42,9 +64,6 @@ const LoginPage = () => {
       const userData = response.data; // Gelen veriyi direkt değişkene al
       // Login sayfasında, sayfa yüklendiğinde
     
-      if (token) {
-        sessionStorage.setItem('activationToken', token);
-      }
       console.log('Backend Response:', userData); // Doğrudan veriyi logla
 
       if (userData?.accessToken) {
@@ -57,21 +76,12 @@ const LoginPage = () => {
             message: 'Giriş başarılı!',
             type: 'success',
           });
-
-          setTimeout(() => {
-            setModalData({ isOpen: false });
-            navigate('/');
-          }, 2000);
         } else {
           setModalData({
             isOpen: true,
-            message: 'Hesabınız Inactive. Lütfen e-posta doğrulaması yapın.',
-            type: 'error',
+            message: 'Hesabınız aktif degil e-mail dogrulaması yapınız',
+            type: 'warring',
           });
-          setTimeout(() => {
-            setModalData({ isOpen: false });
-            navigate('/email-verify');
-          }, 2000);
         }
       } else {
         setModalData({
@@ -91,10 +101,8 @@ const LoginPage = () => {
     }
   };
 
-  // Modal kapatma
-  const closeModal = () => {
-    setModalData({ isOpen: false, message: '', type: '' });
-  };
+
+
 
   return (
     <div style={{ maxWidth: '400px', margin: 'auto', padding: '20px' }}>

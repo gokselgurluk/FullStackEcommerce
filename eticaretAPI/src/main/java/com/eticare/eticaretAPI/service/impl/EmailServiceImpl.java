@@ -5,6 +5,7 @@ import com.eticare.eticaretAPI.config.jwt.JwtService;
 import com.eticare.eticaretAPI.config.result.ResultData;
 import com.eticare.eticaretAPI.config.result.ResultHelper;
 import com.eticare.eticaretAPI.entity.User;
+import com.eticare.eticaretAPI.entity.VerifyCode;
 import com.eticare.eticaretAPI.entity.enums.TokenType;
 import com.eticare.eticaretAPI.repository.ITokenRepository;
 import com.eticare.eticaretAPI.repository.IUserRepository;
@@ -32,10 +33,10 @@ import java.util.Optional;
 @Service
 public class EmailServiceImpl implements EmailService {
 
-    private  final JavaMailSender javaMailSender;
-    private  final IUserRepository userRepository;
+    private final JavaMailSender javaMailSender;
+    private final IUserRepository userRepository;
     private final UserService userService;
-    private final   ITokenRepository tokenRepository;
+    private final ITokenRepository tokenRepository;
     private final JwtService jwtService;
     private static final String IMAGE_PATH = "C:\\Users\\ASUS\\IdeaProjects\\eticaretAPI\\eticaretAPI\\src\\main\\resources\\images\\logo.png";
 
@@ -108,35 +109,34 @@ public class EmailServiceImpl implements EmailService {
     }*/
 
     @Override
-    public void sendVerificationEmailWithMedia(User user, String code) {
+    public void sendVerificationEmailWithMedia(User user, VerifyCode verifyCode) {
         String email = user.getEmail();
-        String activationToken = jwtService.generateActivationToken(user,code);
-        String activationLink = "http://localhost:5173/login?token=" + activationToken; /*+"&email=" + email*/;
+        String activationLink = "http://localhost:5173/activate-account?verifyToken=" + verifyCode.getVerifyToken(); /*+"&email=" + email*/;
 
         try {
             MimeMessage message = javaMailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message,true);
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
             helper.setFrom("noreply@e-TicaretMailDogrulamaService");
             helper.setTo(email);
             helper.setSubject("Account Verification Code");
             // HTML formatında içerik
             String htmlContent = "<html><body style='background-color: #f0f0f0; font-family: Arial, sans-serif; text-align: center; padding: 20px;'>"
                     + "<div style='background-color: #ffffff; padding: 40px; border-radius: 8px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); width: 90%; max-width: 600px; margin: 0 auto;'>"
-                    + "<h2>Your Verification Code</h2>"
-                    + "<p>This token is valid for 2 minutes.</p>"
-                    // URL'yi ekledik
-                    + "<p><a href='"+ activationLink + "' style='color: #007BFF; text-decoration: none;'>Click here to verify your account</a></p>"
-                    + "<h3><b>Code:</b> " + activationToken + "</h3>"
+                    + "<h2 style='text-align: center;'>Hoş Geldiniz! 🎉</h2>" + "<h3 style='text-align: center;'>Hesabınızı aktive etmek için aşağıdaki butona tıklayın:</h3>"
+                    + "<p><a href='" + activationLink + "' "
+                    + "style='display: inline-block; background-color: #007BFF; color: white; padding: 12px 20px; "
+                    + "border-radius: 5px; text-decoration: none; font-weight: bold;'>"
+                    + "Hesabınızı Doğrulayın"
+                    + "</a></p>"
                     + "<br>"
-                    // Marka logosunu ekleyin
-                    + "<img src='cid:logoImage' alt='Brand Logo' style='width: 150px; height: auto;' />"
+                    + "<p style='color: red; font-weight: bold;'>Bu link 2 dakika geçerlidir!</p>"
+                    + "<img src='cid:logoImage' alt='Şirketinizin logosu' style='width: 150px; height: auto; margin-top: 10px;' />"
                     + "</div>"
                     + "</body></html>";
 
             // HTML içeriği e-postaya ekle
             helper.setText(htmlContent, true); // true parametresi HTML içeriği olduğunu belirtir
             // Marka logosunu e-posta ile birlikte gömülü olarak ekle
-
             helper.addInline("logoImage", new File(IMAGE_PATH));
 
             // E-posta gönder
@@ -150,7 +150,7 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public String sendVerificationEmail(String email, String code) {
         Optional<User> userOpt = userRepository.findByEmail(email);
-        if(userOpt.get().isActive()){
+        if (userOpt.get().isActive()) {
             throw new NotFoundException("Bu hesap zaten aktif");
         }
         SimpleMailMessage message = new SimpleMailMessage();

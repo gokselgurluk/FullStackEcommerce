@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom'; // Yönlendirme için gerekli
 import ModalComponent from "../components/ModalComponent"; // ModalComponent'ı kullanıyoruz
 
 const RegisterPage = () => {
+    const navigate = useNavigate(); // Yönlendirme işlemi için useNavigate hook'u
+
     const [formData, setFormData] = useState({
         username: '',
         surname: '',
@@ -19,8 +21,23 @@ const RegisterPage = () => {
         type: '', // 'success' veya 'error'
     });
 
-    const navigate = useNavigate(); // Yönlendirme işlemi için useNavigate hook'u
+   const closeModal = () => {
+        setModalData({ isOpen: false, message: "", type: "" });
+        // Modal kapandıktan sonra yönlendirme işlemi
+         // Eğer modal kapatılırken message "enter" ise, yönlendirme yap
+         if (modalData.type === "warning") {
+            navigate("/login"); // İstediğiniz sayfaya yönlendirin
+        }
+        if (modalData.type === "error") {
+            navigate("/login"); // İstediğiniz sayfaya yönlendirin
+        }
 
+        if (modalData.type === "success") {
+            navigate("/login"); // İstediğiniz sayfaya yönlendirin
+        }
+       
+    };
+    
     // Form alanlarını kontrol etme
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -40,11 +57,6 @@ const RegisterPage = () => {
                 message: `Kayıt başarılı! Hoşgeldiniz, ${userData.username}.`,
                 type: "success",
             });
-
-            // Modal kapandıktan sonra e-posta doğrulama sayfasına yönlendir
-            setTimeout(() => {
-                navigate("/email-verify"); // Email doğrulama sayfasına yönlendir
-            }, 2000);
         } catch (error) {
             let errorMessage = "Bilinmeyen bir hata oluştu. Lütfen tekrar deneyin.";
 
@@ -72,10 +84,7 @@ const RegisterPage = () => {
         }
     };
 
-    // Modal'ı kapatma
-    const closeModal = () => {
-        setModalData({ ...modalData, isOpen: false });
-    };
+  
 
     return (
         <div className="container mt-4">

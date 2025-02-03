@@ -10,7 +10,7 @@ import EmailVerifyPage from './pages/EmailVerifyPage'; // E-posta doğrulama say
 import NavbarComponent from './components/Navbar'; // Navbar bileşeni
 import { CartProvider } from './context/CartContext'; // CartContext'i import et
 import CartPage from './pages/CartPage'; // Sepet sayfası
-
+import ActivateAccountPage from './pages/ActivateAccountPage'; // Sepet sayfası
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const App = () => {
@@ -23,7 +23,7 @@ const App = () => {
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-
+            <Route path="/activate-account" element={<ActivateAccountPage />} />
             {/* PrivateRoute ile ProfilePage'i koru */}
             <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
             <Route path="/email-verify" element={<EmailVerifyPage />} />

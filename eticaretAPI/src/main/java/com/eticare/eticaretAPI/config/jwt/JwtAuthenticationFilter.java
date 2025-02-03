@@ -34,7 +34,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         boolean isActive;
         // 🔹 Endpoint kontrolü: Sadece "/send-activation-email" endpoint'ine gelen isteği kontrol et
         boolean isResendActivationRequest = request.getRequestURI().contains("/send-activation-email");
-        boolean isActivateAccountRequest = request.getRequestURI().contains("/activate-account");
+        boolean isActivateAccountRequest = request.getRequestURI().contains("/auth/activate-account");
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             jwt = authHeader.substring(7);
