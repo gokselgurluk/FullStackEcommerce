@@ -78,10 +78,8 @@ private final UserService userService;
         Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
-    public boolean isTokenValid(String token, String email) {
-        String tokenEmail = extractEmail(token);
-
-        return tokenEmail.equals(email) && !isTokenExpired(token) ;
+    public boolean isTokenValid(String token) {
+        return !isTokenExpired(token) ;
     }
     public boolean isUserActive(String token){
         Claims claims =extractAllClaims(token);

@@ -42,7 +42,26 @@ public class Session {
     @JoinColumn(name = "user_id", nullable = false)
     private User user; // Oturumun sahibi kullanıcı
 
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "token_id", nullable = false)
     private Token token; // Oturumun ilgili Refresh Token'ı
+
+    @Override
+    public String toString() {
+        return "Session{" +
+                "id=" + id +
+                ", email='" + email + '\'' +
+                ", refreshToken='" + refreshToken + '\'' +
+                ", ipAddress='" + ipAddress + '\'' +
+                ", browser='" + browser + '\'' +
+                ", os='" + os + '\'' +
+                ", device='" + device + '\'' +
+                ", createdAt=" + createdAt +
+                ", expiresAt=" + expiresAt +
+                ", user=" + user +
+                ", token=" + token +
+                '}';
+    }
+
 }

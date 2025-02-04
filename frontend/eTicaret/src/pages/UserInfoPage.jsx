@@ -10,7 +10,7 @@ const UserInfoPage = () => {
     if (accessToken) {
       const fetchUserInfo = async () => {
         try {
-          const response = await axiosInstance.get('/api/users/getUserInfo', {
+          const response = await axiosInstance.get('/api/users/sessionInfo', {
             headers: {
               Authorization: `Bearer ${accessToken}`,
             },

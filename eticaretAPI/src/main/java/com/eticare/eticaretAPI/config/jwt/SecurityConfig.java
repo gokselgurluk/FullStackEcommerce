@@ -72,3 +72,18 @@ public class SecurityConfig {
         return http.build();
     }
 }*/
+/*
+   @Bean
+   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+       return http
+               .csrf(AbstractHttpConfigurer::disable) // CSRF kapatıldı
+               .cors(cors -> cors.configure(http)) // CORS açık olmalı
+               .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless mod
+               .authorizeHttpRequests(auth -> auth
+                       .requestMatchers("/auth/**", "/send-activation-email", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                       .anyRequest().authenticated()
+               )
+               .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // JWT doğrulama filtresi
+               .build();
+   }
+*/

@@ -90,6 +90,7 @@ public class AuthController {
         authenticationService.checkAndUpdateExpiredTokens();
         System.out.println(authenticationRequest.getEmail());
         // Kullanıcıyı doğrula ve token üret
+
         List<Token> tokens = authenticationService.authenticate(authenticationRequest.getEmail(), authenticationRequest.getPassword());
         Token refreshToken = tokens.get(0); // İlk eleman (Refresh Token)
         Token accessToken = tokens.get(1); // İkinci eleman (Access Token)
@@ -97,12 +98,7 @@ public class AuthController {
         final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getEmail());
         // Kullanıcıyı username(email) ile bul
         User user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow(() -> new RuntimeException("User bulunamadı"));
-      /* // Kullanıcı bulunamazsa hata fırlat
-            if(!user.isActive())
-            {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Hesap Aktif Değil");
-            }*/
-
+      // Kullanıcı bulunamazsa hata fırlat
         // IP adresi ve cihaz bilgisi alınır
         String ipAddress = IpUtils.getClientIp(httpRequest);
         Map<String, String> deviceInfo = DeviceUtils.getUserAgent(httpRequest);
@@ -110,7 +106,7 @@ public class AuthController {
 
         // Session oluşturulur
         sessionService.createSession(user, refreshToken, ipAddress, deviceInfo);
-
+        System.out.println(sessionService.getSessionByRefreshToken(refreshToken.getToken()));
         // Yanıt olarak token ve kullanıcı bilgilerini gönder
         return ResponseEntity.ok(new AuthenticationResponse(accessToken.getToken(), userDetails.getUsername(), userDetails.getAuthorities(), user.isActive()));
     }
@@ -119,7 +115,7 @@ public class AuthController {
     @PostMapping("/activate-account")
     public ResultData<?> activateAccount(@RequestBody VerifyCodeRequest verifyCodeRequest) {
         String token =verifyCodeRequest.getVerifyToken();
-        System.out.println(token);
+        System.out.println("activasyon token: "+token);
         try {
             String email = jwtService.extractEmail(token);
             boolean expiredToken = jwtService.isTokenExpired(token);
@@ -189,7 +185,7 @@ public class AuthController {
         if (sessionService.isValidSession(session.getEmail(), session.getIpAddress(), session.getDevice())) {
             if (session.getIpAddress().equalsIgnoreCase(IpUtils.getClientIp(httpServletRequest))
                     && session.getDevice().equalsIgnoreCase(DeviceUtils.getUserAgent(httpServletRequest).get("Device"))) {
-                if (session.getEmail() == null || !jwtService.isTokenValid(session.getRefreshToken(), session.getEmail())) {
+                if (session.getEmail() == null || !jwtService.isTokenValid(session.getRefreshToken())) {
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                             .body("Refresh token geçersiz veya süresi dolmuş. Lütfen tekrar giriş yapınız.");
                 }

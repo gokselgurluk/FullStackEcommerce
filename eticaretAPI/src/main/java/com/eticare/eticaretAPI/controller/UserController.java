@@ -7,18 +7,27 @@ import com.eticare.eticaretAPI.config.result.ResultData;
 import com.eticare.eticaretAPI.config.result.ResultHelper;
 import com.eticare.eticaretAPI.dto.request.User.UserUpdateRequest;
 import com.eticare.eticaretAPI.dto.response.AuthenticationResponse;
+import com.eticare.eticaretAPI.dto.response.ReviewResponse;
+import com.eticare.eticaretAPI.dto.response.SessionResponse;
 import com.eticare.eticaretAPI.dto.response.UserResponse;
+import com.eticare.eticaretAPI.entity.Session;
+import com.eticare.eticaretAPI.entity.Token;
 import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.entity.enums.TokenType;
+import com.eticare.eticaretAPI.repository.ITokenRepository;
+import com.eticare.eticaretAPI.service.SessionService;
 import com.eticare.eticaretAPI.service.UserService;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.token.TokenService;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -26,19 +35,23 @@ import java.util.Optional;
 public class UserController {
     private final UserService userService;
     private final IModelMapperService modelMapperService;
-    private final AuthenticationService authenticationService;
+    private final SessionService sessionService;
     private  final ModelMapper modelMapper ;
-    public UserController(UserService userService, IModelMapperService modelMapperService, AuthenticationService authenticationService, ModelMapper modelMapper) {
+   private   final AuthenticationService authenticationService;
+   private final ITokenRepository tokenRepository;
+    public UserController(UserService userService, IModelMapperService modelMapperService, SessionService sessionService, ModelMapper modelMapper, AuthenticationService authenticationService, ITokenRepository tokenRepository) {
         this.userService = userService;
         this.modelMapperService = modelMapperService;
-        this.authenticationService = authenticationService;
+        this.sessionService = sessionService;
         this.modelMapper = modelMapper;
+
+        this.authenticationService = authenticationService;
+        this.tokenRepository = tokenRepository;
     }
 
-
-
-    @GetMapping("/getUserInfo")
-    public ResultData<?> getUserInfo(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    @GetMapping("/sessionInfo")
+    @PreAuthorize("isAuthenticated()")
+    public ResultData<?> getUserSessionInfo(@AuthenticationPrincipal CustomUserDetails userDetails) {
         if (userDetails == null) {
             return ResultHelper.Error500("User details are null. Authentication failed.");
         }
@@ -46,8 +59,13 @@ public class UserController {
         if (user.isEmpty()) {
             return ResultHelper.Error500("No user found with email: " + userDetails.getUsername());
         }
-            // return ResponseEntity.ok(new AuthenticationResponse("accessToken", userDetails.getUsername(), userDetails.getAuthorities(),user.isActive())); // Kullanıcı bilgilerini döndür
-            return ResultHelper.success(this.modelMapperService.forResponse().map(user, AuthenticationResponse.class));
+
+        Token token = tokenRepository.findByUserAndTokenType(user.get() ,TokenType.REFRESH).orElseThrow(()->new RuntimeException("UserController:kullanıcıya aıt token bılgısı bulunamadı"));
+        List<Session> sessionList = sessionService.getActiveSessions(user.get().getId());
+        Session session = sessionService.getSessionByRefreshToken(token.getToken());
+        List<SessionResponse> sessionResponsesList =sessionList.stream().map(Session->this.modelMapperService.forResponse().map(Session,SessionResponse.class)).collect(Collectors.toList());
+        // return ResponseEntity.ok(new AuthenticationResponse("accessToken", userDetails.getUsername(), userDetails.getAuthorities(),user.isActive())); // Kullanıcı bilgilerini döndür
+            return ResultHelper.success(sessionResponsesList);
     }
     // Bu endpoint'e yalnızca giriş yapmış kullanıcılar erişebilir.
     @GetMapping("/profile")
