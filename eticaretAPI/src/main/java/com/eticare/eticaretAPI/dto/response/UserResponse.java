@@ -1,9 +1,7 @@
 package com.eticare.eticaretAPI.dto.response;
 
 
-import com.eticare.eticaretAPI.entity.Token;
-import com.eticare.eticaretAPI.entity.enums.Role;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.eticare.eticaretAPI.entity.enums.RoleEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,7 +19,7 @@ public class UserResponse {
     private String username;
     private String surname;
     private String email;
-    private Role roleEnum;
+    private RoleEnum roleEnum;
     private Date createdAt;
     private Date lastLogin;
     private boolean active;

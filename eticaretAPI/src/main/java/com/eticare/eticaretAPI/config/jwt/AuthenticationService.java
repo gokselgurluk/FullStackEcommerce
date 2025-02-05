@@ -14,7 +14,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -57,29 +59,32 @@ public class AuthenticationService {
 
 
     // Kullanıcı doğrulama ve token üretme
-    public List<Token> authenticate(String email, String password) throws NotFoundException {
-        // Kullanıcıyı doğrula
+    public List<Token> authenticate(String email, String password) throws RuntimeException {
         try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
-        } catch (BadCredentialsException e) {
-            throw new NotFoundException("Kullanıcı adı veya şifre hatalı.");
-        } catch (AuthenticationException e) {
-            throw new NotFoundException("Kimlik doğrulama sırasında bir hata oluştu.");
-        }        // User'ı DB'den al
-        Optional<User> user = userRepository.findByEmail(email);
-        if (user.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Kullanıcı bulunamadı "+email);
-        }
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(email, password)
+            );
+            CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
 
-        if (!passwordEncoder.matches(password, user.get().getPassword())) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Şifre yanlış");
-        }
+                // Kullanıcı adını (email) almak
+            String detailsUserMail = customUserDetails.getUsername(); // veya customUserDetails.getEmail() gibi bir metot eklediyseniz
+            Optional<User> user = userRepository.findByEmail(detailsUserMail); // Doğrulanan kullanıcıyı al
 
-        List<Token> tokens = new ArrayList<>();;
-        tokens.add(refreshToken(email,user.get()));
-        tokens.add(accessToken(user.get()));
-        return  tokens;
+            List<Token> tokens = new ArrayList<>();
+            tokens.add(refreshToken(detailsUserMail, user.get()));
+            tokens.add(accessToken(user.get()));
+
+            return tokens;
+        } catch (UsernameNotFoundException e) {
+            throw new RuntimeException("Bu e-posta ile kayıtlı kullanıcı bulunamadı: ");
+        } catch ( BadCredentialsException e) {
+            throw new RuntimeException("Şifre yanlış: ");
+        }
+        catch (AuthenticationException e) {
+            throw new RuntimeException("Kimlik doğrulama sırasında bir hata oluştu. HATA:"+e.getMessage());
+        }
     }
+
     public Token refreshToken(String email,User user){
         String refreshToken = jwtService.generateRefreshToken(email);
         Date expiresRefreshToken =(jwtService.extractClaim(refreshToken, Claims::getExpiration));

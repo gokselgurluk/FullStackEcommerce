@@ -1,12 +1,8 @@
 package com.eticare.eticaretAPI.dto.request.User;
 
-import com.eticare.eticaretAPI.entity.enums.Role;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+import com.eticare.eticaretAPI.entity.enums.RoleEnum;
 import jakarta.validation.constraints.*;
 import lombok.Data;
-
-import java.util.Date;
 
 @Data
 public class UserUpdateRequest {
@@ -33,6 +29,6 @@ public class UserUpdateRequest {
 
     //private Date lastLogin; // Son giriş tarihi (isteğe bağlı)
 
-    private Role roleEnum; // Kullanıcı rolü (isteğe bağlı)
+    private RoleEnum roleEnum; // Kullanıcı rolü (isteğe bağlı)
 
 }

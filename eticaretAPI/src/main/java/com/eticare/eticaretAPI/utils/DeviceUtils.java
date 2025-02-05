@@ -19,16 +19,21 @@ public class DeviceUtils {
         Parser uaParser = new Parser();
         Client client = uaParser.parse(userAgent);
 
-        // Tarayıcı, OS ve cihaz bilgileri alınır
+        // Tarayıcı ve OS bilgileri
         String browser = client.userAgent.family;
         String os = client.os.family;
-        String device = client.device.family;
 
-        // Bilgiler Map'e eklenir
+        // Eğer device bilgisi "Other" veya boş ise OS bilgisini kullan
+        String device = client.device.family;
+        if (device.equals("Other") || device.isEmpty()) {
+            device = os; // Cihaz yerine işletim sistemini kullan
+        }
+
+        // Bilgileri Map'e ekle
         Map<String, String> parseSessionInfo = new HashMap<>();
         parseSessionInfo.put("Browser", browser);
         parseSessionInfo.put("OS", os);
-        parseSessionInfo.put("Device", device);
+        parseSessionInfo.put("Device", device); // Güncellenmiş cihaz bilgisi
 
         return parseSessionInfo;
     }

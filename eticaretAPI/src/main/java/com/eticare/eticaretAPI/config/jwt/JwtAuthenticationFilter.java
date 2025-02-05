@@ -90,6 +90,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // JWT süresi dolmuşsa, 403 status kodu döner
             response.setStatus(403);
             System.out.println(e.getMessage());
+        }catch (Exception e){
+            System.out.println(e.getMessage());
         }
 
         filterChain.doFilter(request, response);

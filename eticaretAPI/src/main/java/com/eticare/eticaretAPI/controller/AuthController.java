@@ -85,30 +85,32 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> createAuthToken(@RequestBody AuthenticationRequest authenticationRequest, HttpServletRequest httpRequest
     ) throws Exception {
-
         // Süresi dolmuş token'ları kontrol et ve güncelle
         authenticationService.checkAndUpdateExpiredTokens();
-        System.out.println(authenticationRequest.getEmail());
-        // Kullanıcıyı doğrula ve token üret
 
+        // Kullanıcıyı doğrula ve token üret
         List<Token> tokens = authenticationService.authenticate(authenticationRequest.getEmail(), authenticationRequest.getPassword());
         Token refreshToken = tokens.get(0); // İlk eleman (Refresh Token)
         Token accessToken = tokens.get(1); // İkinci eleman (Access Token)
 
         final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getEmail());
-        // Kullanıcıyı username(email) ile bul
-        User user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow(() -> new RuntimeException("User bulunamadı"));
-      // Kullanıcı bulunamazsa hata fırlat
+        User user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+
         // IP adresi ve cihaz bilgisi alınır
         String ipAddress = IpUtils.getClientIp(httpRequest);
         Map<String, String> deviceInfo = DeviceUtils.getUserAgent(httpRequest);
-
-
         // Session oluşturulur
         sessionService.createSession(user, refreshToken, ipAddress, deviceInfo);
-        System.out.println(sessionService.getSessionByRefreshToken(refreshToken.getToken()));
         // Yanıt olarak token ve kullanıcı bilgilerini gönder
-        return ResponseEntity.ok(new AuthenticationResponse(accessToken.getToken(), userDetails.getUsername(), userDetails.getAuthorities(), user.isActive()));
+
+    /*    new AuthenticationResponse (accessToken.getToken(), userDetails.getUsername(), userDetails.getAuthorities(), user.isActive());*/
+        return ResponseEntity.ok(AuthenticationResponse
+                .builder().accessToken(accessToken.getToken())
+                .email(userDetails.getUsername())
+                .roles(userDetails.getAuthorities())
+                .isActive(user.isActive())
+                .build()
+        );
     }
 
 

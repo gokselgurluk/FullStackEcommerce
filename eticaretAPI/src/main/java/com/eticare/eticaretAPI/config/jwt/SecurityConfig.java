@@ -1,5 +1,6 @@
 package com.eticare.eticaretAPI.config.jwt;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -57,6 +58,15 @@ public class SecurityConfig {
 
         return authenticationManagerBuilder.build();
     }
+    @Bean
+    public AuthenticationManager authManager(HttpSecurity http, CustomAuthenticationProvider customAuthProvider) throws Exception {
+        return http.getSharedObject(AuthenticationManagerBuilder.class)
+                .authenticationProvider(customAuthProvider)
+                .build();
+    }
+
+
+
 }
 
 

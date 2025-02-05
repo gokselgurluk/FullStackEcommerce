@@ -1,8 +1,6 @@
 package com.eticare.eticaretAPI.entity;
 
-import com.eticare.eticaretAPI.dto.response.UserResponse;
-import com.eticare.eticaretAPI.entity.enums.Role;
-import com.eticare.eticaretAPI.entity.enums.TokenType;
+import com.eticare.eticaretAPI.entity.enums.RoleEnum;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -46,7 +44,7 @@ public class User {
 
 
     @Enumerated(EnumType.STRING)
-    private Role roleEnum = Role.USER;
+    private RoleEnum roleEnum = RoleEnum.USER;
 
 
     @Temporal(TemporalType.TIMESTAMP)
