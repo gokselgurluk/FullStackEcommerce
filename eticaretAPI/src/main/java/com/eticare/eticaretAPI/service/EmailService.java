@@ -14,4 +14,6 @@ public interface EmailService {
    // void createImageAndSendEmail(String email, String code);
 
     void sendVerificationEmailWithMedia(User user , VerifyCode verifyCode);
+
+    void sendResetPasswordEmail(String email);
 }

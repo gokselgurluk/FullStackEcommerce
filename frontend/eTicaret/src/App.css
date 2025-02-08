@@ -3,29 +3,46 @@ body {
   font-family: Arial, sans-serif;
   margin: 0;
   padding: 0;
-  background-color: #f4f4f4;
-}
+  
 
-/* Form stili */
-form {
-  width: 100%; /* Form genişliği sayfa genişliğine göre ayarlanır */
-  max-width: 600px; /* Çok geniş ekranlarda sınır koymak için */
-  margin: 20px auto; /* Formu yatayda ve dikeyde ortalamak için */
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background: white;
-  padding: 20px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
-
-form h2 {
-  color: #007bff;
-  text-align: center; /* Başlık merkezi hizalanır */
+/* Main container should cover the full height */
+.form-container {
+  display: flex;
+  justify-content: center; /* Yatayda ortala */
+  align-items: center; /* Dikeyde ortala */
+  width: 100%;
+  min-height: 100vh; /* Sayfanın tamamını kapsasın */
+  background-color: rgba(107, 107, 107, 0.692);
+}
+.main {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  
+}
+.form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  max-width: 500px; /* Maksimum genişlik */
+  
+  padding: 2rem;
+  border-radius: 1rem;
+  border: 1px solid #e5e7eb;
+  background-color: rgba(217, 217, 217, 0.17);
+  backdrop-filter: blur(24px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  gap: 15px;
+ 
 }
 
 /* Buton stili */
 button {
-  display: block; /* Butonu tam genişlikte ortalamak için */
+  display: block;
   margin: 20px auto;
   padding: 10px 20px;
   font-size: 16px;
@@ -34,28 +51,197 @@ button {
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  transition: background-color 0.3s;
 }
 
-button:hover {
-  background-color: #0056b3;
+.clip-path {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background:  rgba(255, 255, 255, 0.377); /* Green background to match login-left */
+  clip-path: polygon(0 0, 100% 0, 0 100%, 0 100%); /* Clipping shape */
+  z-index: 0;
 }
-/*Modal sınıf*/
-/* Modal çerçeve boyutunu ve konumunu belirleme */
+
+/* Main Layout */
+.login-container {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  
+}
+
+
+
+/* Sol Bölüm */
+.login-left {
+  background-color: rgba(22, 163, 74, 0.897); /* Same green color as the right side */
+  position: relative;
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+.login-left-clip-box {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: rgb(217, 217, 217,100); /* Green background to match login-left */
+  clip-path: polygon(0 0, 100% 0, 50% 100%, 0 100%); /* Clipping shape */
+  z-index: 0;
+}
+/* Logo */
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem;
+  z-index: 1;
+}
+.form-title {
+  font-size: 2rem; /* Daha büyük başlık */
+  font-weight: bold;
+  margin-bottom: 20px; /* Aşağıdaki inputlardan biraz daha uzaklaşsın */
+  color:#181818; /* Daha koyu renk */
+  text-align: center;
+}
+
+/* Login Formu */
+.login-form {
+  position: relative;
+  display: flex; /* Flexbox kullan */
+  flex-direction: column; /* Dikey hizalama */
+  align-items: center; /* Elemanları ortala */
+  justify-content: center; /* Dikey ortalama */
+  width: 100%; /* Full width */
+  max-width: 80%; /* Maksimum genişlik sınırı kaldırıldı */
+  padding: 5rem;
+  border-radius: 1rem;
+  border: 1px solid #e5e7eb;
+  background-color: rgba(217, 217, 217, 0.17);
+  backdrop-filter: blur(24px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  gap: 15px;
+  margin-top: -60px;
+  
+}
+
+/* Düzeltilmiş Input Wrapper */
+.input-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px; /* Alt boşluk ekleyelim */
+}
+
+.input-field {
+  width: 100%;
+  max-width: 400px; /* İstersen maksimum genişlik belirleyebilirsin */
+  padding: 10px 60px 10px 10px; /* Sağda boşluk bırak */
+  text-align: center; /* Yazıyı ortalar */
+  margin-bottom: 10px; /* Alt boşluk ekler */
+  border-radius: 1rem;
+  border: 0px solid #808080;
+  background-color: rgba(0, 0, 0, 0.178);
+  backdrop-filter: blur(24px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Password Toggle */
+.password-toggle {
+  position: absolute;
+  right: 0px;
+  top: 45%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(2, 2, 2, 0.603);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* "Şifremi Unuttum" yazısının alt kısma yerleştirilmesi */
+.forget-password {
+  position: absolute;
+  bottom: -25px; /* Input altına yerleştirilecek */
+  left: 0;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.7);
+  cursor: pointer;
+}
+/* Login Button */
+.login-button {
+  width: 40%;
+  padding: 0.75rem;
+  margin-top: 1rem;
+  margin-bottom:  1rem;
+  border-radius: 2rem;
+  background-color: rgba(22, 163, 74, 0.897);
+  color: white;
+  font-weight: 500;
+  transition: background-color 0.2s;
+
+}
+
+.login-button:hover {
+  background-color: #217c42;
+}
+
+/* Sign Up Button */
+.sign-up-button {
+   width: 25%;
+  padding: 0.5rem;
+  border-radius: 2rem;
+  background-color: #181818;
+  color: white;
+  font-weight: 200;
+  transition: background-color 0.2s;
+}
+
+.sign-up-button:hover {
+  background-color: #16161696;
+}
+
+
+/* Sağ Bölüm */
+.login-right {
+  background-color: rgba(22, 163, 74, 0.897); /* Same green color as the left side */
+  flex-direction: column;
+  display: flex;
+  align-items: center;
+  width: 50%;
+}
+
+/* SVG Görseli */
+.svg {
+  width: 390px;
+  height: 465px;
+  display: flex;
+  align-items: flex-end; /* Aligns to the bottom */
+  justify-content: center;
+  margin-top: auto; /* Pushes the SVG to the bottom */
+}
+
+/* Modal Stilleri */
 .custom-modal {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 50%; /* Ekranın %50 genişliği */
-  max-width: 400px; /* Maksimum genişlik */
-  max-height: 300px; /* Maksimum yükseklik */
+  width: 50%;
+  max-width: 400px;
+  max-height: 300px;
   padding: 20px;
   border-radius: 20px;
-  background-color: white; /* Arka plan rengi */
+  background-color: white;
   font-size: 14px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Hafif gölge efekti */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   text-align: center;
-  overflow: auto; /* İçerik taşarsa kaydırılabilir */
+  overflow: auto;
 }
 
 .custom-overlay {
@@ -64,11 +250,9 @@ button:hover {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7); /* Şeffaf siyah arka plan */
+  background-color: rgba(0, 0, 0, 0.7);
   z-index: 1000;
 }
-
-
 
 .modal-message {
   font-size: 16px;
@@ -80,29 +264,4 @@ button:hover {
 
 .modal-message.error {
   color: red;
-}
-
-.nav-links {
-  margin-left: auto;
-}
-.login-link {
-  margin-left: auto; /* Login butonunu sağa kaydırır */
-}
-.custom-navbar .nav-links {
-  display: flex;
-  width: 100%;
-}
-
-.custom-navbar .nav-links .login-link {
-  margin-left: auto; /* Login'i sağ tarafa iter */
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th, td {
-  padding: 8px;
-  text-align: left;
-  border: 1px solid #ddd;
 }

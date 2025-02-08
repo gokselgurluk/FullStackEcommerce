@@ -1,13 +1,16 @@
 package com.eticare.eticaretAPI.controller;
 
 import com.eticare.eticaretAPI.config.exeption.NotFoundException;
-import com.eticare.eticaretAPI.config.jwt.AuthenticationService;
+import com.eticare.eticaretAPI.config.modelMapper.IModelMapperService;
+import com.eticare.eticaretAPI.dto.request.User.UserUpdateRequest;
+import com.eticare.eticaretAPI.service.impl.AuthenticationService;
 import com.eticare.eticaretAPI.config.jwt.CustomUserDetailsService;
 import com.eticare.eticaretAPI.config.jwt.JwtService;
 import com.eticare.eticaretAPI.config.result.ResultData;
 import com.eticare.eticaretAPI.config.result.ResultHelper;
 import com.eticare.eticaretAPI.dto.request.ActivatedAccount.VerifyCodeRequest;
 import com.eticare.eticaretAPI.dto.request.AuthRequest.AuthenticationRequest;
+import com.eticare.eticaretAPI.dto.request.ForgotPasswordRequest.ForgotPasswordRequest;
 import com.eticare.eticaretAPI.dto.request.User.UserSaveRequest;
 import com.eticare.eticaretAPI.dto.response.AuthenticationResponse;
 import com.eticare.eticaretAPI.dto.response.UserResponse;
@@ -51,6 +54,8 @@ public class AuthController {
     private UserService userService;
     @Autowired
     private ModelMapper modelMapper;
+    @Autowired
+    private IModelMapperService modelMapperService;
     @Autowired
     private JwtService jwtService;
     @Autowired
@@ -141,6 +146,47 @@ public class AuthController {
 
     }
 
+    @PostMapping("/reset-password")
+    public ResultData<?> resetPassword(@RequestBody ForgotPasswordRequest request)  {
+
+        try {
+            String resetToken =request.getResetPasswordToken();
+            String password = request.getPassword();
+            String confirmPassword =request.getConfirmPassword();
+            Token tokenFind = tokenRepository.findByToken(resetToken).orElseThrow(()-> new RuntimeException("Kullanıcı bulunamadi"));
+            User user = tokenFind.getUser();
+            System.out.printf(user.toString());
+            String email = jwtService.extractEmail(resetToken);
+            boolean expiredToken = jwtService.isTokenExpired(resetToken);
+            System.out.println("reset token: "+resetToken);
+            if (user==null) {
+                throw new IllegalStateException("Kullanıcı bulunamadi.");
+            }
+            if (expiredToken) {
+                throw new IllegalStateException("Geçersiz veya süresi dolmuş token.");
+            }
+
+            if (!password.isBlank() || !confirmPassword.isBlank()) {
+                if(password.equalsIgnoreCase(confirmPassword)){
+                    user.setPassword(password);
+                    UserUpdateRequest userUpdateRequest = this.modelMapperService.forRequest().map(user, UserUpdateRequest.class);
+                    userService.updateUser(userUpdateRequest );
+                    tokenRepository.delete(tokenFind);
+                    return ResultHelper.successWithData("Şifreniz başarıyla sıfırlandı: ", email, HttpStatus.OK);
+
+                }else{
+                    throw new RuntimeException("Şifreler uyuşmuyor");
+
+                }
+            } else {
+                throw new IllegalStateException("Şifre geçersiz veya boş");
+            }
+
+        } catch (Exception e) {
+            return ResultHelper.errorWithData("Hesap Dogrulanama Başarısız: ", e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+
+    }
 
   /*  @PostMapping("/verifyAccount")
     @PreAuthorize("isAuthenticated()")

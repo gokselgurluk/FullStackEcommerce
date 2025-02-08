@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axiosInstance from "../api/axiosInstance"; // axios instance kullanımı
 
-const UserInfoPage = () => {
+const UserSessionInfo = () => {
   const [userInfo, setUserInfo] = useState(null); // Kullanıcı bilgilerini tutacak state
   const accessToken = localStorage.getItem("accessToken"); // accessToken'ı localStorage'dan al
 
@@ -49,4 +49,4 @@ const UserInfoPage = () => {
   );
 };
 
-export default UserInfoPage;
+export default UserSessionInfo;

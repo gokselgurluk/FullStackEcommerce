@@ -1,88 +1,57 @@
 import React, { useState } from 'react';
 import { Modal, Form, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext'; // AuthContext'e erişim
-import axiosInstance from '../api/axiosInstance'; // axios instance kullanımı
-import ModalComponent from '../components/ModalComponent'; // Modal bileşeni
+import { useAuth } from '../context/AuthContext';
+import axiosInstance from '../api/axiosInstance';
+import ModalComponent from '../components/ModalComponent';
+import { Eye, EyeOff } from "lucide-react";
 
 const LoginPage = () => {
-  const { login } = useAuth(); // Global login fonksiyonu
-  const navigate = useNavigate(); // Yönlendirme işlemi için useNavigate hook'u
-  const [userInfo, setUserInfo] = useState(null); // Kullanıcı bilgilerini tutacak state
-  // Form ve kullanıcı verileri
+  const { login } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: '', password: '' });
-
-  // Şifre görünürlüğü kontrolü
   const [showPassword, setShowPassword] = useState(false);
+  const [modalData, setModalData] = useState({ isOpen: false, message: '', type: '' });
 
-  // Modal yönetimi
-  const [modalData, setModalData] = useState({
-    isOpen: false,
-    message: '',
-    type: '', // 'success' veya 'error'
-  });
   const closeModal = () => {
     setModalData({ isOpen: false, message: "", type: "" });
-
-    // Modal kapandıktan sonra yönlendirme işlemi
     if (modalData.type === "success") {
-        setTimeout(() => {
-            navigate("/"); // Yönlendirme yapılacak sayfa
-        
-        }, 500); // Modalın kapanmasını bekleyin (500ms gibi)
+      setTimeout(() => {
+        navigate("/");
+      }, 500);
+    } else if (modalData.type === "error") {
+      setTimeout(() => {
+        navigate("/login");
+      }, 500);
+    } else if (modalData.type === "warring") {
+      setTimeout(() => {
+        navigate("/email-verify");
+      }, 500);
     }
+  };
 
-    if (modalData.type === "error") {
-        setTimeout(() => {
-            logout();  // Kullanıcıyı çıkış yapmaya yönlendir
-            navigate("/login"); // Yönlendirme yapılacak sayfa
-        }, 500);
-    }
-
-    if (modalData.type === "warring") {
-        setTimeout(() => {
-            navigate("/email-verify"); // Yönlendirme yapılacak sayfa
-        }, 500);
-    }
-};
-  // Giriş alanlarının değişimini takip et
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  // Şifre görünürlüğü toggle
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
-  
-  // Giriş işlemini gönder
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const response = await axiosInstance.post('/auth/login', formData);
-      const userData = response.data; // Gelen veriyi direkt değişkene al
-      // Login sayfasında, sayfa yüklendiğinde
-    
-      console.log('Backend Response:', userData); // Doğrudan veriyi logla
-
+      const userData = response.data;
       if (userData?.accessToken) {
         localStorage.setItem('accessToken', userData.accessToken);
         login(userData.accessToken);
-
-        if (userData.active) {
-          setModalData({
-            isOpen: true,
-            message: 'Giriş başarılı!',
-            type: 'success',
-          });
-        } else {
-          setModalData({
-            isOpen: true,
-            message: 'Hesabınız aktif degil e-mail dogrulaması yapınız',
-            type: 'warring',
-          });
-        }
+        setModalData({
+          isOpen: true,
+          message: userData.active ? 'Giriş başarılı!' : 'Hesabınız aktif değil, e-mail doğrulaması yapınız.',
+          type: userData.active ? 'success' : 'warring',
+        });
       } else {
         setModalData({
           isOpen: true,
@@ -91,8 +60,7 @@ const LoginPage = () => {
         });
       }
     } catch (error) {
-      const errorMessage =
-        error.response?.data?.message || 'Giriş işlemi sırasında bir hata oluştu.';
+      const errorMessage = error.response?.data?.message || 'Giriş işlemi sırasında bir hata oluştu.';
       setModalData({
         isOpen: true,
         message: errorMessage,
@@ -101,67 +69,58 @@ const LoginPage = () => {
     }
   };
 
-
-
-
   return (
-    <div style={{ maxWidth: '400px', margin: 'auto', padding: '20px' }}>
-      <h3>Login</h3>
-      <Form onSubmit={handleSubmit}>
-        <Form.Group className="mb-3" controlId="formBasicEmail">
-          <Form.Label>Email</Form.Label>
-          <Form.Control
+    <main className="login-container">
+
+      <div className="login-left">
+        <div className='login-left-clip-box'></div>
+        <div className='logo-container'>
+          <img src="/images/Logo.png" alt="Logo" />
+        </div>
+        <form className="login-form" onSubmit={handleSubmit}>
+          <h2 className="form-title">Login In</h2>
+          <input
             type="email"
-            name="email" // 'email' olarak güncellendi
-            placeholder="Enter email"
+            name="email"
+            className="input-field"
+            placeholder="Email"
             value={formData.email}
             onChange={handleInputChange}
             required
           />
-        </Form.Group>
-
-        <Form.Group className="mb-3" controlId="formBasicPassword">
-          <Form.Label>Password</Form.Label>
-          <Form.Control
-            type={showPassword ? 'text' : 'password'}
-            name="password"
-            placeholder="Enter Password"
-            value={formData.password}
-            onChange={handleInputChange}
-            required
-          />
-        </Form.Group>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Form.Group className="mb-3" controlId="formShowPasswordCheckbox">
-            <Form.Check
-              type="checkbox"
-              label="Show Password"
-              onChange={togglePasswordVisibility}
+          <div className="input-wrapper">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              className="input-field"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleInputChange}
+              required
             />
-          </Form.Group>
-          <Form.Group className="mb-3" controlId="formBasicCheckbox">
-            <Form.Check type="checkbox" label="Remember me" />
-          </Form.Group>
-        </div>
+           <a className="forget-password" href="/forget-password">Forget Password</a>
+            <button className="password-toggle" type="button" onClick={togglePasswordVisibility}>
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
+          <button type="submit" className="login-button">Login</button>
+          <button type="button" className="sign-up-button" onClick={() => navigate('/register')}>Sign Up</button>
+        </form>
+      </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Button variant="primary" type="submit">
-            Login
-          </Button>
-          <Button variant="secondary" onClick={() => navigate('/Register')}>
-            Create Account
-          </Button>
-        </div>
-      </Form>
 
-      {/* Modal */}
+      <div className="login-right">
+        <img className='svg' src="/images/shopping-cart.svg" alt="Market Arabası" />
+
+      </div>
+
       <ModalComponent
         isOpen={modalData.isOpen}
         onRequestClose={closeModal}
         message={modalData.message}
         type={modalData.type}
       />
-    </div>
+    </main>
   );
 };
 

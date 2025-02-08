@@ -16,11 +16,16 @@ const EmailVerifyPage = () => {
   const closeModal = () => {
     setModalData({ isOpen: false, message: "", type: "" });
     if (modalData.type === "warning") {
-      navigate("/login");
+      setTimeout(() => {
+        navigate("/login"); // Yönlendirme yapılacak sayfa
+    }, 500);
     }
     if (modalData.type === "warning") {
-      navigate("/login");
+      setTimeout(() => {
+        navigate("/login"); // Yönlendirme yapılacak sayfa
+    }, 500);
     }
+ 
   };
   const showModal = (message, type) => {
     setModalData({ isOpen: true, message, type });
@@ -67,7 +72,9 @@ const EmailVerifyPage = () => {
     } catch (error) {
       if (error.response && error.response.status === 403) {
         showModal("Oturum süresi doldu, tekrar giriş yapmalısınız!", "warning");
-        navigate("/login");
+        setTimeout(() => {
+          navigate("/login"); // Yönlendirme yapılacak sayfa
+      }, 500);
       } else {
         showModal("Kod gönderilirken hata oluştu.", "error");
       }

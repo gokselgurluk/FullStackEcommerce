@@ -38,14 +38,16 @@ public class EmailServiceImpl implements EmailService {
     private final UserService userService;
     private final ITokenRepository tokenRepository;
     private final JwtService jwtService;
+    private final AuthenticationService authenticationService;
     private static final String IMAGE_PATH = "C:\\Users\\ASUS\\IdeaProjects\\eticaretAPI\\eticaretAPI\\src\\main\\resources\\images\\logo.png";
 
-    public EmailServiceImpl(JavaMailSender javaMailSender, IUserRepository userRepository, UserService userService, ITokenRepository tokenRepository, JwtService jwtService) {
+    public EmailServiceImpl(JavaMailSender javaMailSender, IUserRepository userRepository, UserService userService, ITokenRepository tokenRepository, JwtService jwtService, AuthenticationService authenticationService) {
         this.javaMailSender = javaMailSender;
         this.userRepository = userRepository;
         this.userService = userService;
         this.tokenRepository = tokenRepository;
         this.jwtService = jwtService;
+        this.authenticationService = authenticationService;
     }
 
     /*@Override
@@ -111,7 +113,8 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendVerificationEmailWithMedia(User user, VerifyCode verifyCode) {
         String email = user.getEmail();
-        String activationLink = "http://localhost:5173/activate-account?verifyToken=" + verifyCode.getVerifyToken(); /*+"&email=" + email*/;
+        String activationLink = "http://localhost:5173/activate-account?verifyToken=" + verifyCode.getVerifyToken(); /*+"&email=" + email*/
+        ;
 
         try {
             MimeMessage message = javaMailSender.createMimeMessage();
@@ -143,8 +146,56 @@ public class EmailServiceImpl implements EmailService {
             javaMailSender.send(message);
 
         } catch (MessagingException e) {
-            throw new RuntimeException("Email içerigi oluşturulamadı");
+            throw new RuntimeException("Email içerigi oluşturulamadı"+e.getMessage());
         }
+    }
+
+    @Override
+    public void sendResetPasswordEmail(String email) {
+
+        try {
+            Optional<User> user = userRepository.findByEmail(email);
+            if (user.isEmpty()) {
+                throw new RuntimeException("Email kayıtlı degil");
+            }
+
+
+                String resetPasswordToken = authenticationService.resetPasswordToken(user.get()).getToken();
+                String resetUrl = "http://localhost:5173/reset-password?token=" + resetPasswordToken;
+            System.out.printf("reset token :"+resetPasswordToken);
+                MimeMessage message = javaMailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(message, true);
+                helper.setFrom("noreply@e-TicaretHesapSifreSıfırlamaService");
+                helper.setTo(email);
+                helper.setSubject("Account Reset Password Link");
+                // HTML formatında içerik
+                String htmlContent = "<html><body style='background-color: #f0f0f0; font-family: Arial, sans-serif; text-align: center; padding: 20px;'>"
+                        + "<div style='background-color: #ffffff; padding: 40px; border-radius: 8px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); width: 90%; max-width: 600px; margin: 0 auto;'>"
+                        + "<h2 style='text-align: center;'>Hoş Geldiniz! 🎉</h2>" + "<h3 style='text-align: center;'>Şifrenizi sıfırlamak için şu linke tıklayın:</h3>"
+                        + "<p><a href='" + resetUrl + "' "
+                        + "style='display: inline-block; background-color: #007BFF; color: white; padding: 12px 20px; "
+                        + "border-radius: 5px; text-decoration: none; font-weight: bold;'>"
+                        + "Şifrenizi Sıfırlayın"
+                        + "</a></p>"
+                        + "<br>"
+                        + "<p style='color: red; font-weight: bold;'>Bu link 3 dakika geçerlidir!</p>"
+                        + "<img src='cid:logoImage' alt='Şirketinizin logosu' style='width: 150px; height: auto; margin-top: 10px;' />"
+                        + "</div>"
+                        + "</body></html>";
+
+                // HTML içeriği e-postaya ekle
+                helper.setText(htmlContent, true); // true parametresi HTML içeriği olduğunu belirtir
+                // Marka logosunu e-posta ile birlikte gömülü olarak ekle
+                helper.addInline("logoImage", new File(IMAGE_PATH));
+
+                // E-posta gönder
+                javaMailSender.send(message);
+
+
+        } catch (MessagingException e) {
+            throw new RuntimeException("Email içerigi oluşturulamadı :"+e.getMessage());
+        }
+
     }
 
     @Override

@@ -2,9 +2,7 @@ package com.eticare.eticaretAPI.service.impl;
 
 import com.eticare.eticaretAPI.config.exeption.EmailAlreadyRegisteredException;
 import com.eticare.eticaretAPI.config.exeption.NotFoundException;
-import com.eticare.eticaretAPI.config.jwt.AuthenticationService;
 import com.eticare.eticaretAPI.config.modelMapper.IModelMapperService;
-import com.eticare.eticaretAPI.config.result.ResultHelper;
 import com.eticare.eticaretAPI.dto.request.User.UserSaveRequest;
 import com.eticare.eticaretAPI.dto.request.User.UserUpdateRequest;
 import com.eticare.eticaretAPI.dto.response.UserResponse;
@@ -15,7 +13,6 @@ import com.eticare.eticaretAPI.repository.ITokenRepository;
 import com.eticare.eticaretAPI.repository.IUserRepository;
 import com.eticare.eticaretAPI.service.UserService;
 import jakarta.validation.Valid;
-import jakarta.validation.ValidationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 

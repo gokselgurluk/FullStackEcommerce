@@ -1,13 +1,11 @@
 package com.eticare.eticaretAPI.controller;
 import com.eticare.eticaretAPI.config.jwt.CustomUserDetails;
-import com.eticare.eticaretAPI.config.jwt.AuthenticationService;
+import com.eticare.eticaretAPI.service.impl.AuthenticationService;
 import com.eticare.eticaretAPI.config.modelMapper.IModelMapperService;
 import com.eticare.eticaretAPI.config.result.Result;
 import com.eticare.eticaretAPI.config.result.ResultData;
 import com.eticare.eticaretAPI.config.result.ResultHelper;
 import com.eticare.eticaretAPI.dto.request.User.UserUpdateRequest;
-import com.eticare.eticaretAPI.dto.response.AuthenticationResponse;
-import com.eticare.eticaretAPI.dto.response.ReviewResponse;
 import com.eticare.eticaretAPI.dto.response.SessionResponse;
 import com.eticare.eticaretAPI.dto.response.UserResponse;
 import com.eticare.eticaretAPI.entity.Session;
@@ -21,7 +19,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.token.TokenService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -86,7 +83,6 @@ public class UserController {
     @PreAuthorize("isAuthenticated()") // Sadece giriş yapmış kullanıcılar
     public ResultData<UserResponse> updateUser(@RequestBody UserUpdateRequest request) {
         UserResponse userResponse =  userService.updateUser(request);
-
         return ResultHelper.success(userResponse);
     }
 

@@ -4,11 +4,13 @@ import com.eticare.eticaretAPI.config.jwt.CustomUserDetails;
 import com.eticare.eticaretAPI.config.jwt.JwtService;
 import com.eticare.eticaretAPI.config.result.ResultData;
 import com.eticare.eticaretAPI.config.result.ResultHelper;
+import com.eticare.eticaretAPI.dto.request.ForgotPasswordRequest.ForgotPasswordRequest;
 import com.eticare.eticaretAPI.entity.VerifyCode;
 import com.eticare.eticaretAPI.service.EmailService;
 import com.eticare.eticaretAPI.service.SmsService;
 import com.eticare.eticaretAPI.service.UserService;
 import com.eticare.eticaretAPI.service.VerificationService;
+import jakarta.mail.MessagingException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -71,6 +73,16 @@ public class EmailSendController {
     }
 }
 
+    @PostMapping("/forgot-password")
+    public ResultData<?> forgotPassword(@RequestBody ForgotPasswordRequest request) throws MessagingException {
+        // E-posta adresine sahip kullanıcıyı bul
+        try {
+            emailService.sendResetPasswordEmail(request.getEmail());
+            return ResultHelper.successWithData("Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.", request.getEmail(), HttpStatus.CREATED);
+        } catch (Exception e) {
+            return ResultHelper.errorWithData(e.getMessage(), null, HttpStatus.BAD_REQUEST);
+        }
+    }
 
 /*    @PostMapping("/send-activation-email")
     public ResultData<?> sendActivationEmail(@RequestHeader ("Authorization") String accessToken) {

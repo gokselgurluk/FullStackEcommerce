@@ -1,16 +1,14 @@
-package com.eticare.eticaretAPI.config.jwt;
+package com.eticare.eticaretAPI.service.impl;
 
-import com.eticare.eticaretAPI.config.exeption.NotFoundException;
+import com.eticare.eticaretAPI.config.jwt.CustomUserDetails;
+import com.eticare.eticaretAPI.config.jwt.JwtService;
 import com.eticare.eticaretAPI.entity.Token;
 import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.entity.enums.TokenType;
 import com.eticare.eticaretAPI.repository.ITokenRepository;
 import com.eticare.eticaretAPI.repository.IUserRepository;
 
-import com.eticare.eticaretAPI.service.VerificationService;
-import com.eticare.eticaretAPI.service.impl.VerificationServiceImpl;
 import io.jsonwebtoken.Claims;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,7 +17,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -48,7 +45,6 @@ public class AuthenticationService {
         // Save User in DB
         String refreshToken = jwtService.generateRefreshToken(user.getUsername());
         Date expiresRefreshToken =(jwtService.extractClaim(refreshToken, Claims::getExpiration));
-
         //saveOrUpdateToken(user, accessToken, TokenType.ACCESS,expiresAccessToken);
         saveOrUpdateToken(user, refreshToken, TokenType.REFRESH);
 
@@ -96,6 +92,12 @@ public class AuthenticationService {
         Date expiresAccessToken =(jwtService.extractClaim(accessToken, Claims::getExpiration));
         return saveOrUpdateToken(user, accessToken, TokenType.ACCESS);
     }
+    public Token resetPasswordToken(User user){
+        String resetPasswordToken = jwtService.generateResetPasswordToken(user);
+        Date expiresAccessToken =(jwtService.extractClaim(resetPasswordToken, Claims::getExpiration));
+        return saveOrUpdateToken(user, resetPasswordToken, TokenType.RESET);
+    }
+
 
     // Token'ların sürelerini kontrol et ve expired alanını güncelle
     public void checkAndUpdateExpiredTokens() {
