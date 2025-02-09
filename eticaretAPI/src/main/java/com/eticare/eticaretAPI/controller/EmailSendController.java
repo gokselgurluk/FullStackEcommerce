@@ -5,11 +5,8 @@ import com.eticare.eticaretAPI.config.jwt.JwtService;
 import com.eticare.eticaretAPI.config.result.ResultData;
 import com.eticare.eticaretAPI.config.result.ResultHelper;
 import com.eticare.eticaretAPI.dto.request.ForgotPasswordRequest.ForgotPasswordRequest;
-import com.eticare.eticaretAPI.entity.VerifyCode;
-import com.eticare.eticaretAPI.service.EmailService;
-import com.eticare.eticaretAPI.service.SmsService;
-import com.eticare.eticaretAPI.service.UserService;
-import com.eticare.eticaretAPI.service.VerificationService;
+import com.eticare.eticaretAPI.entity.EmailSend;
+import com.eticare.eticaretAPI.service.*;
 import jakarta.mail.MessagingException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,18 +20,20 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api")
 public class EmailSendController {
-    private final EmailService emailService;
-    private final VerificationService verificationService;
+    private final EmailSendService emailSendService;
+    private final CodeService codeService;
     private final SmsService smsService;
     private  final JwtService jwtService;
     private final UserService userService;
 
-    public EmailSendController(EmailService emailService, VerificationService verificationService, SmsService smsService, JwtService jwtService, UserService userService) {
-        this.emailService = emailService;
-        this.verificationService = verificationService;
+
+    public EmailSendController(EmailSendService emailSendService, CodeService codeService, SmsService smsService, JwtService jwtService, UserService userService ) {
+        this.emailSendService = emailSendService;
+        this.codeService = codeService;
         this.smsService = smsService;
         this.jwtService = jwtService;
         this.userService = userService;
+    
     }
 
 /*
@@ -60,14 +59,9 @@ public class EmailSendController {
     public ResultData<?> resendActivationEmail(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
 
     try {
-       VerifyCode verifyCode = verificationService.sendVerifyCodeAndEmail(customUserDetails.getUsername());
-        Map<String, Object> responseCode = new HashMap<>();
-        responseCode.put("mail", verifyCode.getUser().getEmail());
-        responseCode.put("verificationCode", verifyCode.getCode());
-        responseCode.put("verifyToken", verifyCode.getVerifyToken());
-        responseCode.put("expiryTime", verifyCode.getCodeExpiryDate());
-        responseCode.put("remainingAttempts", verifyCode.getRemainingAttempts());
-        return ResultHelper.successWithData("Doğrulama kodu gönderildi",responseCode,HttpStatus.CREATED);
+       EmailSend emailSend = emailSendService.sendVerifyTokenEmail(customUserDetails.getUsername());
+
+        return ResultHelper.successWithData("Doğrulama kodu gönderildi",emailSend,HttpStatus.CREATED);
     } catch (Exception e) {
         return ResultHelper.errorWithData(e.getMessage(),null, HttpStatus.BAD_REQUEST);
     }
@@ -77,7 +71,7 @@ public class EmailSendController {
     public ResultData<?> forgotPassword(@RequestBody ForgotPasswordRequest request) throws MessagingException {
         // E-posta adresine sahip kullanıcıyı bul
         try {
-            emailService.sendResetPasswordEmail(request.getEmail());
+            emailSendService.sendResetPasswordEmail(request.getEmail());
             return ResultHelper.successWithData("Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.", request.getEmail(), HttpStatus.CREATED);
         } catch (Exception e) {
             return ResultHelper.errorWithData(e.getMessage(), null, HttpStatus.BAD_REQUEST);
@@ -117,7 +111,7 @@ public class EmailSendController {
             return ResultHelper.Error500("Authentication failed. User is not logged in.");
         }
         // Yeni bir doğrulama token'ı oluştur
-        String verificationCode = verificationService.generateCode(6);
+        String verificationCode = codeService.generateCode(6);
         // Doğrulama kodunu e-posta ile gönder
         smsService.sendSms(phoneNumber,verificationCode);
         // Detaylı bilgi için bir map oluştur

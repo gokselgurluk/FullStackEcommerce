@@ -92,6 +92,12 @@ public class AuthenticationService {
         Date expiresAccessToken =(jwtService.extractClaim(accessToken, Claims::getExpiration));
         return saveOrUpdateToken(user, accessToken, TokenType.ACCESS);
     }
+    public Token activationAccountToken(User user){
+        String activationToken = jwtService.generateActivationToken(user);
+        Date expiresAccessToken =(jwtService.extractClaim(activationToken, Claims::getExpiration));
+        return saveOrUpdateToken(user, activationToken, TokenType.ACTIVATION);
+    }
+
     public Token resetPasswordToken(User user){
         String resetPasswordToken = jwtService.generateResetPasswordToken(user);
         Date expiresAccessToken =(jwtService.extractClaim(resetPasswordToken, Claims::getExpiration));

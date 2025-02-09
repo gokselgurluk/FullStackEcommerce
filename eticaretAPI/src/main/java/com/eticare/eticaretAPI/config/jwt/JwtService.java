@@ -51,11 +51,10 @@ private final UserService userService;
                 .signWith(SignatureAlgorithm.HS256, getSigningKey())
                 .compact();
     }
-    public String generateActivationToken(User user,String verificationCode) {
+    public String generateActivationToken(User user) {
         // User user = userService.ge(email).orElseThrow(()->new RuntimeException("generatedAccesToken:Kullanıcı bulunamadı"));
         return Jwts.builder()
                 .setSubject(user.getEmail())
-                .claim("code",verificationCode)
                 .claim("active",user.isActive())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + ACTIVATION_TOKEN_EXPIRATION))

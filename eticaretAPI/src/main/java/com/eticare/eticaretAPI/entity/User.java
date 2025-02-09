@@ -68,6 +68,9 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Session> sessions = new ArrayList<>();
 
+    @OneToOne(mappedBy ="user")
+    private EmailSend emailSend;
+    
     @Override
     public String toString() {
         return "User{" +

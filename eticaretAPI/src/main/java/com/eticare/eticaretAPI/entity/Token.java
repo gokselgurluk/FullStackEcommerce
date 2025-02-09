@@ -49,6 +49,9 @@ public class Token {
     @JoinColumn(name = "user_id")
     private  User user ;
 
+    @OneToOne(mappedBy = "token")
+    private EmailSend emailSend;
+
     @OneToMany(mappedBy = "token", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Session> sessions = new ArrayList<>();
     @Override

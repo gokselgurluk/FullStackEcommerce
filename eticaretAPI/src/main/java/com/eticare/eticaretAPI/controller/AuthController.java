@@ -20,10 +20,10 @@ import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.repository.ISessionRepository;
 import com.eticare.eticaretAPI.repository.ITokenRepository;
 import com.eticare.eticaretAPI.repository.IUserRepository;
-import com.eticare.eticaretAPI.service.EmailService;
+import com.eticare.eticaretAPI.service.EmailSendService;
 import com.eticare.eticaretAPI.service.SessionService;
 import com.eticare.eticaretAPI.service.UserService;
-import com.eticare.eticaretAPI.service.VerificationService;
+import com.eticare.eticaretAPI.service.CodeService;
 import com.eticare.eticaretAPI.utils.DeviceUtils;
 import com.eticare.eticaretAPI.utils.IpUtils;
 import jakarta.servlet.http.HttpServletRequest;
@@ -62,9 +62,9 @@ public class AuthController {
     private ITokenRepository tokenRepository;
 
     @Autowired
-    private EmailService emailService;
+    private EmailSendService emailSendService;
     @Autowired
-    private VerificationService verificationService;
+    private CodeService codeService;
 
     @Autowired
     private SessionService sessionService;
@@ -121,27 +121,30 @@ public class AuthController {
 
     @PostMapping("/activate-account")
     public ResultData<?> activateAccount(@RequestBody VerifyCodeRequest verifyCodeRequest) {
-        String token =verifyCodeRequest.getVerifyToken();
-        System.out.println("activasyon token: "+token);
+        String token = verifyCodeRequest.getVerifyToken();
+        System.out.println("activasyon token: " + token);
+
         try {
-            String email = jwtService.extractEmail(token);
             boolean expiredToken = jwtService.isTokenExpired(token);
-            String code = jwtService.extractCode(token);
-            if (email.isBlank() || code.isBlank()) {
-                throw new IllegalStateException("Email veya doğrulama kodu eksik.");
-            }
             if (expiredToken) {
                 throw new IllegalStateException("Aktivasyon tokenın süresi dolmuş.");
             }
-            boolean isVerification = verificationService.activateUser(email,code);
+
+            String email  = jwtService.extractEmail(token);
+            if (email.isBlank()) {
+                throw new IllegalStateException("Email bilgisi eksik.");
+            }
+
+            boolean isVerification = codeService.activateUser(email);
             if (isVerification) {
                 return ResultHelper.successWithData("Hesap Dogrulama Başarılı: ", email, HttpStatus.OK);
             } else {
-                throw new IllegalStateException("Code geçersiz veya suresi dolmuş");
+                // Eğer doğrulama başarısızsa hata döndürülür.
+                return ResultHelper.errorWithData("Hesap Dogrulama Başarısız: ", "Verifikasyon işlemi başarısız.", HttpStatus.BAD_REQUEST);
             }
 
         } catch (Exception e) {
-            return ResultHelper.errorWithData("Hesap Dogrulanama Başarısız: ", e.getMessage(), HttpStatus.BAD_REQUEST);
+            return ResultHelper.errorWithData(e.getMessage(),null , HttpStatus.BAD_REQUEST);
         }
 
     }
