@@ -10,34 +10,55 @@ import com.eticare.eticaretAPI.entity.Token;
 import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.entity.enums.TokenType;
 import com.eticare.eticaretAPI.repository.ITokenRepository;
-import com.eticare.eticaretAPI.repository.IUserRepository;
+import com.eticare.eticaretAPI.repository.IUserService;
 import com.eticare.eticaretAPI.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
 
+    @Value("${MAX.FAILD.ENTER.COUNT}")
+    private Integer MAX_FAILD_ENTER_COUNT;
 
-    private final IUserRepository userRepository;
+    private final static long ACCOUNT_LOCKED_TIME =1000*60*30;
+    private final IUserService userRepository;
     private final IModelMapperService modelMapperService;
     private final PasswordEncoder passwordEncoder;
     private final ITokenRepository tokenRepository;
 
 
-    public UserServiceImpl(IUserRepository userRepository, IModelMapperService modelMapperService, PasswordEncoder passwordEncoder, ITokenRepository tokenRepository) {
+    public UserServiceImpl(IUserService userRepository, IModelMapperService modelMapperService, PasswordEncoder passwordEncoder, ITokenRepository tokenRepository) {
         this.userRepository = userRepository;
         this.modelMapperService = modelMapperService;
         this.passwordEncoder = passwordEncoder;
         this.tokenRepository = tokenRepository;
+    }
+    @Override
+    public void resetFailedLoginAttempts(User user) {
+        user.setIncrementFailedLoginAttempts(0);
+        userRepository.save(user);
+    }
+
+    @Override
+    public void handleFailedLogin(User user) {
+        Date now = new Date();
+        // Eğer kullanıcı kilitliyse ve kilit süresi dolmamışsa, işlem yapma
+        if (user.getAccountLockedTime() != null && user.getAccountLockedTime().after(now)) {
+            return; // Kullanıcı hala kilitli, giriş denemelerine izin yok
+        }
+        // Başarısız giriş sayacını artır
+        user.setIncrementFailedLoginAttempts(user.getIncrementFailedLoginAttempts() + 1);
+        // Eğer limit aşıldıysa hesabı kilitle
+        if (user.getIncrementFailedLoginAttempts() >= MAX_FAILD_ENTER_COUNT) {
+            user.setAccountLockedTime(new Date(System.currentTimeMillis() + ACCOUNT_LOCKED_TIME)); // 30 dk kilitle
+        }
+        userRepository.save(user);
     }
 
     @Override
@@ -81,7 +102,7 @@ public class UserServiceImpl implements UserService {
             // Token'ları UserResponse'a ekle
             List<String> accessTokens = userTokens.stream()
                     .filter(token -> token.getTokenType().equals(TokenType.ACCESS)) // ACCESS token'ları
-                    .map(Token::getToken)
+                    .map(Token::getTokenValue)
                     .collect(Collectors.toList());
             userResponse.setAccessTokens(accessTokens);
 

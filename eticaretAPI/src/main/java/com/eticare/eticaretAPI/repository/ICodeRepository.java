@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 @Repository
 public interface ICodeRepository extends JpaRepository<Code, Long> {
-    Optional<Code> findByUserAndCode(User user, String code);
+    Optional<Code> findByUserAndCodeValue(User user, String code);
 
     Optional<Code> findByUser(User user);
 

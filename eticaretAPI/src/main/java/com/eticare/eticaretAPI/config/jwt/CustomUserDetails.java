@@ -4,16 +4,20 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.Date;
 
 public class CustomUserDetails implements UserDetails {
     private final String email;
     private final String password;
     private final Collection<? extends GrantedAuthority> authorities;
-
-    public CustomUserDetails(String email, String password, Collection<? extends GrantedAuthority> authorities) {
+    private final Date accountLockedUntil; // Kullanıcının kilit süresi
+    private final boolean isActive; // Kullanıcının aktif olup olmadığı
+    public CustomUserDetails( String email, String password, Collection<? extends GrantedAuthority> authorities, Date accountLockedUntil, boolean isActive) {
         this.email = email;
         this.password = password;
         this.authorities = authorities;
+        this.accountLockedUntil = accountLockedUntil;
+        this.isActive = isActive;
     }
 
     @Override
@@ -38,7 +42,8 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        // Eğer kilit süresi varsa veya şu anki zamandan sonra ise hesap kilitlidir.
+        return accountLockedUntil == null || accountLockedUntil.before(new Date());
     }
 
     @Override
@@ -48,6 +53,6 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return isActive;
     }
 }

@@ -60,7 +60,6 @@ public class EmailSendController {
 
     try {
        EmailSend emailSend = emailSendService.sendVerifyTokenEmail(customUserDetails.getUsername());
-
         return ResultHelper.successWithData("Doğrulama kodu gönderildi",emailSend,HttpStatus.CREATED);
     } catch (Exception e) {
         return ResultHelper.errorWithData(e.getMessage(),null, HttpStatus.BAD_REQUEST);
@@ -71,8 +70,8 @@ public class EmailSendController {
     public ResultData<?> forgotPassword(@RequestBody ForgotPasswordRequest request) throws MessagingException {
         // E-posta adresine sahip kullanıcıyı bul
         try {
-            emailSendService.sendResetPasswordEmail(request.getEmail());
-            return ResultHelper.successWithData("Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.", request.getEmail(), HttpStatus.CREATED);
+            EmailSend emailSend =emailSendService.sendResetPasswordTokenEmail(request.getEmail());
+            return ResultHelper.successWithData("Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.", emailSend, HttpStatus.CREATED);
         } catch (Exception e) {
             return ResultHelper.errorWithData(e.getMessage(), null, HttpStatus.BAD_REQUEST);
         }

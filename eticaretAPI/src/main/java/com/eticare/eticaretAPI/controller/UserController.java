@@ -1,6 +1,6 @@
 package com.eticare.eticaretAPI.controller;
 import com.eticare.eticaretAPI.config.jwt.CustomUserDetails;
-import com.eticare.eticaretAPI.service.impl.AuthenticationService;
+import com.eticare.eticaretAPI.service.impl.AuthService;
 import com.eticare.eticaretAPI.config.modelMapper.IModelMapperService;
 import com.eticare.eticaretAPI.config.result.Result;
 import com.eticare.eticaretAPI.config.result.ResultData;
@@ -34,15 +34,15 @@ public class UserController {
     private final IModelMapperService modelMapperService;
     private final SessionService sessionService;
     private  final ModelMapper modelMapper ;
-   private   final AuthenticationService authenticationService;
+   private   final AuthService authService;
    private final ITokenRepository tokenRepository;
-    public UserController(UserService userService, IModelMapperService modelMapperService, SessionService sessionService, ModelMapper modelMapper, AuthenticationService authenticationService, ITokenRepository tokenRepository) {
+    public UserController(UserService userService, IModelMapperService modelMapperService, SessionService sessionService, ModelMapper modelMapper, AuthService authService, ITokenRepository tokenRepository) {
         this.userService = userService;
         this.modelMapperService = modelMapperService;
         this.sessionService = sessionService;
         this.modelMapper = modelMapper;
 
-        this.authenticationService = authenticationService;
+        this.authService = authService;
         this.tokenRepository = tokenRepository;
     }
 
@@ -59,7 +59,7 @@ public class UserController {
 
         Token token = tokenRepository.findByUserAndTokenType(user.get() ,TokenType.REFRESH).orElseThrow(()->new RuntimeException("UserController:kullanıcıya aıt token bılgısı bulunamadı"));
         List<Session> sessionList = sessionService.getActiveSessions(user.get().getId());
-        Session session = sessionService.getSessionByRefreshToken(token.getToken());
+        Session session = sessionService.getSessionByRefreshToken(token.getTokenValue());
         List<SessionResponse> sessionResponsesList =sessionList.stream().map(Session->this.modelMapperService.forResponse().map(Session,SessionResponse.class)).collect(Collectors.toList());
         // return ResponseEntity.ok(new AuthenticationResponse("accessToken", userDetails.getUsername(), userDetails.getAuthorities(),user.isActive())); // Kullanıcı bilgilerini döndür
             return ResultHelper.success(sessionResponsesList);

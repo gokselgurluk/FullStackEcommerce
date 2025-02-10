@@ -23,7 +23,7 @@ public class Code {
     private  Long id;
 
     @Column(unique = true,nullable = false)
-    private  String code;
+    private  String codeValue;
 
     private boolean revoked; // code iptal edildi mi?
 

@@ -6,6 +6,7 @@ body {
   
 
 }
+
 /* Main container should cover the full height */
 .form-container {
   display: flex;
@@ -71,7 +72,77 @@ button {
   
 }
 
+/* Sosyal Giriş Butonları */
+.social-login {
+  display: flex;
+  flex-direction:row;
+  gap: 10px;
+  width: auto;
+  max-width: 300px;
+  margin-top: 1rem;
+}
 
+.social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: auto;
+  padding: 10px;
+  border-radius: 15px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.google {
+  background-color: rgba(0, 0, 0, 0.178);;
+  color: white;
+}
+
+.google:hover {
+  background-color: #c62828;
+}
+
+.facebook {
+  background-color: rgba(0, 0, 0, 0.178);;
+  color: white;
+}
+
+.facebook:hover {
+  background-color: #135cb3;
+}
+
+.apple {
+  background-color: rgba(0, 0, 0, 0.178);;
+  color: white;
+}
+
+.apple:hover {
+  background-color: #181818;
+}
+
+/* Ayırıcı Çizgi */
+.divider {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 300px;
+  margin: 20px 0;
+  text-align: center;
+  color: #555;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #ccc;
+  margin: 0 10px;
+}
 
 /* Sol Bölüm */
 .login-left {
@@ -124,7 +195,7 @@ button {
   backdrop-filter: blur(24px);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   gap: 15px;
-  margin-top: -60px;
+  margin-top: 0px;
   
 }
 
@@ -154,6 +225,21 @@ button {
 .password-toggle {
   position: absolute;
   right: 0px;
+  top: 45%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(2, 2, 2, 0.603);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  
+}
+.mail-toggle {
+  position: absolute;
+  right: 15px;
   top: 45%;
   transform: translateY(-50%);
   background: none;
@@ -206,7 +292,13 @@ button {
   background-color: #16161696;
 }
 
-
+.Sign-Up{
+  font-size: 1rem; /* Daha büyük başlık */
+  font-weight: bold;
+  margin-bottom: 20px; /* Aşağıdaki inputlardan biraz daha uzaklaşsın */
+  color:#181818; /* Daha koyu renk */
+  text-align: center;
+}
 /* Sağ Bölüm */
 .login-right {
   background-color: rgba(22, 163, 74, 0.897); /* Same green color as the left side */

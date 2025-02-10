@@ -3,7 +3,7 @@ package com.eticare.eticaretAPI.controller;
 import com.eticare.eticaretAPI.config.exeption.NotFoundException;
 import com.eticare.eticaretAPI.config.modelMapper.IModelMapperService;
 import com.eticare.eticaretAPI.dto.request.User.UserUpdateRequest;
-import com.eticare.eticaretAPI.service.impl.AuthenticationService;
+import com.eticare.eticaretAPI.service.impl.AuthService;
 import com.eticare.eticaretAPI.config.jwt.CustomUserDetailsService;
 import com.eticare.eticaretAPI.config.jwt.JwtService;
 import com.eticare.eticaretAPI.config.result.ResultData;
@@ -19,7 +19,7 @@ import com.eticare.eticaretAPI.entity.Token;
 import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.repository.ISessionRepository;
 import com.eticare.eticaretAPI.repository.ITokenRepository;
-import com.eticare.eticaretAPI.repository.IUserRepository;
+import com.eticare.eticaretAPI.repository.IUserService;
 import com.eticare.eticaretAPI.service.EmailSendService;
 import com.eticare.eticaretAPI.service.SessionService;
 import com.eticare.eticaretAPI.service.UserService;
@@ -34,6 +34,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -46,10 +47,10 @@ public class AuthController {
     private CustomUserDetailsService userDetailsService;
 
     @Autowired
-    private AuthenticationService authenticationService;
+    private AuthService authService;
 
     @Autowired
-    private IUserRepository userRepository;
+    private IUserService userRepository;
     @Autowired
     private UserService userService;
     @Autowired
@@ -79,7 +80,7 @@ public class AuthController {
     public ResultData<UserResponse> createUser(@RequestBody UserSaveRequest request) {
         UserResponse userResponse = userService.createUser(request);
         User user = modelMapper.map(userResponse, User.class);
-        authenticationService.register(user);
+        authService.register(user);
         // Doğrulama kodu oluştur ve kullanıcıya gönder
 
 
@@ -91,15 +92,16 @@ public class AuthController {
     public ResponseEntity<?> createAuthToken(@RequestBody AuthenticationRequest authenticationRequest, HttpServletRequest httpRequest
     ) throws Exception {
         // Süresi dolmuş token'ları kontrol et ve güncelle
-        authenticationService.checkAndUpdateExpiredTokens();
+        authService.checkAndUpdateExpiredTokens();
+
 
         // Kullanıcıyı doğrula ve token üret
-        List<Token> tokens = authenticationService.authenticate(authenticationRequest.getEmail(), authenticationRequest.getPassword());
+        List<Token> tokens = authService.authenticate(authenticationRequest.getEmail(), authenticationRequest.getPassword());
         Token refreshToken = tokens.get(0); // İlk eleman (Refresh Token)
         Token accessToken = tokens.get(1); // İkinci eleman (Access Token)
 
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getEmail());
-        User user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+        //final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getEmail());
+        User user = userService.getUserByMail(authenticationRequest.getEmail()).orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
 
         // IP adresi ve cihaz bilgisi alınır
         String ipAddress = IpUtils.getClientIp(httpRequest);
@@ -110,9 +112,9 @@ public class AuthController {
 
     /*    new AuthenticationResponse (accessToken.getToken(), userDetails.getUsername(), userDetails.getAuthorities(), user.isActive());*/
         return ResponseEntity.ok(AuthenticationResponse
-                .builder().accessToken(accessToken.getToken())
-                .email(userDetails.getUsername())
-                .roles(userDetails.getAuthorities())
+                .builder().accessToken(accessToken.getTokenValue())
+                .email(user.getEmail())
+                .role((user.getRoleEnum()))
                 .isActive(user.isActive())
                 .build()
         );
@@ -156,7 +158,7 @@ public class AuthController {
             String resetToken =request.getResetPasswordToken();
             String password = request.getPassword();
             String confirmPassword =request.getConfirmPassword();
-            Token tokenFind = tokenRepository.findByToken(resetToken).orElseThrow(()-> new RuntimeException("Kullanıcı bulunamadi"));
+            Token tokenFind = tokenRepository.findByTokenValue(resetToken).orElseThrow(()-> new RuntimeException("Kullanıcı bulunamadi"));
             User user = tokenFind.getUser();
             System.out.printf(user.toString());
             String email = jwtService.extractEmail(resetToken);

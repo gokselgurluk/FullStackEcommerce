@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Modal, Form, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../api/axiosInstance';
 import ModalComponent from '../components/ModalComponent';
-import { Eye, EyeOff } from "lucide-react";
+import { FaGoogle, FaFacebook, FaApple } from "react-icons/fa"; // react-icons paketi
+import { Eye, EyeOff,Mail } from "lucide-react";
 
 const LoginPage = () => {
   const { login } = useAuth();
@@ -71,14 +71,28 @@ const LoginPage = () => {
 
   return (
     <main className="login-container">
-
       <div className="login-left">
         <div className='login-left-clip-box'></div>
         <div className='logo-container'>
           <img src="/images/Logo.png" alt="Logo" />
         </div>
+     
+
+        {/* Giriş Formu */}
         <form className="login-form" onSubmit={handleSubmit}>
-          <h2 className="form-title">Login In</h2>
+        <h2 className="form-title">Login In</h2>
+             {/* Sosyal Medya Butonları */}
+        <div className="social-login">
+        <button className="social-btn google"><FaGoogle size={20} /> </button>
+        <button className="social-btn facebook"><FaFacebook size={20} /> </button>
+        <button className="social-btn apple"><FaApple size={20} /> </button>
+        </div>
+        {/* Ayırıcı Çizgi */}
+        <div className="divider">
+          <span>Or continue </span>
+        </div>
+        <div className="input-wrapper">
+        <Mail className="mail-toggle" />
           <input
             type="email"
             name="email"
@@ -88,6 +102,8 @@ const LoginPage = () => {
             onChange={handleInputChange}
             required
           />
+           
+          </div>
           <div className="input-wrapper">
             <input
               type={showPassword ? "text" : "password"}
@@ -98,20 +114,20 @@ const LoginPage = () => {
               onChange={handleInputChange}
               required
             />
-           <a className="forget-password" href="/forget-password">Forget Password</a>
+            <a className="forget-password" href="/forget-password">Forget Password</a>
             <button className="password-toggle" type="button" onClick={togglePasswordVisibility}>
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
           <button type="submit" className="login-button">Login</button>
-          <button type="button" className="sign-up-button" onClick={() => navigate('/register')}>Sign Up</button>
+          <div className='Sign-Up'>
+            <p>Don’t have an account? <a href="/register">Sign Up</a></p>
+          </div>
         </form>
       </div>
 
-
       <div className="login-right">
         <img className='svg' src="/images/shopping-cart.svg" alt="Market Arabası" />
-
       </div>
 
       <ModalComponent

@@ -6,8 +6,9 @@ import com.eticare.eticaretAPI.entity.Token;
 import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.entity.enums.TokenType;
 import com.eticare.eticaretAPI.repository.ITokenRepository;
-import com.eticare.eticaretAPI.repository.IUserRepository;
+import com.eticare.eticaretAPI.repository.IUserService;
 
+import com.eticare.eticaretAPI.service.UserService;
 import io.jsonwebtoken.Claims;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -24,20 +25,22 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class AuthenticationService {
+public class AuthService {
 
     private final ITokenRepository tokenRepository;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
-    private final IUserRepository userRepository;
+    private final IUserService userRepository;
     private  final PasswordEncoder passwordEncoder;
+    private final UserService userService;
 
-    public AuthenticationService(ITokenRepository tokenRepository, JwtService jwtService, AuthenticationManager authenticationManager, IUserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public AuthService(ITokenRepository tokenRepository, JwtService jwtService, AuthenticationManager authenticationManager, IUserService userRepository, PasswordEncoder passwordEncoder, UserService userService) {
         this.tokenRepository = tokenRepository;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.userService = userService;
     }
 
 
@@ -64,7 +67,7 @@ public class AuthenticationService {
 
                 // Kullanıcı adını (email) almak
             String detailsUserMail = customUserDetails.getUsername(); // veya customUserDetails.getEmail() gibi bir metot eklediyseniz
-            Optional<User> user = userRepository.findByEmail(detailsUserMail); // Doğrulanan kullanıcıyı al
+            Optional<User> user = userService.getUserByMail(detailsUserMail); // Doğrulanan kullanıcıyı al
 
             List<Token> tokens = new ArrayList<>();
             tokens.add(refreshToken(detailsUserMail, user.get()));
@@ -74,11 +77,16 @@ public class AuthenticationService {
         } catch (UsernameNotFoundException e) {
             throw new RuntimeException("Bu e-posta ile kayıtlı kullanıcı bulunamadı: ");
         } catch ( BadCredentialsException e) {
+           // hatalı gırıslerı yakalıyoruz
+
             throw new RuntimeException("Şifre yanlış: ");
+
         }
         catch (AuthenticationException e) {
             throw new RuntimeException("Kimlik doğrulama sırasında bir hata oluştu. HATA:"+e.getMessage());
         }
+
+
     }
 
     public Token refreshToken(String email,User user){
@@ -118,7 +126,7 @@ public class AuthenticationService {
 
     // Revoked token'ları güncelle
     public void revokeToken(String tokenString) {
-        Token token = tokenRepository.findByToken(tokenString).orElseThrow(() -> new RuntimeException("Token not found"));
+        Token token = tokenRepository.findByTokenValue(tokenString).orElseThrow(() -> new RuntimeException("Token not found"));
         token.setRevoked(true);  // Token iptal edilmişse revoked'ı true yap
         tokenRepository.save(token);
     }
@@ -131,7 +139,7 @@ public class AuthenticationService {
         if (existingToken.isPresent()) {
             // Mevcut token'ı güncelle
             tokenCreateOrUpdate = existingToken.get();
-            tokenCreateOrUpdate.setToken(token);
+            tokenCreateOrUpdate.setTokenValue(token);
             tokenCreateOrUpdate.setCreated_at((jwtService.extractClaim(token, Claims::getIssuedAt)));
             tokenCreateOrUpdate.setExpires_at((jwtService.extractClaim(token, Claims::getExpiration)));
             tokenCreateOrUpdate.setRevoked(false); // Varsayılan olarak revoked false
@@ -141,7 +149,7 @@ public class AuthenticationService {
 
             tokenCreateOrUpdate = Token.builder()
                     .user(user)
-                    .token(token)
+                    .tokenValue(token)
                     .tokenType(tokenType)
                     .created_at(jwtService.extractClaim(token, Claims::getIssuedAt))
                     .expires_at(jwtService.extractClaim(token, Claims::getExpiration))

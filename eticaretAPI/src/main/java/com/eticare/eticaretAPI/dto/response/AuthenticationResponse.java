@@ -1,5 +1,6 @@
 package com.eticare.eticaretAPI.dto.response;
 
+import com.eticare.eticaretAPI.entity.enums.RoleEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,7 +15,7 @@ import java.util.Collection;
     public class AuthenticationResponse {
         private String accessToken;;
         private String email;
-        private Collection<?> roles;
+        private RoleEnum role;
         private boolean isActive;
 
         // Constructor, getter, setter

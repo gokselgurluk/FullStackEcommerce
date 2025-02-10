@@ -3,13 +3,11 @@ package com.eticare.eticaretAPI.entity;
 import com.eticare.eticaretAPI.entity.enums.TokenType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -27,7 +25,7 @@ public class Token {
 
     @Column(unique = true ,nullable = false)
     @NotBlank(message = "the Token cannot be empty or null")
-    private String token;
+    private String tokenValue;
 
     @Column(name = "token_created_at_time")
     @Temporal(TemporalType.TIMESTAMP)
@@ -58,7 +56,7 @@ public class Token {
     public String toString() {
         return "Token{" +
                 "id=" + id +
-                ", token='" + token + '\'' +
+                ", token='" + tokenValue + '\'' +
                 ", created_at=" + created_at +
                 ", expires_at=" + expires_at +
                 ", tokenType=" + tokenType +

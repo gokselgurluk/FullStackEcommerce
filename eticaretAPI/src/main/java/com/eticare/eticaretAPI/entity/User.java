@@ -46,9 +46,12 @@ public class User {
     private Date createdAt = new Date(); // Varsayılan olarak kayıt zamanı
 
     @Temporal(TemporalType.TIMESTAMP) // Son Giriş Tarihi
-    private Date lastLogin;
+    private Date accountLockedTime;
 
+    private int incrementFailedLoginAttempts = 0;
+    private boolean isLocked = false; // Varsayılan olarak kullanıcı aktif değil
     private boolean active = false; // Varsayılan olarak kullanıcı aktif değil
+
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Order> orderList = new ArrayList<>();
@@ -68,8 +71,8 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Session> sessions = new ArrayList<>();
 
-    @OneToOne(mappedBy ="user")
-    private EmailSend emailSend;
+    @OneToMany(mappedBy ="user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EmailSend> emailSends = new ArrayList<>();
     
     @Override
     public String toString() {
@@ -81,7 +84,6 @@ public class User {
                 ", email='" + email + '\'' +
                 ", roleEnum=" + roleEnum +
                 ", createdAt=" + createdAt +
-                ", lastLogin=" + lastLogin +
                 ", active=" + active +
                 ", orderList=" + (orderList != null ? orderList.size() + " orders" : "null") +
                 ", reviews=" + (reviews != null ? reviews.size() + " reviews" : "null") +

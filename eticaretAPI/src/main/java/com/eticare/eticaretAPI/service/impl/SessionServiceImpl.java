@@ -4,7 +4,7 @@ import com.eticare.eticaretAPI.entity.Session;
 import com.eticare.eticaretAPI.entity.Token;
 import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.repository.ISessionRepository;
-import com.eticare.eticaretAPI.repository.IUserRepository;
+import com.eticare.eticaretAPI.repository.IUserService;
 import com.eticare.eticaretAPI.service.SessionService;
 import org.springframework.stereotype.Service;
 
@@ -15,9 +15,9 @@ import java.util.Map;
 @Service
 public class SessionServiceImpl implements SessionService {
     private final ISessionRepository sessionRepository;
-    private final IUserRepository userRepository; // Kullanıcıyı güncellemek için gerekli
+    private final IUserService userRepository; // Kullanıcıyı güncellemek için gerekli
 
-    public SessionServiceImpl(ISessionRepository sessionRepository, IUserRepository userRepository) {
+    public SessionServiceImpl(ISessionRepository sessionRepository, IUserService userRepository) {
         this.sessionRepository = sessionRepository;
         this.userRepository = userRepository;
     }
@@ -26,7 +26,7 @@ public class SessionServiceImpl implements SessionService {
     public Session createSession(User user, Token token,String ipAddress, Map<String,String> deviceInfo) {
         Session session = new Session();
         session.setEmail(user.getEmail());
-        session.setRefreshToken(token.getToken());
+        session.setRefreshToken(token.getTokenValue());
         session.setIpAddress(ipAddress);
         session.setBrowser(deviceInfo.get("Browser"));
         session.setOs(deviceInfo.get("OS"));

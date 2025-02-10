@@ -10,7 +10,7 @@ import com.eticare.eticaretAPI.entity.enums.SecretTypeEnum;
 import com.eticare.eticaretAPI.entity.enums.TokenType;
 import com.eticare.eticaretAPI.repository.IEmailSendRepository;
 import com.eticare.eticaretAPI.repository.ITokenRepository;
-import com.eticare.eticaretAPI.repository.IUserRepository;
+import com.eticare.eticaretAPI.repository.IUserService;
 import com.eticare.eticaretAPI.service.EmailSendService;
 import com.eticare.eticaretAPI.service.UserService;
 import jakarta.mail.MessagingException;
@@ -26,7 +26,6 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Optional;
 
@@ -34,28 +33,26 @@ import java.util.Optional;
 public class EmailSendSendServiceImpl implements EmailSendService {
 
     private final JavaMailSender javaMailSender;
-    private final IUserRepository userRepository;
+    private final IUserService userRepository;
     private final UserService userService;
     private final ITokenRepository tokenRepository;
     private final JwtService jwtService;
-    private final AuthenticationService authenticationService;
+    private final AuthService authService;
     private final IEmailSendRepository emailSendRepository;
     private static final String IMAGE_PATH = "C:\\Users\\ASUS\\IdeaProjects\\eticaretAPI\\eticaretAPI\\src\\main\\resources\\images\\logo.png";
     @Value("${verify.code.max_attempts}")
     private int remainingAttempts;
-    private static final long EMAIL_EXPIRATION = 1000 * 60 * 3; // 3 dk
+    private static final long EMAIL_EXPIRATION = 1000 * 60 * 2; // 3 dk
 
-    public EmailSendSendServiceImpl(JavaMailSender javaMailSender, IUserRepository userRepository, UserService userService, ITokenRepository tokenRepository, JwtService jwtService, AuthenticationService authenticationService, IEmailSendRepository emailSendRepository) {
+    public EmailSendSendServiceImpl(JavaMailSender javaMailSender, IUserService userRepository, UserService userService, ITokenRepository tokenRepository, JwtService jwtService, AuthService authService, IEmailSendRepository emailSendRepository) {
         this.javaMailSender = javaMailSender;
         this.userRepository = userRepository;
         this.userService = userService;
         this.tokenRepository = tokenRepository;
         this.jwtService = jwtService;
-        this.authenticationService = authenticationService;
+        this.authService = authService;
         this.emailSendRepository = emailSendRepository;
     }
-
-
 
     /*@Override
     public BufferedImage generateCodeImage(String code)throws IOException {
@@ -118,14 +115,16 @@ public class EmailSendSendServiceImpl implements EmailSendService {
     }*/
 
     @Override
-    public boolean sendVerificationEmailWithMedia(Token token) {
+    public void sendVerificationEmailWithMedia(EmailSend emailSend) {
 
-        String email = token.getUser().getEmail();
-        String activationLink = "http://localhost:5173/activate-account?verifyToken=" + token.getToken();
 
         try {
+            String email = emailSend.getUser().getEmail();
+            String keyValue = emailSend.getToken()!=null ? emailSend.getToken().getTokenValue() : emailSend.getCode().getCodeValue();                                                                                 ;
+            String activationLink = "http://localhost:5173/activate-account?verifyToken=" + keyValue;
+
             MimeMessage message = javaMailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8"); // UTF-8 karakter seti eklendi
             helper.setFrom("noreply@e-TicaretMailDogrulamaService");
             helper.setTo(email);
             helper.setSubject("Account Verification Code");
@@ -139,7 +138,7 @@ public class EmailSendSendServiceImpl implements EmailSendService {
                     + "Hesabınızı Doğrulayın"
                     + "</a></p>"
                     + "<br>"
-                    + "<p style='color: red; font-weight: bold;'>Bu link 2 dakika geçerlidir!</p>"
+                    + "<p style='color: red; font-weight: bold;'>Bu link 2 dakika süresince geçerlidir!</p>"
                     + "<img src='cid:logoImage' alt='Şirketinizin logosu' style='width: 150px; height: auto; margin-top: 10px;' />"
                     + "</div>"
                     + "</body></html>";
@@ -147,78 +146,21 @@ public class EmailSendSendServiceImpl implements EmailSendService {
             // HTML içeriği e-postaya ekle
             helper.setText(htmlContent, true); // true parametresi HTML içeriği olduğunu belirtir
             // Marka logosunu e-posta ile birlikte gömülü olarak ekle
-            helper.addInline("logoImage", new File(IMAGE_PATH));
+            File logoFile = new File(IMAGE_PATH);
+            if (!logoFile.exists()) {
+                throw new RuntimeException("Logo resmi bulunamadı !");
+            } else {
+                helper.addInline("logoImage", logoFile);
+            }
 
             // E-posta gönder
             javaMailSender.send(message);
-            return true; // Hata olmadıysa true dön
 
         } catch (MessagingException e) {
             throw new RuntimeException("Email içerigi oluşturulamadı" + e.getMessage());
         }
        }
 
-    @Override
-    public void sendResetPasswordEmail(String email) {
-
-        try {
-            Optional<User> user = userRepository.findByEmail(email);
-            if (user.isEmpty()) {
-                throw new RuntimeException("Email kayıtlı degil");
-            }
-            String resetPasswordToken = authenticationService.resetPasswordToken(user.get()).getToken();
-            String resetUrl = "http://localhost:5173/reset-password?token=" + resetPasswordToken;
-            System.out.printf("reset token :" + resetPasswordToken);
-            MimeMessage message = javaMailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true);
-            helper.setFrom("noreply@e-TicaretHesapSifreSıfırlamaService");
-            helper.setTo(email);
-            helper.setSubject("Account Reset Password Link");
-            // HTML formatında içerik
-            String htmlContent = "<html><body style='background-color: #f0f0f0; font-family: Arial, sans-serif; text-align: center; padding: 20px;'>"
-                    + "<div style='background-color: #ffffff; padding: 40px; border-radius: 8px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); width: 90%; max-width: 600px; margin: 0 auto;'>"
-                    + "<h2 style='text-align: center;'>Hoş Geldiniz! 🎉</h2>" + "<h3 style='text-align: center;'>Şifrenizi sıfırlamak için şu linke tıklayın:</h3>"
-                    + "<p><a href='" + resetUrl + "' "
-                    + "style='display: inline-block; background-color: #007BFF; color: white; padding: 12px 20px; "
-                    + "border-radius: 5px; text-decoration: none; font-weight: bold;'>"
-                    + "Şifrenizi Sıfırlayın"
-                    + "</a></p>"
-                    + "<br>"
-                    + "<p style='color: red; font-weight: bold;'>Bu link 3 dakika geçerlidir!</p>"
-                    + "<img src='cid:logoImage' alt='Şirketinizin logosu' style='width: 150px; height: auto; margin-top: 10px;' />"
-                    + "</div>"
-                    + "</body></html>";
-
-            // HTML içeriği e-postaya ekle
-            helper.setText(htmlContent, true); // true parametresi HTML içeriği olduğunu belirtir
-            // Marka logosunu e-posta ile birlikte gömülü olarak ekle
-            helper.addInline("logoImage", new File(IMAGE_PATH));
-
-            // E-posta gönder
-            javaMailSender.send(message);
-
-
-        } catch (MessagingException e) {
-            throw new RuntimeException("Email içerigi oluşturulamadı :" + e.getMessage());
-        }
-
-    }
-
-    @Override
-    public String sendVerificationEmail(String email, String code) {
-        Optional<User> userOpt = userRepository.findByEmail(email);
-        if (userOpt.get().isActive()) {
-            throw new NotFoundException("Bu hesap zaten aktif");
-        }
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("noreply@springMailService");
-        message.setTo(email);
-        message.setSubject("Account Verification Code");
-        message.setText("Your verification code is: " + code + "\nThis code is valid for 2 minutes.");
-        javaMailSender.send(message);
-
-        return "Mesaj gönderildi";
-    }
 
     @Transactional
     @Override
@@ -235,17 +177,15 @@ public class EmailSendSendServiceImpl implements EmailSendService {
             throw new IllegalStateException("Hesap zaten aktif.");
         }
 
-      /*  if (!sendVerificationEmailWithMedia(token)) {
-            log.warn("E-posta gönderimi başarısız: {}", email);
-            return null;
-        }*/
-        Token token = authenticationService.activationAccountToken(user);
         try {
-            sendVerificationEmailWithMedia(token);
+            Token token = authService.activationAccountToken(user);
+            EmailSend emailSend=  saveOrUpdateEmailSend(user, token, null, token.getTokenType(), SecretTypeEnum.TOKEN);
+            if(emailSend!=null)
+            {
+                sendVerificationEmailWithMedia(emailSend);
 
-          EmailSend emailSend=  saveOrUpdateEmailSend(user, token, null, token.getTokenType(), SecretTypeEnum.TOKEN);
-
-          return emailSend;
+            }
+            return emailSend;
         } catch (Exception e) {
             throw new RuntimeException("E-posta kaydedilirken hata oluştu. : "+ e.getMessage());
         }
@@ -253,33 +193,131 @@ public class EmailSendSendServiceImpl implements EmailSendService {
     }
 
     @Override
+    public void sendResetPasswordEmailWithMedia(EmailSend emailSend) {
+
+        try {
+            String email = emailSend.getUser().getEmail();
+            String resetPasswordToken = emailSend.getToken()!=null ? emailSend.getToken().getTokenValue() : emailSend.getCode().getCodeValue();
+            String resetUrl = "http://localhost:5173/reset-password?token=" + resetPasswordToken;
+            MimeMessage message = javaMailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setFrom("noreply@e-TicaretHesapSifreSıfırlamaService");
+            helper.setTo(email);
+            helper.setSubject("Account Reset Password Link");
+            // HTML formatında içerik
+            String htmlContent = "<html><body style='background-color: #f0f0f0; font-family: Arial, sans-serif; text-align: center; padding: 20px;'>"
+                    + "<div style='background-color: #ffffff; padding: 40px; border-radius: 8px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); width: 90%; max-width: 600px; margin: 0 auto;'>"
+                    + "<h2 style='text-align: center;'>Hoş Geldiniz! 🎉</h2>" + "<h3 style='text-align: center;'>Şifrenizi sıfırlamak için şu linke tıklayın:</h3>"
+                    + "<p><a href='" + resetUrl + "' "
+                    + "style='display: inline-block; background-color: #007BFF; color: white; padding: 12px 20px; "
+                    + "border-radius: 5px; text-decoration: none; font-weight: bold;'>"
+                    + "Şifrenizi Sıfırlayın"
+                    + "</a></p>"
+                    + "<br>"
+                    + "<p style='color: red; font-weight: bold;'>Bu link 2 dakika süresince geçerlidir!</p>"
+                    + "<img src='cid:logoImage' alt='Şirketinizin logosu' style='width: 150px; height: auto; margin-top: 10px;' />"
+                    + "</div>"
+                    + "</body></html>";
+
+            // HTML içeriği e-postaya ekle
+            helper.setText(htmlContent, true); // true parametresi HTML içeriği olduğunu belirtir
+            // Marka logosunu e-posta ile birlikte gömülü olarak ekle
+            helper.addInline("logoImage", new File(IMAGE_PATH));
+
+            // E-posta gönder
+            File logoFile = new File(IMAGE_PATH);
+            if (!logoFile.exists()) {
+                throw new RuntimeException("Logo resmi bulunamadı !");
+            } else {
+                helper.addInline("logoImage", logoFile);
+            }
+            // E-posta gönder
+            javaMailSender.send(message);
+
+        } catch (MessagingException e) {
+            throw new RuntimeException("Email içerigi oluşturulamadı :" + e.getMessage());
+        }
+
+    }
+    @Transactional
+    @Override
+    public EmailSend sendResetPasswordTokenEmail(String email) {
+
+        if (StringUtils.isBlank(email)) {
+            throw new IllegalArgumentException("Geçersiz e-posta adresi.");
+        }
+        User user = userService.getUserByMail(email)
+                .orElseThrow(() -> new EntityNotFoundException("Doğrulama tokenı için kullanıcı bulunamadı"));
+
+
+        if (!user.isActive()) {
+            throw new IllegalStateException("Hesap aktif degil.");
+        }
+
+        try {
+            Token token = authService.resetPasswordToken(user);
+            EmailSend emailSend = saveOrUpdateEmailSend(user, token, null, token.getTokenType(), SecretTypeEnum.TOKEN);
+            if (emailSend != null) {
+                sendResetPasswordEmailWithMedia(emailSend);
+            }
+            return emailSend;
+        } catch (Exception e) {
+            throw new RuntimeException("E-posta kaydedilirken hata oluştu. : " + e.getMessage());
+        }
+    }
+
+    @Override
+    public String sendVerificationCodeEmail(String email, String code) {
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.get().isActive()) {
+            throw new NotFoundException("Bu hesap zaten aktif");
+        }
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("noreply@springMailService");
+        message.setTo(email);
+        message.setSubject("Account Verification Code");
+        message.setText("Your verification code is: " + code + "\nThis code is valid for 2 minutes.");
+        javaMailSender.send(message);
+
+        return "Mesaj gönderildi";
+    }
+
+
+
+
+
+    @Override
     public EmailSend saveOrUpdateEmailSend(User user, Token token, Code code, TokenType tokenType, SecretTypeEnum secretTypeEnum) {
         EmailSend emailSend = emailSendRepository.findByUserAndTokenTypeAndSecretTypeEnum(user, tokenType, secretTypeEnum).orElse(null);
 
         if (emailSend != null) {
-            // Aynı gün içinde mi kontrol et
-            if (DateUtils.isSameDay(emailSend.getLastSendDate(), new Date())) {
-                if (emailSend.getRemainingAttempts() > 0) {
-                    emailSend.setRemainingAttempts(emailSend.getRemainingAttempts() - 1); // Önce düş
-                    throw new IllegalStateException("Bugün için maksimum e-posta gönderim hakkına ulaşıldı.");
-                } else {
-                    throw new RuntimeException("Bu işlem için e-posta gönderme hakkınız bitti.");
-                }
-            } else {
-                // Yeni gün, hakkı sıfırla
-                emailSend.setLastSendDate(new Date());
-                emailSend.setRemainingAttempts(remainingAttempts);
-            }
-
             // Token veya kod süresi kontrolü
-            if (emailSend.getEmailExpiryDate().after(new Date())) {
+            if (emailSend.getEmailExpiryDate().before(new Date())) {
+                // Aynı gün içinde mi kontrol et
+                if (DateUtils.isSameDay(emailSend.getLastSendDate(), new Date())) {
+                    if (emailSend.getRemainingAttempts() > 0) {
+                        // Token veya kodu güncelle
+                        //emailSend.setSecretTypeEnum(token != null ? (SecretTypeEnum.TOKEN) : (SecretTypeEnum.CODE));
+
+                        emailSend.setRemainingAttempts(emailSend.getRemainingAttempts() - 1); // Önce düş
+
+                    } else {
+                        throw new RuntimeException("Bugün için maksimum e-posta gönderim hakkına ulaşıldı.");
+                    }
+                } else {
+                    // Yeni gün, hakkı sıfırla
+                    emailSend.setRemainingAttempts(remainingAttempts);
+
+                }
+            }else {
                 throw new IllegalStateException("Code veya Token geçerliliğini koruyor.");
             }
 
-            // Token veya kodu güncelle
-            emailSend.setSecretTypeEnum(token != null ? (SecretTypeEnum.TOKEN) : (SecretTypeEnum.CODE));
-            emailSend.setValue(token != null ? token.getToken() : code.getCode());
+            emailSend.setLastSendDate(new Date());
             emailSend.setEmailExpiryDate(new Date(System.currentTimeMillis() + EMAIL_EXPIRATION));
+            emailSend.setValue(token != null ? token.getTokenValue() : code.getCodeValue());
+
+
         }
 
         // Eğer daha önce kayıt yoksa, yeni oluştur
@@ -288,8 +326,8 @@ public class EmailSendSendServiceImpl implements EmailSendService {
                     .user(user)
                     .secretTypeEnum(secretTypeEnum)
                     .tokenType(tokenType)
-                    .value(token != null ? token.getToken() : code.getCode())
-                    .remainingAttempts(remainingAttempts)
+                    .value(token != null ? token.getTokenValue() : code.getCodeValue())
+                    .remainingAttempts(remainingAttempts-1)
                     .lastSendDate(new Date())
                     .emailExpiryDate(new Date(System.currentTimeMillis()+EMAIL_EXPIRATION))
                     .token(token)

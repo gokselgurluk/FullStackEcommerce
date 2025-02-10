@@ -8,7 +8,7 @@ import com.eticare.eticaretAPI.entity.enums.SecretTypeEnum;
 import com.eticare.eticaretAPI.entity.enums.TokenType;
 
 public interface EmailSendService {
-    String sendVerificationEmail(String email, String code) ;
+    String sendVerificationCodeEmail(String email, String code) ;
 
    // BufferedImage generateCodeImage(String code) throws IOException;
 
@@ -16,9 +16,11 @@ public interface EmailSendService {
 
     EmailSend saveOrUpdateEmailSend(User user, Token token, Code code, TokenType tokenType, SecretTypeEnum secretTypeEnum);
 
-    boolean sendVerificationEmailWithMedia(Token token );
+    void sendVerificationEmailWithMedia(EmailSend emailSend);
 
-    void sendResetPasswordEmail(String email);
+    void sendResetPasswordEmailWithMedia(EmailSend emailSend);
 
     EmailSend sendVerifyTokenEmail(String email);
+
+    EmailSend sendResetPasswordTokenEmail(String email);
 }

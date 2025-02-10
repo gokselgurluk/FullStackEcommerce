@@ -52,9 +52,10 @@ public class EmailSend {
     private Code code;
 
     @ManyToOne
-    @JoinColumn(name="user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     @JsonIgnore // Kullanıcı bilgisinin serileştirilmesini engeller
     private User user;
+
 
     @Override
     public String toString() {

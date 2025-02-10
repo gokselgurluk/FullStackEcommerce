@@ -2,7 +2,8 @@ package com.eticare.eticaretAPI.config.jwt;
 
 import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.entity.enums.RoleEnum;
-import com.eticare.eticaretAPI.repository.IUserRepository;
+import com.eticare.eticaretAPI.repository.IUserService;
+import com.eticare.eticaretAPI.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,7 +24,7 @@ public class CustomAuthenticationProvider extends DaoAuthenticationProvider {
 
 
     @Autowired
-    private IUserRepository userRepository;
+    private UserService userService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -39,7 +40,7 @@ public class CustomAuthenticationProvider extends DaoAuthenticationProvider {
         String email = authentication.getName();
         String password = authentication.getCredentials().toString();
 
-        Optional<User> userOptional = userRepository.findByEmail(email);
+        Optional<User> userOptional = userService.getUserByMail(email);
         if (userOptional.isEmpty()) {
             throw new UsernameNotFoundException("Bu e-posta ile kayıtlı kullanıcı bulunamadı: " + email);
         }
@@ -51,12 +52,13 @@ public class CustomAuthenticationProvider extends DaoAuthenticationProvider {
         }
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
+            userService.handleFailedLogin(user);
             throw new BadCredentialsException("Şifre yanlış");
         }
 
         RoleEnum role = user.getRoleEnum();
         List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.name()));
-
+        userService.resetFailedLoginAttempts(user);
         return new UsernamePasswordAuthenticationToken(user, password, authorities);
     }
 }
