@@ -1,5 +1,6 @@
 package com.eticare.eticaretAPI.controller;
 import com.eticare.eticaretAPI.config.jwt.CustomUserDetails;
+import com.eticare.eticaretAPI.service.TokenService;
 import com.eticare.eticaretAPI.service.impl.AuthService;
 import com.eticare.eticaretAPI.config.modelMapper.IModelMapperService;
 import com.eticare.eticaretAPI.config.result.Result;
@@ -12,7 +13,7 @@ import com.eticare.eticaretAPI.entity.Session;
 import com.eticare.eticaretAPI.entity.Token;
 import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.entity.enums.TokenType;
-import com.eticare.eticaretAPI.repository.ITokenRepository;
+
 import com.eticare.eticaretAPI.service.SessionService;
 import com.eticare.eticaretAPI.service.UserService;
 import org.modelmapper.ModelMapper;
@@ -35,15 +36,16 @@ public class UserController {
     private final SessionService sessionService;
     private  final ModelMapper modelMapper ;
    private   final AuthService authService;
-   private final ITokenRepository tokenRepository;
-    public UserController(UserService userService, IModelMapperService modelMapperService, SessionService sessionService, ModelMapper modelMapper, AuthService authService, ITokenRepository tokenRepository) {
+private  final TokenService tokenService;
+    public UserController(UserService userService, IModelMapperService modelMapperService, SessionService sessionService, ModelMapper modelMapper, AuthService authService, TokenService tokenService) {
         this.userService = userService;
         this.modelMapperService = modelMapperService;
         this.sessionService = sessionService;
         this.modelMapper = modelMapper;
 
         this.authService = authService;
-        this.tokenRepository = tokenRepository;
+
+        this.tokenService = tokenService;
     }
 
     @GetMapping("/sessionInfo")
@@ -57,7 +59,7 @@ public class UserController {
             return ResultHelper.Error500("No user found with email: " + userDetails.getUsername());
         }
 
-        Token token = tokenRepository.findByUserAndTokenType(user.get() ,TokenType.REFRESH).orElseThrow(()->new RuntimeException("UserController:kullanıcıya aıt token bılgısı bulunamadı"));
+        Token token = tokenService.findByUserAndTokenType(user.get() ,TokenType.REFRESH).orElseThrow(()->new RuntimeException("UserController:kullanıcıya aıt token bılgısı bulunamadı"));
         List<Session> sessionList = sessionService.getActiveSessions(user.get().getId());
         Session session = sessionService.getSessionByRefreshToken(token.getTokenValue());
         List<SessionResponse> sessionResponsesList =sessionList.stream().map(Session->this.modelMapperService.forResponse().map(Session,SessionResponse.class)).collect(Collectors.toList());

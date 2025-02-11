@@ -18,5 +18,7 @@ Optional<User>  getUserByMail(String email);
 void deleteUser(Long id);
 void resetFailedLoginAttempts(User user);
 void handleFailedLogin(User user);
-
+void save(User user);
+long diffLockedTime(User user);
+void updateUserLocked(User user ,boolean status);
 }

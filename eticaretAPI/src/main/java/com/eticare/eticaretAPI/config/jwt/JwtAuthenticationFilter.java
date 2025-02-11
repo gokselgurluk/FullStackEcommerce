@@ -49,7 +49,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     // Kullanıcı aktif değilse 423 gönder ve işlemi sonlandır
                     if (!isActive && isResendActivationRequest || !isActive && isActivateAccountRequest) {
                         System.out.println("Deactive bilgisi içeren token ile işlem devam etti.");
-
                         UserDetails userDetails = userDetailsService.loadUserByUsername(email);
                         System.out.println("Kullanıcı detayları yüklendi: " + userDetails.getUsername());
 
@@ -59,8 +58,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                         System.out.println("Authentication ayarlandı: " + userDetails.getUsername());
 
-                    }
-                    else if (isActive) {
+                    } else if (isActive) {
                         if (SecurityContextHolder.getContext().getAuthentication() == null) {
                             UserDetails userDetails = userDetailsService.loadUserByUsername(email);
                             System.out.println("Kullanıcı detayları yüklendi: " + userDetails.getUsername());
@@ -74,7 +72,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 System.out.println("JWT geçersiz.");
                             }
                         }
-                    }else {
+                    } else {
                         response.setStatus(423);
                         response.getWriter().write("Hesap Aktif Degil");
                         return;
@@ -83,14 +81,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     System.out.println("JWT geçersiz.");
                 }
 
-            }else {
+            } else {
                 System.out.println("JwtAuthenticationFilter : request.getHeader boş");
             }
         } catch (ExpiredJwtException e) {
             // JWT süresi dolmuşsa, 403 status kodu döner
             response.setStatus(403);
             System.out.println(e.getMessage());
-        }catch (Exception e){
+        } catch (Exception e) {
             System.out.println(e.getMessage());
         }
 

@@ -45,7 +45,7 @@ public class User {
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt = new Date(); // Varsayılan olarak kayıt zamanı
 
-    @Temporal(TemporalType.TIMESTAMP) // Son Giriş Tarihi
+    @Temporal(TemporalType.TIMESTAMP)
     private Date accountLockedTime;
 
     private int incrementFailedLoginAttempts = 0;

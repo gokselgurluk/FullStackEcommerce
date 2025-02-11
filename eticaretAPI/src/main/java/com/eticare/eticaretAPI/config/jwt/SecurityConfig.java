@@ -24,9 +24,7 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
-                          UserDetailsService userDetailsService,
-                          PasswordEncoder passwordEncoder) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
@@ -34,9 +32,9 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http .csrf(csrf -> csrf.disable())  // CSRF korumasını devre dışı bırak
+        http.csrf(csrf -> csrf.disable())  // CSRF korumasını devre dışı bırak
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(   "/auth/refresh-token","/auth/login", "/auth/register","/send-activation-email" ,"/auth/activate-account","auth/reset-password","api/forgot-password","/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**", "/Message").permitAll()  // "Message" endpoint'ini herkesin erişmesine izin ver
+                        .requestMatchers("/auth/refresh-token", "/auth/login", "/auth/register", "/send-activation-email", "/auth/activate-account", "auth/reset-password", "api/forgot-password", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**", "/Message").permitAll()  // "Message" endpoint'ini herkesin erişmesine izin ver
                         .anyRequest().authenticated()  // Diğer endpoint'ler için doğrulama gerekli
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // JWT doğrulama filtresi
@@ -44,8 +42,8 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // Password encoder bean (required for authentication)
 
+    // Password encoder bean (required for authentication)/**/
     // AuthenticationManager bean definition
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
@@ -58,13 +56,13 @@ public class SecurityConfig {
 
         return authenticationManagerBuilder.build();
     }
+
     @Bean
     public AuthenticationManager authManager(HttpSecurity http, CustomAuthenticationProvider customAuthProvider) throws Exception {
         return http.getSharedObject(AuthenticationManagerBuilder.class)
                 .authenticationProvider(customAuthProvider)
                 .build();
     }
-
 
 
 }

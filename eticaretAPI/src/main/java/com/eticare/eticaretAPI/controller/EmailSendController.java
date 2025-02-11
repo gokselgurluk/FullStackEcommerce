@@ -60,7 +60,7 @@ public class EmailSendController {
 
     try {
        EmailSend emailSend = emailSendService.sendVerifyTokenEmail(customUserDetails.getUsername());
-        return ResultHelper.successWithData("Doğrulama kodu gönderildi",emailSend,HttpStatus.CREATED);
+        return ResultHelper.successWithData("Doğrulama linki gönderildi",emailSend,HttpStatus.CREATED);
     } catch (Exception e) {
         return ResultHelper.errorWithData(e.getMessage(),null, HttpStatus.BAD_REQUEST);
     }

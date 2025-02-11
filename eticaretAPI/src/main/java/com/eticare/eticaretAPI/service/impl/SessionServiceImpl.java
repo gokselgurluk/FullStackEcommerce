@@ -1,11 +1,13 @@
 package com.eticare.eticaretAPI.service.impl;
 
+import com.eticare.eticaretAPI.config.exeption.NotFoundException;
 import com.eticare.eticaretAPI.entity.Session;
 import com.eticare.eticaretAPI.entity.Token;
 import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.repository.ISessionRepository;
-import com.eticare.eticaretAPI.repository.IUserService;
+
 import com.eticare.eticaretAPI.service.SessionService;
+import com.eticare.eticaretAPI.service.UserService;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -15,11 +17,11 @@ import java.util.Map;
 @Service
 public class SessionServiceImpl implements SessionService {
     private final ISessionRepository sessionRepository;
-    private final IUserService userRepository; // Kullanıcıyı güncellemek için gerekli
+    private final UserService userService;
 
-    public SessionServiceImpl(ISessionRepository sessionRepository, IUserService userRepository) {
+    public SessionServiceImpl(ISessionRepository sessionRepository, UserService userService) {
         this.sessionRepository = sessionRepository;
-        this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     @Override
@@ -62,8 +64,7 @@ public class SessionServiceImpl implements SessionService {
     @Override
     public boolean isValidSession(String email, String ipAddress, String deviceInfo) {
         // Kullanıcıyı email ile bul
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.getUserByMail(email).orElseThrow(() -> new NotFoundException("isValidSession Error : Kullanıcı bulunamadı"));
 
         // Kullanıcının aktif oturumlarını kontrol et
         List<Session> sessions = sessionRepository.findByUserIdAndExpiresAtAfter(user.getId(), new Date());
@@ -72,7 +73,6 @@ public class SessionServiceImpl implements SessionService {
                         session.getIpAddress().equals(ipAddress) &&
                                 session.getDevice().equals(deviceInfo));
     }
-
 
 
 

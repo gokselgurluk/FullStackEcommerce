@@ -13,12 +13,12 @@ public interface ITokenRepository extends JpaRepository<Token , Long> {
 
     @Query("SELECT t FROM Token t WHERE t.user.id = :userId AND (t.expired=false OR t.revoked=false )")
     List<Token> findAllValidTokensByUser(Long userId);
+
     Optional<Token> findByTokenValue(String token);
 
     List<Token> findAllByUserId(Long userId);
 
     Optional<Token> findByUserAndTokenType(User user, TokenType tokenType);
-
 
 
 }

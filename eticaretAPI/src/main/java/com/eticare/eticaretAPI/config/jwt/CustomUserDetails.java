@@ -1,5 +1,8 @@
 package com.eticare.eticaretAPI.config.jwt;
 
+import com.eticare.eticaretAPI.entity.User;
+import com.eticare.eticaretAPI.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -7,17 +10,22 @@ import java.util.Collection;
 import java.util.Date;
 
 public class CustomUserDetails implements UserDetails {
+
+    @Autowired
+    UserService userService;
+
     private final String email;
     private final String password;
     private final Collection<? extends GrantedAuthority> authorities;
     private final Date accountLockedUntil; // Kullanıcının kilit süresi
-    private final boolean isActive; // Kullanıcının aktif olup olmadığı
-    public CustomUserDetails( String email, String password, Collection<? extends GrantedAuthority> authorities, Date accountLockedUntil, boolean isActive) {
+
+
+    public CustomUserDetails( String email, String password, Collection<? extends GrantedAuthority> authorities, Date accountLockedUntil) {
         this.email = email;
         this.password = password;
         this.authorities = authorities;
         this.accountLockedUntil = accountLockedUntil;
-        this.isActive = isActive;
+
     }
 
     @Override
@@ -42,8 +50,14 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        // Eğer kilit süresi varsa veya şu anki zamandan sonra ise hesap kilitlidir.
-        return accountLockedUntil == null || accountLockedUntil.before(new Date());
+
+        boolean isUnlocked = accountLockedUntil == null || accountLockedUntil.before(new Date());
+      /*  if(email != null) {
+            User user = userService.getUserByMail(email).get();
+            // Eğer kilit süresi varsa veya şu anki zamandan sonra ise hesap kilitlidir.
+            userService.updateUserLocked(user, isUnlocked);
+        }*/
+            return isUnlocked ;
     }
 
     @Override
@@ -53,6 +67,6 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return isActive;
+        return true;
     }
 }

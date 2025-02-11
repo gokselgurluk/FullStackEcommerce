@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -21,8 +22,7 @@ public class UserResponse {
     private String email;
     private RoleEnum roleEnum;
     private Date createdAt;
-    private Date lastLogin;
     private boolean active;
-    private List<String> AccessTokens;
+    private List<String> AccessTokens = new ArrayList<>();
 
 }

@@ -1,8 +1,10 @@
 package com.eticare.eticaretAPI.controller;
 
 import com.eticare.eticaretAPI.config.exeption.NotFoundException;
+import com.eticare.eticaretAPI.config.jwt.CustomUserDetails;
 import com.eticare.eticaretAPI.config.modelMapper.IModelMapperService;
 import com.eticare.eticaretAPI.dto.request.User.UserUpdateRequest;
+import com.eticare.eticaretAPI.service.*;
 import com.eticare.eticaretAPI.service.impl.AuthService;
 import com.eticare.eticaretAPI.config.jwt.CustomUserDetailsService;
 import com.eticare.eticaretAPI.config.jwt.JwtService;
@@ -18,12 +20,6 @@ import com.eticare.eticaretAPI.entity.Session;
 import com.eticare.eticaretAPI.entity.Token;
 import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.repository.ISessionRepository;
-import com.eticare.eticaretAPI.repository.ITokenRepository;
-import com.eticare.eticaretAPI.repository.IUserService;
-import com.eticare.eticaretAPI.service.EmailSendService;
-import com.eticare.eticaretAPI.service.SessionService;
-import com.eticare.eticaretAPI.service.UserService;
-import com.eticare.eticaretAPI.service.CodeService;
 import com.eticare.eticaretAPI.utils.DeviceUtils;
 import com.eticare.eticaretAPI.utils.IpUtils;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,10 +27,8 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -43,35 +37,34 @@ import java.util.Map;
 public class AuthController {
 
 
-    @Autowired
-    private CustomUserDetailsService userDetailsService;
 
-    @Autowired
-    private AuthService authService;
+    private final CustomUserDetailsService userDetailsService;
+    private final AuthService authService;
+    private final UserService userService;
+    private final ModelMapper modelMapper;
+    private final IModelMapperService modelMapperService;
+    private final JwtService jwtService;
 
-    @Autowired
-    private IUserService userRepository;
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private ModelMapper modelMapper;
-    @Autowired
-    private IModelMapperService modelMapperService;
-    @Autowired
-    private JwtService jwtService;
-    @Autowired
-    private ITokenRepository tokenRepository;
+    private final EmailSendService emailSendService;
+    private final CodeService codeService;
+    private final SessionService sessionService;
+    private final ISessionRepository sessionRepository;
+    private final TokenService tokenService;
 
-    @Autowired
-    private EmailSendService emailSendService;
-    @Autowired
-    private CodeService codeService;
+    public AuthController(CustomUserDetailsService userDetailsService, AuthService authService, UserService userService, ModelMapper modelMapper, IModelMapperService modelMapperService, JwtService jwtService, EmailSendService emailSendService, CodeService codeService, SessionService sessionService, ISessionRepository sessionRepository, TokenService tokenService) {
+        this.userDetailsService = userDetailsService;
+        this.authService = authService;
+        this.userService = userService;
+        this.modelMapper = modelMapper;
+        this.modelMapperService = modelMapperService;
+        this.jwtService = jwtService;
 
-    @Autowired
-    private SessionService sessionService;
-
-    @Autowired
-    private ISessionRepository sessionRepository;
+        this.emailSendService = emailSendService;
+        this.codeService = codeService;
+        this.sessionService = sessionService;
+        this.sessionRepository = sessionRepository;
+        this.tokenService = tokenService;
+    }
 
     /**
      * Login endpoint: Kullanıcı adı ve şifre ile kimlik doğrulaması yapılır
@@ -82,49 +75,59 @@ public class AuthController {
         User user = modelMapper.map(userResponse, User.class);
         authService.register(user);
         // Doğrulama kodu oluştur ve kullanıcıya gönder
-
-
         return ResultHelper.created(userResponse);
         // UserServise sınıfında user sınıfı maplenıyor metot tıpı  UserResponse donuyor bu yuzden burada maplemedık
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> createAuthToken(@RequestBody AuthenticationRequest authenticationRequest, HttpServletRequest httpRequest
-    ) throws Exception {
-        // Süresi dolmuş token'ları kontrol et ve güncelle
-        authService.checkAndUpdateExpiredTokens();
+    public ResponseEntity<?> createAuthToken(@RequestBody AuthenticationRequest authenticationRequest, HttpServletRequest httpRequest) {
+        try {
+            // Süresi dolmuş token'ları kontrol et ve güncelle
+            tokenService.checkAndUpdateExpiredTokens();
 
+            // Kullanıcıyı doğrula ve token üret
+            List<Token> tokens = authService.authenticate(authenticationRequest.getEmail(), authenticationRequest.getPassword());
+            if (tokens.size() < 2) {
+                throw new RuntimeException("Token üretimi sırasında bir hata oluştu.");
+            }
 
-        // Kullanıcıyı doğrula ve token üret
-        List<Token> tokens = authService.authenticate(authenticationRequest.getEmail(), authenticationRequest.getPassword());
-        Token refreshToken = tokens.get(0); // İlk eleman (Refresh Token)
-        Token accessToken = tokens.get(1); // İkinci eleman (Access Token)
+            Token refreshToken = tokens.get(0); // İlk eleman (Refresh Token)
+            Token accessToken = tokens.get(1);  // İkinci eleman (Access Token)
 
-        //final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getEmail());
-        User user = userService.getUserByMail(authenticationRequest.getEmail()).orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+            User user = userService.getUserByMail(authenticationRequest.getEmail())
+                    .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
 
-        // IP adresi ve cihaz bilgisi alınır
-        String ipAddress = IpUtils.getClientIp(httpRequest);
-        Map<String, String> deviceInfo = DeviceUtils.getUserAgent(httpRequest);
-        // Session oluşturulur
-        sessionService.createSession(user, refreshToken, ipAddress, deviceInfo);
-        // Yanıt olarak token ve kullanıcı bilgilerini gönder
+            // IP adresi ve cihaz bilgisi alınır
+            String ipAddress = IpUtils.getClientIp(httpRequest);
+            Map<String, String> deviceInfo = DeviceUtils.getUserAgent(httpRequest);
 
-    /*    new AuthenticationResponse (accessToken.getToken(), userDetails.getUsername(), userDetails.getAuthorities(), user.isActive());*/
-        return ResponseEntity.ok(AuthenticationResponse
-                .builder().accessToken(accessToken.getTokenValue())
-                .email(user.getEmail())
-                .role((user.getRoleEnum()))
-                .isActive(user.isActive())
-                .build()
-        );
+            // Session oluşturulur
+            sessionService.createSession(user, refreshToken, ipAddress, deviceInfo);
+
+            // Yanıt olarak token ve kullanıcı bilgilerini gönder
+            AuthenticationResponse response = AuthenticationResponse.builder()
+                    .accessToken(accessToken.getTokenValue())
+                    .email(user.getEmail())
+                    .role(user.getRoleEnum())
+                    .isActive(user.isActive())
+                    .build();
+
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            User user = userService.getUserByMail(authenticationRequest.getEmail()).orElse(null);
+            if (user != null && user.getAccountLockedTime() != null) {
+                // Hata mesajı ve kilitli süreyi dön
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ResultHelper.errorWithData(e.getMessage(), "kalan süre: " + userService.diffLockedTime(user) + " dakika", HttpStatus.BAD_REQUEST));
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
 
     @PostMapping("/activate-account")
     public ResultData<?> activateAccount(@RequestBody VerifyCodeRequest verifyCodeRequest) {
         String token = verifyCodeRequest.getVerifyToken();
-        System.out.println("activasyon token: " + token);
 
         try {
             boolean expiredToken = jwtService.isTokenExpired(token);
@@ -132,7 +135,7 @@ public class AuthController {
                 throw new IllegalStateException("Aktivasyon tokenın süresi dolmuş.");
             }
 
-            String email  = jwtService.extractEmail(token);
+            String email = jwtService.extractEmail(token);
             if (email.isBlank()) {
                 throw new IllegalStateException("Email bilgisi eksik.");
             }
@@ -142,44 +145,44 @@ public class AuthController {
                 return ResultHelper.successWithData("Hesap Dogrulama Başarılı: ", email, HttpStatus.OK);
             } else {
                 // Eğer doğrulama başarısızsa hata döndürülür.
-                return ResultHelper.errorWithData("Hesap Dogrulama Başarısız: ", "Verifikasyon işlemi başarısız.", HttpStatus.BAD_REQUEST);
+                throw new IllegalStateException("Hesap Dogrulama Başarısız: ");
             }
 
         } catch (Exception e) {
-            return ResultHelper.errorWithData(e.getMessage(),null , HttpStatus.BAD_REQUEST);
+            return ResultHelper.errorWithData(e.getMessage(), null, HttpStatus.BAD_REQUEST);
         }
 
     }
 
     @PostMapping("/reset-password")
-    public ResultData<?> resetPassword(@RequestBody ForgotPasswordRequest request)  {
+    public ResultData<?> resetPassword(@RequestBody ForgotPasswordRequest request) {
 
         try {
-            String resetToken =request.getResetPasswordToken();
+            String resetToken = request.getResetPasswordToken();
             String password = request.getPassword();
-            String confirmPassword =request.getConfirmPassword();
-            Token tokenFind = tokenRepository.findByTokenValue(resetToken).orElseThrow(()-> new RuntimeException("Kullanıcı bulunamadi"));
+            String confirmPassword = request.getConfirmPassword();
+            Token tokenFind = tokenService.findByTokenValue(resetToken);
             User user = tokenFind.getUser();
-            System.out.printf(user.toString());
-            String email = jwtService.extractEmail(resetToken);
-            boolean expiredToken = jwtService.isTokenExpired(resetToken);
-            System.out.println("reset token: "+resetToken);
-            if (user==null) {
+            if (user == null) {
                 throw new IllegalStateException("Kullanıcı bulunamadi.");
             }
+            String email = jwtService.extractEmail(resetToken);
+            boolean expiredToken = jwtService.isTokenExpired(resetToken);
+            System.out.println("reset token: " + resetToken);
+
             if (expiredToken) {
                 throw new IllegalStateException("Geçersiz veya süresi dolmuş token.");
             }
 
             if (!password.isBlank() || !confirmPassword.isBlank()) {
-                if(password.equalsIgnoreCase(confirmPassword)){
+                if (password.equalsIgnoreCase(confirmPassword)) {
                     user.setPassword(password);
                     UserUpdateRequest userUpdateRequest = this.modelMapperService.forRequest().map(user, UserUpdateRequest.class);
-                    userService.updateUser(userUpdateRequest );
-                    tokenRepository.delete(tokenFind);
+                    userService.updateUser(userUpdateRequest);
+                    tokenService.delete(tokenFind);
                     return ResultHelper.successWithData("Şifreniz başarıyla sıfırlandı: ", email, HttpStatus.OK);
 
-                }else{
+                } else {
                     throw new RuntimeException("Şifreler uyuşmuyor");
 
                 }
@@ -217,12 +220,11 @@ public class AuthController {
     }*/
 
 
-
     // Refresh token endpoint
     @PostMapping("/refresh-token")
     public ResponseEntity<?> refreshToken(@RequestBody AuthenticationRequest authenticationRequest, HttpServletRequest httpServletRequest) {
         // Kullanıcı kontrolü
-        User user = userRepository.findByEmail(authenticationRequest.getEmail())
+        User user = userService.getUserByMail(authenticationRequest.getEmail())
                 .orElseThrow(() -> new NotFoundException("Kullanıcı bulunamadı"));
 
         // Kullanıcıya ait refresh token'ı bul

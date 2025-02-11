@@ -9,8 +9,9 @@ import com.eticare.eticaretAPI.dto.response.UserResponse;
 import com.eticare.eticaretAPI.entity.Token;
 import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.entity.enums.TokenType;
-import com.eticare.eticaretAPI.repository.ITokenRepository;
-import com.eticare.eticaretAPI.repository.IUserService;
+
+import com.eticare.eticaretAPI.repository.IUserRepository;
+
 import com.eticare.eticaretAPI.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,18 +29,39 @@ public class UserServiceImpl implements UserService {
     private Integer MAX_FAILD_ENTER_COUNT;
 
     private final static long ACCOUNT_LOCKED_TIME =1000*60*30;
-    private final IUserService userRepository;
+    private final IUserRepository userRepository;
     private final IModelMapperService modelMapperService;
     private final PasswordEncoder passwordEncoder;
-    private final ITokenRepository tokenRepository;
 
 
-    public UserServiceImpl(IUserService userRepository, IModelMapperService modelMapperService, PasswordEncoder passwordEncoder, ITokenRepository tokenRepository) {
+    public UserServiceImpl(IUserRepository userRepository, IModelMapperService modelMapperService, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.modelMapperService = modelMapperService;
         this.passwordEncoder = passwordEncoder;
-        this.tokenRepository = tokenRepository;
+
     }
+
+    @Override
+    public void save(User user) {
+        userRepository.save(user);
+    }
+
+    @Override
+    public void updateUserLocked(User user ,boolean status) {
+        user.setLocked(!status);
+        save(user);
+    }
+
+    @Override
+    public long diffLockedTime(User user) {
+        if(user.getAccountLockedTime()== null){
+         return 0;
+        }
+        long diffMillis = user.getAccountLockedTime().getTime() - System.currentTimeMillis();
+        long diffTimeMinute =  TimeUnit.MILLISECONDS.toMinutes(diffMillis);
+        return  Math.max(diffTimeMinute, 0);
+    }
+
     @Override
     public void resetFailedLoginAttempts(User user) {
         user.setIncrementFailedLoginAttempts(0);
@@ -58,6 +81,8 @@ public class UserServiceImpl implements UserService {
         if (user.getIncrementFailedLoginAttempts() >= MAX_FAILD_ENTER_COUNT) {
             user.setAccountLockedTime(new Date(System.currentTimeMillis() + ACCOUNT_LOCKED_TIME)); // 30 dk kilitle
         }
+
+
         userRepository.save(user);
     }
 
@@ -94,9 +119,9 @@ public class UserServiceImpl implements UserService {
         // Kullanıcıları al
         List<User> users = userRepository.findAll();
         // Her kullanıcı için ilgili token'ları yükle
-        List<UserResponse> response = users.stream().map(user -> {
+       /* List<UserResponse> response = users.stream().map(user -> {
             // Kullanıcıya ait token'ları bul
-            List<Token> userTokens = tokenRepository.findAllByUserId(user.getId());
+            List<Token> userTokens = tokenService.findAllByUserId(user.getId());
             // Kullanıcıyı maple
             UserResponse userResponse = this.modelMapperService.forResponse().map(user, UserResponse.class);
             // Token'ları UserResponse'a ekle
@@ -107,13 +132,13 @@ public class UserServiceImpl implements UserService {
             userResponse.setAccessTokens(accessTokens);
 
             return userResponse;
-        }).collect(Collectors.toList());
+        }).collect(Collectors.toList());  */
 
         // Response Body oluştur
         Map<String, Object> responseBody = new HashMap<>();
         responseBody.put("status", "success");
-        responseBody.put("users", response);
-        responseBody.put("total", response.size());
+        responseBody.put("users", users);
+        responseBody.put("total", users.size());
 
         return responseBody;
     }

@@ -9,9 +9,9 @@ import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.entity.enums.SecretTypeEnum;
 import com.eticare.eticaretAPI.entity.enums.TokenType;
 import com.eticare.eticaretAPI.repository.IEmailSendRepository;
-import com.eticare.eticaretAPI.repository.ITokenRepository;
-import com.eticare.eticaretAPI.repository.IUserService;
+
 import com.eticare.eticaretAPI.service.EmailSendService;
+import com.eticare.eticaretAPI.service.TokenService;
 import com.eticare.eticaretAPI.service.UserService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -30,98 +30,33 @@ import java.util.Date;
 import java.util.Optional;
 
 @Service
-public class EmailSendSendServiceImpl implements EmailSendService {
+public class EmailSendServiceImpl implements EmailSendService {
 
     private final JavaMailSender javaMailSender;
-    private final IUserService userRepository;
     private final UserService userService;
-    private final ITokenRepository tokenRepository;
-    private final JwtService jwtService;
+private final TokenService tokenService;
     private final AuthService authService;
     private final IEmailSendRepository emailSendRepository;
     private static final String IMAGE_PATH = "C:\\Users\\ASUS\\IdeaProjects\\eticaretAPI\\eticaretAPI\\src\\main\\resources\\images\\logo.png";
     @Value("${verify.code.max_attempts}")
     private int remainingAttempts;
-    private static final long EMAIL_EXPIRATION = 1000 * 60 * 2; // 3 dk
+    private static final long EMAIL_EXPIRATION = 1000 * 60 * 2; // 2 dk
 
-    public EmailSendSendServiceImpl(JavaMailSender javaMailSender, IUserService userRepository, UserService userService, ITokenRepository tokenRepository, JwtService jwtService, AuthService authService, IEmailSendRepository emailSendRepository) {
+    public EmailSendServiceImpl(JavaMailSender javaMailSender, UserService userService, TokenService tokenService, AuthService authService, IEmailSendRepository emailSendRepository) {
         this.javaMailSender = javaMailSender;
-        this.userRepository = userRepository;
         this.userService = userService;
-        this.tokenRepository = tokenRepository;
-        this.jwtService = jwtService;
+        this.tokenService = tokenService;
         this.authService = authService;
         this.emailSendRepository = emailSendRepository;
     }
 
-    /*@Override
-    public BufferedImage generateCodeImage(String code)throws IOException {
-        int width = 0;
-        int height = 0;
-
-        // Görselleri yükleyip toplam genişlik ve yükseklik hesapla,
-        List<BufferedImage> images = new ArrayList<>();
-        for (char digit  : code.toCharArray()) {
-            String imagePath = "images/" + digit + ".png";
-            InputStream inputStream = getClass().getClassLoader().getResourceAsStream(imagePath);
-            if (inputStream == null) {
-                throw new RuntimeException("Görsel bulunamadı: " + imagePath);
-            }
-            BufferedImage img = ImageIO.read(inputStream);
-            images.add(img);
-            width+= img.getWidth();
-            height = Math.max(height, img.getHeight());
-        }
-        // Yeni birleştirilmiş görsel oluştur
-        BufferedImage combinedImage = new BufferedImage(width ,height,BufferedImage.TYPE_INT_ARGB);
-        Graphics g =combinedImage.getGraphics();
-        // Görselleri birleştir
-        int currentX = 0;
-        for (BufferedImage img : images){
-            g.drawImage(img,currentX,0,null);
-            currentX+=img.getWidth();
-
-        }
-        g.dispose();
-        return combinedImage;
-    }
-    public static void saveImage(BufferedImage image, String outputPath) throws IOException {
-        // Hedef dosyayı oluştur
-        File outputFile = new File(outputPath);
-
-        // Dosyanın olduğu klasör yoksa oluştur
-        File parentDir = outputFile.getParentFile();
-        if (!parentDir.exists()) {
-            parentDir.mkdirs();
-        }
-
-        // Görseli kaydet
-        ImageIO.write(image, "png", outputFile);
-    }*/
-
-   /* @Override
-    public void createImageAndSendEmail(String email, String code) {
-        try {
-            // Doğrulama kodu için görsel oluştur
-            BufferedImage codeImage = generateCodeImage(code);
-            String outputPath = "src/main/resources/output/code.png";
-            saveImage(codeImage, outputPath);
-
-            // Görseli e-posta ile gönder
-            sendVerificationEmailWithMedia(email, outputPath);
-        } catch (IOException e) {
-            throw new RuntimeException("Görsel oluşturulurken hata oluştu", e);
-        }
-    }*/
-
     @Override
     public void sendVerificationEmailWithMedia(EmailSend emailSend) {
 
-
         try {
             String email = emailSend.getUser().getEmail();
-            String keyValue = emailSend.getToken()!=null ? emailSend.getToken().getTokenValue() : emailSend.getCode().getCodeValue();                                                                                 ;
-            String activationLink = "http://localhost:5173/activate-account?verifyToken=" + keyValue;
+            String Value = emailSend.getToken() != null ? emailSend.getToken().getTokenValue() : emailSend.getCode().getCodeValue();
+            String activationLink = "http://localhost:5173/activate-account?token=" + Value;
 
             MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8"); // UTF-8 karakter seti eklendi
@@ -159,36 +94,36 @@ public class EmailSendSendServiceImpl implements EmailSendService {
         } catch (MessagingException e) {
             throw new RuntimeException("Email içerigi oluşturulamadı" + e.getMessage());
         }
-       }
+    }
 
 
     @Transactional
     @Override
     public EmailSend sendVerifyTokenEmail(String email) {
-
-        if (StringUtils.isBlank(email)) {
-            throw new IllegalArgumentException("Geçersiz e-posta adresi.");
-        }
-        User user = userService.getUserByMail(email)
-                .orElseThrow(() -> new EntityNotFoundException("Doğrulama tokenı için kullanıcı bulunamadı"));
-
-
-        if (user.isActive()) {
-            throw new IllegalStateException("Hesap zaten aktif.");
-        }
-
         try {
-            Token token = authService.activationAccountToken(user);
-            EmailSend emailSend=  saveOrUpdateEmailSend(user, token, null, token.getTokenType(), SecretTypeEnum.TOKEN);
-            if(emailSend!=null)
-            {
-                sendVerificationEmailWithMedia(emailSend);
-
+            if (StringUtils.isBlank(email)) {
+                throw new IllegalArgumentException("Geçersiz e-posta adresi.");
             }
+            User user = userService.getUserByMail(email)
+                    .orElseThrow(() -> new EntityNotFoundException("sendVerifyTokenEmail : kullanıcı bulunamadı"));
+
+            if (user.isActive()) {
+                throw new IllegalStateException("Hesap zaten aktif.");
+            }
+
+            Token token = tokenService.activationAccountToken(user);
+            EmailSend emailSend = saveOrUpdateEmailSend(user, token, null, token.getTokenType(), SecretTypeEnum.TOKEN);
+
+            if (emailSend != null) {
+                sendVerificationEmailWithMedia(emailSend);
+            }
+
             return emailSend;
+
         } catch (Exception e) {
-            throw new RuntimeException("E-posta kaydedilirken hata oluştu. : "+ e.getMessage());
+            throw new RuntimeException("E-posta kaydedilirken hata oluştu. : " + e.getMessage());
         }
+
 
     }
 
@@ -197,8 +132,8 @@ public class EmailSendSendServiceImpl implements EmailSendService {
 
         try {
             String email = emailSend.getUser().getEmail();
-            String resetPasswordToken = emailSend.getToken()!=null ? emailSend.getToken().getTokenValue() : emailSend.getCode().getCodeValue();
-            String resetUrl = "http://localhost:5173/reset-password?token=" + resetPasswordToken;
+            String Value = emailSend.getToken() != null ? emailSend.getToken().getTokenValue() : emailSend.getCode().getCodeValue();
+            String resetUrl = "http://localhost:5173/reset-password?token=" + Value;
             MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
             helper.setFrom("noreply@e-TicaretHesapSifreSıfırlamaService");
@@ -239,23 +174,23 @@ public class EmailSendSendServiceImpl implements EmailSendService {
         }
 
     }
+
     @Transactional
     @Override
     public EmailSend sendResetPasswordTokenEmail(String email) {
-
-        if (StringUtils.isBlank(email)) {
-            throw new IllegalArgumentException("Geçersiz e-posta adresi.");
-        }
-        User user = userService.getUserByMail(email)
-                .orElseThrow(() -> new EntityNotFoundException("Doğrulama tokenı için kullanıcı bulunamadı"));
-
-
-        if (!user.isActive()) {
-            throw new IllegalStateException("Hesap aktif degil.");
-        }
-
         try {
-            Token token = authService.resetPasswordToken(user);
+            if (StringUtils.isBlank(email)) {
+                throw new IllegalArgumentException("Geçersiz e-posta adresi.");
+            }
+            User user = userService.getUserByMail(email)
+                    .orElseThrow(() -> new EntityNotFoundException("sendResetPasswordTokenEmail : kullanıcı bulunamadı"));
+
+            if (!user.isActive()) {
+                throw new IllegalStateException("Hesap aktif degil.");
+            }
+
+
+            Token token = tokenService.resetPasswordToken(user);
             EmailSend emailSend = saveOrUpdateEmailSend(user, token, null, token.getTokenType(), SecretTypeEnum.TOKEN);
             if (emailSend != null) {
                 sendResetPasswordEmailWithMedia(emailSend);
@@ -268,7 +203,7 @@ public class EmailSendSendServiceImpl implements EmailSendService {
 
     @Override
     public String sendVerificationCodeEmail(String email, String code) {
-        Optional<User> userOpt = userRepository.findByEmail(email);
+        Optional<User> userOpt = userService.getUserByMail(email);
         if (userOpt.get().isActive()) {
             throw new NotFoundException("Bu hesap zaten aktif");
         }
@@ -283,9 +218,6 @@ public class EmailSendSendServiceImpl implements EmailSendService {
     }
 
 
-
-
-
     @Override
     public EmailSend saveOrUpdateEmailSend(User user, Token token, Code code, TokenType tokenType, SecretTypeEnum secretTypeEnum) {
         EmailSend emailSend = emailSendRepository.findByUserAndTokenTypeAndSecretTypeEnum(user, tokenType, secretTypeEnum).orElse(null);
@@ -297,8 +229,6 @@ public class EmailSendSendServiceImpl implements EmailSendService {
                 if (DateUtils.isSameDay(emailSend.getLastSendDate(), new Date())) {
                     if (emailSend.getRemainingAttempts() > 0) {
                         // Token veya kodu güncelle
-                        //emailSend.setSecretTypeEnum(token != null ? (SecretTypeEnum.TOKEN) : (SecretTypeEnum.CODE));
-
                         emailSend.setRemainingAttempts(emailSend.getRemainingAttempts() - 1); // Önce düş
 
                     } else {
@@ -309,7 +239,7 @@ public class EmailSendSendServiceImpl implements EmailSendService {
                     emailSend.setRemainingAttempts(remainingAttempts);
 
                 }
-            }else {
+            } else {
                 throw new IllegalStateException("Code veya Token geçerliliğini koruyor.");
             }
 
@@ -327,9 +257,9 @@ public class EmailSendSendServiceImpl implements EmailSendService {
                     .secretTypeEnum(secretTypeEnum)
                     .tokenType(tokenType)
                     .value(token != null ? token.getTokenValue() : code.getCodeValue())
-                    .remainingAttempts(remainingAttempts-1)
+                    .remainingAttempts(remainingAttempts - 1)
                     .lastSendDate(new Date())
-                    .emailExpiryDate(new Date(System.currentTimeMillis()+EMAIL_EXPIRATION))
+                    .emailExpiryDate(new Date(System.currentTimeMillis() + EMAIL_EXPIRATION))
                     .token(token)
                     .code(code)
                     .build();

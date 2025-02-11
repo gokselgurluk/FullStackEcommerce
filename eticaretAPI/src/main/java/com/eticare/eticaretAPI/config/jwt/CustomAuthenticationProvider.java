@@ -2,7 +2,6 @@ package com.eticare.eticaretAPI.config.jwt;
 
 import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.entity.enums.RoleEnum;
-import com.eticare.eticaretAPI.repository.IUserService;
 import com.eticare.eticaretAPI.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -48,7 +47,7 @@ public class CustomAuthenticationProvider extends DaoAuthenticationProvider {
         User user = userOptional.get();
 
         if (user.getPassword() == null) {
-            throw new BadCredentialsException("Hatalı giriş: Şifre bilgisi eksik.");
+            throw new BadCredentialsException("Şifre bilgisi eksik.");
         }
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
@@ -58,7 +57,9 @@ public class CustomAuthenticationProvider extends DaoAuthenticationProvider {
 
         RoleEnum role = user.getRoleEnum();
         List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.name()));
+
         userService.resetFailedLoginAttempts(user);
+
         return new UsernamePasswordAuthenticationToken(user, password, authorities);
     }
 }

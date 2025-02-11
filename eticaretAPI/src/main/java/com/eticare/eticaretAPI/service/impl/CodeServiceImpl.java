@@ -4,7 +4,6 @@ import com.eticare.eticaretAPI.config.exeption.NotFoundException;
 import com.eticare.eticaretAPI.config.jwt.JwtService;
 import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.entity.Code;
-import com.eticare.eticaretAPI.repository.IUserService;
 import com.eticare.eticaretAPI.repository.ICodeRepository;
 import com.eticare.eticaretAPI.service.EmailSendService;
 import com.eticare.eticaretAPI.service.UserService;
@@ -24,7 +23,6 @@ import static org.apache.commons.lang3.time.DateUtils.isSameDay;
 public class CodeServiceImpl implements CodeService {
 
     private final ICodeRepository verificationTokenRepository;
-    private final IUserService userRepository;
     private final JwtService jwtService;
     private  final EmailSendService emailSendService;
     private  final UserService userService;
@@ -33,9 +31,8 @@ public class CodeServiceImpl implements CodeService {
     private  int remainingAttempts;
     @Value("${char-pool-set}")
     private  String charPool;
-    public CodeServiceImpl(ICodeRepository verificationTokenRepository, IUserService userRepository, JwtService jwtService, EmailSendService emailSendService, UserService userService, AuthService authService) {
+    public CodeServiceImpl(ICodeRepository verificationTokenRepository, JwtService jwtService, EmailSendService emailSendService, UserService userService, AuthService authService) {
         this.verificationTokenRepository = verificationTokenRepository;
-        this.userRepository = userRepository;
         this.jwtService = jwtService;
         this.emailSendService = emailSendService;
         this.userService = userService;
@@ -45,9 +42,9 @@ public class CodeServiceImpl implements CodeService {
 
     @Override
     public boolean activateUser(String email) {
-        Optional<User> user = userRepository.findByEmail(email);
-            user.get().setActive(true); // Hesabı aktif et
-            userRepository.save(user.get());
+        User user = userService.getUserByMail(email).orElseThrow(()-> new NotFoundException("activateUser Error : Kullanıcı bulunamadı"));
+            user.setActive(true); // Hesabı aktif et
+            userService.save(user);
             return true;
     }
     @Override
@@ -64,35 +61,32 @@ public class CodeServiceImpl implements CodeService {
 
     @Override
     public Code createVerifyCode(User user) {
-
+        // Yeni  kodu oluştur
+        String newCode = generateCode(6);
         if (user==null) {
             throw new NotFoundException("Dogrulama kodu oluşturmak için kullanıcı bilgisine ulaşılamadı: " ); // Kullanıcı bulunamazsa hata fırlat
         }
 
-        // Yeni doğrulama kodu oluştur
-        String newCode = generateCode(6);
-
-        // Kullanıcı için var olan doğrulama verifyCode'ını kontrol et
+        // Kullanıcı için var olan  verifyCode'ını kontrol et
         Optional<Code> optionalVerifyCode = verificationTokenRepository.findByUser(user);
         Code code;
 
         if (optionalVerifyCode.isPresent()) {
             code = optionalVerifyCode.get();
-            if(LocalDateTime.now().isAfter(code.getCodeExpiryDate())){
             // Aynı gün ve maksimum gönderim sınırına ulaşıldıysa hata fırlat
-                // bu kısma faqraklı bır yoldan maksımum dogrulama sayısı kontrolu yapılabılır mı
-            if (DateUtils.isSameDay(code.getLastSendDate(), new Date())) {
-                if (code.getRemainingAttempts() <=0) {
-                    throw new IllegalStateException("Bugün için maksimum doğrulama kodu oluşturma sınırına ulaşıldı.");
-                }
-                code.setRemainingAttempts(code.getRemainingAttempts() - 1);
-            } else {
+            if(LocalDateTime.now().isBefore(code.getCodeExpiryDate())) {
+                throw new IllegalStateException("Code geçerliligini koruyor");
+            }
+
+            if (code.getRemainingAttempts() <=0) {
+                throw new IllegalStateException("Bugün için maksimum kod oluşturma sınırına ulaşıldı.");
+            }
+
+            if (!DateUtils.isSameDay(code.getLastSendDate(), new Date())) {
                 // Yeni güne geçilmiş, sayaç sıfırlanır
                 code.setRemainingAttempts(remainingAttempts);
             }
-            }else {
-                throw new IllegalStateException("Code geçerliligini koruyor");
-            }
+            code.setRemainingAttempts(code.getRemainingAttempts() - 1);
             code.setCodeValue(newCode);
             code.setLastSendDate(new Date());
             code.setCodeExpiryDate(LocalDateTime.now().plusMinutes(2)); // Yeni geçerlilik süresi
@@ -110,7 +104,6 @@ public class CodeServiceImpl implements CodeService {
 
         // onaykodu'u bilgilerini veritabanına kaydet
         verificationTokenRepository.save(code);
-
         return code;
     }
 
@@ -127,11 +120,6 @@ public class CodeServiceImpl implements CodeService {
         }
 
         throw new NotFoundException("Verification code not found for user: " + user.getEmail() + " Gecersiz code: " + code);
-    }
-
-    @Override
-    public Code sendResetPasswordEmail(String email) {
-        return null;
     }
 
 

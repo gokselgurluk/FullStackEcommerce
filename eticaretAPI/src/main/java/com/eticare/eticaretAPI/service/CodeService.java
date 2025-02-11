@@ -14,7 +14,7 @@ public interface CodeService {
 
     Boolean isValidateCode(User user, String code );
 
-    Code sendResetPasswordEmail(String email);
+
 
 
 }
