@@ -11,21 +11,19 @@ import java.util.Date;
 
 public class CustomUserDetails implements UserDetails {
 
-    @Autowired
-    UserService userService;
 
+    private final UserService userService;
     private final String email;
     private final String password;
     private final Collection<? extends GrantedAuthority> authorities;
     private final Date accountLockedUntil; // Kullanıcının kilit süresi
 
-
-    public CustomUserDetails( String email, String password, Collection<? extends GrantedAuthority> authorities, Date accountLockedUntil) {
+    public CustomUserDetails(UserService userService, String email, String password, Collection<? extends GrantedAuthority> authorities, Date accountLockedUntil) {
+        this.userService = userService;
         this.email = email;
         this.password = password;
         this.authorities = authorities;
         this.accountLockedUntil = accountLockedUntil;
-
     }
 
     @Override
@@ -50,14 +48,8 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-
         boolean isUnlocked = accountLockedUntil == null || accountLockedUntil.before(new Date());
-      /*  if(email != null) {
-            User user = userService.getUserByMail(email).get();
-            // Eğer kilit süresi varsa veya şu anki zamandan sonra ise hesap kilitlidir.
-            userService.updateUserLocked(user, isUnlocked);
-        }*/
-            return isUnlocked ;
+        return isUnlocked ;
     }
 
     @Override

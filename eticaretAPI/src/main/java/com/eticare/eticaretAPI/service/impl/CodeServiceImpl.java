@@ -27,7 +27,7 @@ public class CodeServiceImpl implements CodeService {
     private  final EmailSendService emailSendService;
     private  final UserService userService;
     private final AuthService authService;
-    @Value("${verify.code.max_attempts}")
+    @Value("${max_attempts}")
     private  int remainingAttempts;
     @Value("${char-pool-set}")
     private  String charPool;

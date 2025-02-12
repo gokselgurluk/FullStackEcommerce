@@ -3,17 +3,19 @@ import axios from 'axios';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Yönlendirme için gerekli
 import ModalComponent from "../components/ModalComponent"; // ModalComponent'ı kullanıyoruz
-
+import { Eye, EyeOff, Mail } from "lucide-react";
 const RegisterPage = () => {
     const navigate = useNavigate(); // Yönlendirme işlemi için useNavigate hook'u
-
+    const [showPassword, setShowPassword] = useState(false);
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const [formData, setFormData] = useState({
         username: '',
         surname: '',
         password: '',
         email: '',
     });
-
+   
     // Modal durumu ve mesajları
     const [modalData, setModalData] = useState({
         isOpen: false,
@@ -21,11 +23,11 @@ const RegisterPage = () => {
         type: '', // 'success' veya 'error'
     });
 
-   const closeModal = () => {
+    const closeModal = () => {
         setModalData({ isOpen: false, message: "", type: "" });
         // Modal kapandıktan sonra yönlendirme işlemi
-         // Eğer modal kapatılırken message "enter" ise, yönlendirme yap
-         if (modalData.type === "warning") {
+        // Eğer modal kapatılırken message "enter" ise, yönlendirme yap
+        if (modalData.type === "warning") {
             navigate("/login"); // İstediğiniz sayfaya yönlendirin
         }
         if (modalData.type === "error") {
@@ -35,9 +37,9 @@ const RegisterPage = () => {
         if (modalData.type === "success") {
             navigate("/login"); // İstediğiniz sayfaya yönlendirin
         }
-       
+
     };
-    
+
     // Form alanlarını kontrol etme
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -47,6 +49,11 @@ const RegisterPage = () => {
     // Form gönderimi
     const handleSubmit = async (e) => {
         e.preventDefault();
+         // Şifrelerin eşleştiğini kontrol et
+    if (password !== confirmPassword) {
+        setModal({ open: true, message: "Şifreler uyuşmuyor!", type: "error" });
+        return;
+    }
         try {
             const response = await axios.post("http://localhost:8080/auth/register", formData);
             console.log("Backend yanıtı:", response.data);
@@ -84,73 +91,99 @@ const RegisterPage = () => {
         }
     };
 
-  
+    const togglePasswordVisibility = () => {
+        setShowPassword((prev) => !prev);
+    };
+
 
     return (
-        <div className="container mt-4">
-            <h2>Kayıt Ol</h2>
-            <Form onSubmit={handleSubmit}>
-                <Form.Group className="mb-3" controlId="formBasicUsername">
-                    <Form.Label>Kullanıcı Adı</Form.Label>
-                    <Form.Control
-                        type="text"
-                        name="username"
-                        placeholder="Kullanıcı Adınızı Girin"
-                        value={formData.username}
-                        onChange={handleInputChange}
-                        required
-                    />
-                </Form.Group>
+        < main className="main">
+            <div className="form-container">
+                <form className="form" onSubmit={handleSubmit} >
+                    <h4 className="form-title">Kayıt Ol</h4>
+                    <div >
+                        <div className="input-wrapper">
+                            <input className='input-field'
+                                type="text"
+                                name="username"
+                                value={formData.username}
+                                onChange={handleInputChange}
+                                placeholder="Kullanıcı Adı"
+                                required
+                            />
 
-                <Form.Group className="mb-3" controlId="formBasicSurname">
-                    <Form.Label>Soyad</Form.Label>
-                    <Form.Control
-                        type="text"
-                        name="surname"
-                        placeholder="Soyadınızı Girin"
-                        value={formData.surname}
-                        onChange={handleInputChange}
-                        required
-                    />
-                </Form.Group>
+                        </div>
+                    </div>
+                    <div >
+                        <div className="input-wrapper">
+                            <input className='input-field'
+                                type="text"
+                                name="surname"
+                                value={formData.surname}
+                                onChange={handleInputChange}
+                                placeholder="Soyadınızı Girin"
+                                required
+                            />
 
-                <Form.Group className="mb-3" controlId="formBasicPassword">
-                    <Form.Label>Şifre</Form.Label>
-                    <Form.Control
-                        type="password"
-                        name="password"
-                        placeholder="Şifrenizi Girin"
-                        value={formData.password}
-                        onChange={handleInputChange}
-                        required
-                    />
-                </Form.Group>
+                        </div>
+                    </div>
+                    <div >
+                        <div className="input-wrapper">
+                            <input
+                                className="input-field"
+                                type={showPassword ? "text" : "password"}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="Yeni Şifre"
+                                required
+                            />
+                            <button className="password-toggle" type="button" onClick={togglePasswordVisibility}>
+                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                            </button>
+                        </div>
+                    </div>
+                    <div >
+                        <div className="input-wrapper">
+                            <input
+                                className="input-field"
+                                type={showPassword ? "text" : "password"}
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                placeholder="Şifreyi Onayla"
+                                required
+                            />
+                            <button className="password-toggle" type="button" onClick={togglePasswordVisibility}>
+                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                            </button>
+                        </div>
+                    </div>
 
-                <Form.Group className="mb-3" controlId="formBasicEmail">
-                    <Form.Label>Email</Form.Label>
-                    <Form.Control
-                        type="email"
-                        name="email"
-                        placeholder="Email Adresinizi Girin"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        required
-                    />
-                </Form.Group>
+                    <div >
+                        <div className="input-wrapper">
+                            <input className='input-field'
+                                type="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleInputChange}
+                                placeholder="Email Adresinizi Girin"
+                                required
+                            />
+                            <Mail className="mail-toggle" />
+                        </div>
+                    </div>
 
-                <Button variant="primary" type="submit">
-                    Kayıt Ol
-                </Button>
-            </Form>
+                    <button className='login-button' type="submit" style={{ maxWidth: "200px" }}>Kayıt Ol</button>
+                </form>
 
-            {/* Modal Bileşeni */}
-            <ModalComponent
-                isOpen={modalData.isOpen}
-                onRequestClose={closeModal}
-                message={modalData.message}
-                type={modalData.type}
-            />
-        </div>
+                {/* Modal Bileşeni */}
+                <ModalComponent
+                    isOpen={modalData.isOpen}
+                    onRequestClose={closeModal}
+                    message={modalData.message}
+                    type={modalData.type}
+                />
+            </div>
+        </main >
     );
 };
 

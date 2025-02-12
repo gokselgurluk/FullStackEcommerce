@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -34,8 +35,9 @@ public class EmailSend {
 
     private String value; // Token veya kodun içeriği
 
-    private Integer remainingAttempts = 3; // İlgili işlem için kalan deneme hakkı
+    private Integer remainingAttempts; // İlgili işlem için kalan deneme hakkı
     @Temporal(TemporalType.TIMESTAMP)
+
     private Date emailExpiryDate;
 
     @Temporal(TemporalType.TIMESTAMP)

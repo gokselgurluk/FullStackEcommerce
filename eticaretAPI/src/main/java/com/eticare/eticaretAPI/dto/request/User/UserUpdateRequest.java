@@ -1,6 +1,7 @@
 package com.eticare.eticaretAPI.dto.request.User;
 
 import com.eticare.eticaretAPI.entity.enums.RoleEnum;
+import com.eticare.eticaretAPI.utils.annotationValidPassword;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -19,6 +20,7 @@ public class UserUpdateRequest {
 
     @NotBlank(message = "Password cannot be empty or blank")
     @Size(min = 8, message = "Password must be at least 8 characters.")
+    @annotationValidPassword
     private String password; // Password hash yapılmalı
 
     @Email(message = "Email must be a valid format")

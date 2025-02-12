@@ -23,8 +23,10 @@ import com.eticare.eticaretAPI.repository.ISessionRepository;
 import com.eticare.eticaretAPI.utils.DeviceUtils;
 import com.eticare.eticaretAPI.utils.IpUtils;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -70,7 +72,7 @@ public class AuthController {
      * Login endpoint: Kullanıcı adı ve şifre ile kimlik doğrulaması yapılır
      */
     @PostMapping("/register")
-    public ResultData<UserResponse> createUser(@RequestBody UserSaveRequest request) {
+    public ResultData<UserResponse> createUser(@Valid @RequestBody UserSaveRequest request) {
         UserResponse userResponse = userService.createUser(request);
         User user = modelMapper.map(userResponse, User.class);
         authService.register(user);
@@ -118,7 +120,7 @@ public class AuthController {
             if (user != null && user.getAccountLockedTime() != null) {
                 // Hata mesajı ve kilitli süreyi dön
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(ResultHelper.errorWithData(e.getMessage(), "kalan süre: " + userService.diffLockedTime(user) + " dakika", HttpStatus.BAD_REQUEST));
+                        .body(ResultHelper.errorWithData(e.getMessage(), "Hesabınız kilitli kalan süre: " + userService.diffLockedTime(user) + " dakika", HttpStatus.BAD_REQUEST));
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
@@ -155,7 +157,7 @@ public class AuthController {
     }
 
     @PostMapping("/reset-password")
-    public ResultData<?> resetPassword(@RequestBody ForgotPasswordRequest request) {
+    public ResultData<?> resetPassword(@Valid @RequestBody ForgotPasswordRequest request) {
 
         try {
             String resetToken = request.getResetPasswordToken();

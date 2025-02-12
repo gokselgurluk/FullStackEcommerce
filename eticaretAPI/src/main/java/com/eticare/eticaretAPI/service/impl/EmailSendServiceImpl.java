@@ -38,7 +38,7 @@ private final TokenService tokenService;
     private final AuthService authService;
     private final IEmailSendRepository emailSendRepository;
     private static final String IMAGE_PATH = "C:\\Users\\ASUS\\IdeaProjects\\eticaretAPI\\eticaretAPI\\src\\main\\resources\\images\\logo.png";
-    @Value("${verify.code.max_attempts}")
+    @Value("${max_attempts}")
     private int remainingAttempts;
     private static final long EMAIL_EXPIRATION = 1000 * 60 * 2; // 2 dk
 
@@ -121,7 +121,7 @@ private final TokenService tokenService;
             return emailSend;
 
         } catch (Exception e) {
-            throw new RuntimeException("E-posta kaydedilirken hata oluştu. : " + e.getMessage());
+            throw new RuntimeException(e.getMessage());
         }
 
 

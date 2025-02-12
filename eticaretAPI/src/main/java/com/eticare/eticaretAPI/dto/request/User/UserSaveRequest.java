@@ -1,5 +1,6 @@
 package com.eticare.eticaretAPI.dto.request.User;
 
+import com.eticare.eticaretAPI.utils.annotationValidPassword;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -12,6 +13,7 @@ public class UserSaveRequest {
     @NotBlank(message = "Surname cannot be empty or blank")
     private String surname;
 
+    @annotationValidPassword
     @NotBlank(message = "Password cannot be empty or blank")
     private String password;
 
