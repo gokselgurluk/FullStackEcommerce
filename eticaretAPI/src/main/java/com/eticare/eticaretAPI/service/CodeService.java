@@ -12,7 +12,7 @@ public interface CodeService {
 
     Code createVerifyCode(User user);
 
-    Boolean isValidateCode(User user, String code );
+    Boolean isValidateCode(String email, String code );
 
 
 

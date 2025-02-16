@@ -29,6 +29,7 @@ public class JwtService {
     public String generateRefreshToken(User user) {
         return Jwts.builder()
                 .setSubject(user.getEmail())
+                .claim("isActive", user.isActive())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION)) // 7 gün geçerli
                 .signWith(SignatureAlgorithm.HS256, getSigningKey())

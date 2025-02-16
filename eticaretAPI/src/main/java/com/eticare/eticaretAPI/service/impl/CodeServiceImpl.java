@@ -4,6 +4,7 @@ import com.eticare.eticaretAPI.config.exeption.NotFoundException;
 import com.eticare.eticaretAPI.config.jwt.JwtService;
 import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.entity.Code;
+import com.eticare.eticaretAPI.entity.enums.TokenType;
 import com.eticare.eticaretAPI.repository.ICodeRepository;
 import com.eticare.eticaretAPI.service.EmailSendService;
 import com.eticare.eticaretAPI.service.UserService;
@@ -23,20 +24,16 @@ import static org.apache.commons.lang3.time.DateUtils.isSameDay;
 public class CodeServiceImpl implements CodeService {
 
     private final ICodeRepository verificationTokenRepository;
-    private final JwtService jwtService;
-    private  final EmailSendService emailSendService;
     private  final UserService userService;
-    private final AuthService authService;
+
     @Value("${max_attempts}")
     private  int remainingAttempts;
     @Value("${char-pool-set}")
     private  String charPool;
-    public CodeServiceImpl(ICodeRepository verificationTokenRepository, JwtService jwtService, EmailSendService emailSendService, UserService userService, AuthService authService) {
+    public CodeServiceImpl(ICodeRepository verificationTokenRepository,  UserService userService) {
         this.verificationTokenRepository = verificationTokenRepository;
-        this.jwtService = jwtService;
-        this.emailSendService = emailSendService;
         this.userService = userService;
-        this.authService = authService;
+
     }
 
 
@@ -97,8 +94,11 @@ public class CodeServiceImpl implements CodeService {
             code.setUser(user); // Kullanıcıyı set et
             code.setRemainingAttempts(remainingAttempts -1);
             code.setCodeValue(newCode);
+            code.setTokenType(TokenType.VERIFICATION);
             code.setLastSendDate(new Date());
             code.setCodeExpiryDate(LocalDateTime.now().plusMinutes(2)); // Geçerlilik süresi
+            code.setExpired(false);
+            code.setRevoked(false);
 
         }
 
@@ -108,14 +108,13 @@ public class CodeServiceImpl implements CodeService {
     }
 
     @Override
-    public Boolean isValidateCode(User user, String code) {
+    public Boolean isValidateCode(String email, String code) {
+        User user = userService.getUserByMail(email).orElseThrow(()->new NotFoundException("isValidateCode: için kullanıcı bulunamadı !"));
+        Optional<Code> codeValueOtp = verificationTokenRepository.findByUserAndCodeValue(user, code);
 
-
-        Optional<Code> tokenOtp = verificationTokenRepository.findByUserAndCodeValue(user, code);
-
-        if (tokenOtp.isPresent()) {
+        if (codeValueOtp.isPresent()) {
             // Kodun geçerliliğini kontrol et
-            LocalDateTime expiryDate = tokenOtp.get().getCodeExpiryDate();
+            LocalDateTime expiryDate = codeValueOtp.get().getCodeExpiryDate();
             return expiryDate.isAfter(LocalDateTime.now());
         }
 

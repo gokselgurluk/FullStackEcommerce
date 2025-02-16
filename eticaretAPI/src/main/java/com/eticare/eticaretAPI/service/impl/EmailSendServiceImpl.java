@@ -10,6 +10,7 @@ import com.eticare.eticaretAPI.entity.enums.SecretTypeEnum;
 import com.eticare.eticaretAPI.entity.enums.TokenType;
 import com.eticare.eticaretAPI.repository.IEmailSendRepository;
 
+import com.eticare.eticaretAPI.service.CodeService;
 import com.eticare.eticaretAPI.service.EmailSendService;
 import com.eticare.eticaretAPI.service.TokenService;
 import com.eticare.eticaretAPI.service.UserService;
@@ -34,19 +35,20 @@ public class EmailSendServiceImpl implements EmailSendService {
 
     private final JavaMailSender javaMailSender;
     private final UserService userService;
-private final TokenService tokenService;
-    private final AuthService authService;
+    private final TokenService tokenService;
+    private final CodeService codeService;
+
     private final IEmailSendRepository emailSendRepository;
     private static final String IMAGE_PATH = "C:\\Users\\ASUS\\IdeaProjects\\eticaretAPI\\eticaretAPI\\src\\main\\resources\\images\\logo.png";
     @Value("${max_attempts}")
     private int remainingAttempts;
     private static final long EMAIL_EXPIRATION = 1000 * 60 * 2; // 2 dk
 
-    public EmailSendServiceImpl(JavaMailSender javaMailSender, UserService userService, TokenService tokenService, AuthService authService, IEmailSendRepository emailSendRepository) {
+    public EmailSendServiceImpl(JavaMailSender javaMailSender, UserService userService, TokenService tokenService, CodeService codeService, IEmailSendRepository emailSendRepository) {
         this.javaMailSender = javaMailSender;
         this.userService = userService;
         this.tokenService = tokenService;
-        this.authService = authService;
+        this.codeService = codeService;
         this.emailSendRepository = emailSendRepository;
     }
 
@@ -142,6 +144,7 @@ private final TokenService tokenService;
             // HTML formatında içerik
             String htmlContent = "<html><body style='background-color: #f0f0f0; font-family: Arial, sans-serif; text-align: center; padding: 20px;'>"
                     + "<div style='background-color: #ffffff; padding: 40px; border-radius: 8px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); width: 90%; max-width: 600px; margin: 0 auto;'>"
+                    + "<img src='cid:logoImage' alt='Şirketinizin logosu' style='width: 150px; height: auto; margin-top: 10px;' />"
                     + "<h2 style='text-align: center;'>Hoş Geldiniz! 🎉</h2>" + "<h3 style='text-align: center;'>Şifrenizi sıfırlamak için şu linke tıklayın:</h3>"
                     + "<p><a href='" + resetUrl + "' "
                     + "style='display: inline-block; background-color: #007BFF; color: white; padding: 12px 20px; "
@@ -150,7 +153,6 @@ private final TokenService tokenService;
                     + "</a></p>"
                     + "<br>"
                     + "<p style='color: red; font-weight: bold;'>Bu link 2 dakika süresince geçerlidir!</p>"
-                    + "<img src='cid:logoImage' alt='Şirketinizin logosu' style='width: 150px; height: auto; margin-top: 10px;' />"
                     + "</div>"
                     + "</body></html>";
 
@@ -202,20 +204,79 @@ private final TokenService tokenService;
     }
 
     @Override
-    public String sendVerificationCodeEmail(String email, String code) {
-        Optional<User> userOpt = userService.getUserByMail(email);
-        if (userOpt.get().isActive()) {
-            throw new NotFoundException("Bu hesap zaten aktif");
-        }
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("noreply@springMailService");
-        message.setTo(email);
-        message.setSubject("Account Verification Code");
-        message.setText("Your verification code is: " + code + "\nThis code is valid for 2 minutes.");
-        javaMailSender.send(message);
+    public EmailSend sendSecurityCodeEmail(String email) {
+        try {
+            if (StringUtils.isBlank(email)) {
+                throw new IllegalArgumentException("Geçersiz e-posta adresi.");
+            }
+            User user = userService.getUserByMail(email)
+                    .orElseThrow(() -> new EntityNotFoundException("sendSecurityCodeEmail : kullanıcı bulunamadı"));
 
-        return "Mesaj gönderildi";
+          /*  if (!user.isActive()) {
+                throw new IllegalStateException("Hesap aktif degil.");
+            }*/
+
+            Code code = codeService.createVerifyCode(user);
+            EmailSend emailSend = saveOrUpdateEmailSend(user, null, code, code.getTokenType(), SecretTypeEnum.CODE);
+            if (emailSend != null) {
+                sendSecurityCodeEmailWithMedia(emailSend);
+            }
+            return emailSend;
+        } catch (Exception e) {
+            throw new RuntimeException("E-posta kaydedilirken hata oluştu. : " + e.getMessage());
+        }
     }
+
+    @Override
+    public void sendSecurityCodeEmailWithMedia(EmailSend emailSend) {
+        try {
+            String email = emailSend.getUser().getEmail();
+            String Value = emailSend.getToken() != null ? emailSend.getToken().getTokenValue() : emailSend.getCode().getCodeValue();
+            String verifyUrl = "http://localhost:5173/verify-otp";
+            MimeMessage message = javaMailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setFrom("noreply@e-TicaretHesapSifreSıfırlamaService");
+            helper.setTo(email);
+            helper.setSubject("OTP Verify Link");
+            // HTML formatında içerik
+
+            String htmlContent = "<html><body style='background-color: #f0f0f0; font-family: Arial, sans-serif; text-align: center; padding: 20px;'>"
+                    + "<div style='background-color: #ffffff; padding: 40px; border-radius: 8px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); width: 90%; max-width: 600px; margin: 0 auto;'>"
+                    + "<img src='cid:logoImage' alt='Şirketinizin logosu' style='width: 75px; height: auto; margin-top: 2px;' />"
+                    + "<h2 style='text-align: center;'>OTP Doğrulama</h2>"
+                    + "<h3 style='text-align: center;'>Kodunuzu girin:</h3>"
+                    + "<p><strong style='font-size: 24px;'>" + Value + "</strong></p>"
+                    + "<p style='color: red; font-weight: bold;'>Bu kod 2 dakika geçerlidir!</p>"
+                    + "<p><a href='" + verifyUrl + "' "
+                    + "style='display: inline-block; background-color: #007BFF; color: white; padding: 10px 20px; "
+                    + "border-radius: 5px; text-decoration: none; font-weight: bold;'>"
+                    + "OTP GİRİŞİ"
+                    + "</a></p>"
+                    + "</div>"
+                    + "</body></html>";
+
+
+            // HTML içeriği e-postaya ekle
+            helper.setText(htmlContent, true); // true parametresi HTML içeriği olduğunu belirtir
+            // Marka logosunu e-posta ile birlikte gömülü olarak ekle
+            helper.addInline("logoImage", new File(IMAGE_PATH));
+
+            // E-posta gönder
+            File logoFile = new File(IMAGE_PATH);
+            if (!logoFile.exists()) {
+                throw new RuntimeException("Logo resmi bulunamadı !");
+            } else {
+                helper.addInline("logoImage", logoFile);
+            }
+            // E-posta gönder
+            javaMailSender.send(message);
+
+        } catch (MessagingException e) {
+            throw new RuntimeException("Email içerigi oluşturulamadı :" + e.getMessage());
+        }
+
+    }
+
 
 
     @Override

@@ -39,7 +39,7 @@ public class Token {
     @Enumerated(EnumType.STRING)
     private TokenType tokenType;
 
-    private boolean revoked; // Token iptal edildi mi?
+    private boolean revoked = true; // Token iptal edildi mi?
 
     private boolean expired; // Token süresi doldu mu?
 

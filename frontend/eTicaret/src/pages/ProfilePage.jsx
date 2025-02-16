@@ -79,6 +79,7 @@ const ProfilePage = () => {
         }
       } else {
         setError("An error occurred while fetching the profile.");
+        navigate("/email-verify");
       }
     } finally {
       setLoading(false);

@@ -29,24 +29,7 @@ const products = [
 const HomePage = () => {
   return (
     <div>
-      {/* Navbar */}
-      <Navbar bg="dark" variant="dark" expand="lg">
-        <Container>
-          <Navbar.Brand href="#">E-Shop</Navbar.Brand>
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="me-auto">
-              <Nav.Link href="#home">Home</Nav.Link>
-              <Nav.Link href="#shop">Shop</Nav.Link>
-              <NavDropdown title="Categories" id="basic-nav-dropdown">
-                <NavDropdown.Item href="#electronics">Electronics</NavDropdown.Item>
-                <NavDropdown.Item href="#clothing">Clothing</NavDropdown.Item>
-                <NavDropdown.Item href="#accessories">Accessories</NavDropdown.Item>
-              </NavDropdown>
-            </Nav>
-          </Navbar.Collapse>
-        </Container>
-      </Navbar>
+    
 
       {/* Product List */}
       <Container className="my-4">

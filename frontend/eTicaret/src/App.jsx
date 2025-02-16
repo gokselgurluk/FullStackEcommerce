@@ -5,14 +5,14 @@ import PrivateRoute from './components/PrivateRoute'; // PrivateRoute'ı import 
 import HomePage from './pages/HomePage'; // Ana sayfa bileşeni
 import LoginPage from './pages/LoginPage'; // Giriş sayfası
 import ProfilePage from './pages/ProfilePage'; // Profil sayfası
-import RegisterPage from './pages/RegisterPage'; // Kayıt sayfası
-import EmailVerifyPage from './pages/EmailVerifyPage'; // E-posta doğrulama sayfası
+import RegisterPage from './auth/RegisterPage'; // Kayıt sayfası
+import EmailVerifyPage from './auth/EmailVerifyPage'; // E-posta doğrulama sayfası
 import NavbarComponent from './components/Navbar'; // Navbar bileşeni
 import { CartProvider } from './context/CartContext'; // CartContext'i import et
 import CartPage from './pages/CartPage'; // Sepet sayfası
-import ActivateAccountPage from './pages/ActivateAccountPage'; // Sepet sayfası
-import ForgotPassword from './pages/ForgotPassword'; // Sepet sayfası
-import ResetPassword from './pages/ResetPassword'; // Sepet sayfası
+import ActivateAccountPage from './auth/ActivateAccountPage'; // Sepet sayfası
+import ForgotPassword from './auth/ForgotPassword'; // Sepet sayfası
+import ResetPassword from './auth/ResetPassword'; // Sepet sayfası
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const App = () => {

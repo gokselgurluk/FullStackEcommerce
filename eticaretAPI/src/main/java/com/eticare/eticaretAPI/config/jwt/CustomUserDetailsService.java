@@ -25,11 +25,8 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         User user = userService.getUserByMail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Kullanıcı bulunamadı: " + email));
-        // Eğer kilit süresi varsa veya şu anki zamandan sonra ise hesap kilitlidir.
-        boolean isUnlocked = user.getAccountLockedTime() == null || user.getAccountLockedTime().before(new Date());
-        userService.updateUserLocked(user, isUnlocked); // Burada güncelle
+
         return new CustomUserDetails(
-                userService,
                 user.getEmail(),
                 user.getPassword(),
                 Collections.singletonList(new SimpleGrantedAuthority(user.getRoleEnum().name())),

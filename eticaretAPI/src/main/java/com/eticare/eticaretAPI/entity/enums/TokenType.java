@@ -4,5 +4,6 @@ public enum TokenType {
     ACCESS,
     REFRESH,
     ACTIVATION,
-    RESET
+    RESET,
+    VERIFICATION
 }

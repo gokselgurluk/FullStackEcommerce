@@ -47,9 +47,9 @@ public class User {
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date accountLockedTime;
-
+    private long diffLockedTime ;
     private int incrementFailedLoginAttempts = 0;
-    private boolean isLocked = false; // Varsayılan olarak kullanıcı aktif değil
+    private boolean isAccountLocked  = false; // Varsayılan olarak kullanıcı aktif değil
     private boolean active = false; // Varsayılan olarak kullanıcı aktif değil
 
 

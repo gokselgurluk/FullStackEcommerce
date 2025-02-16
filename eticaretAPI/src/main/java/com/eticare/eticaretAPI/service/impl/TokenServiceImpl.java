@@ -40,8 +40,7 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public Optional<Token> findByUserAndTokenType(User user, TokenType tokenType) {
-        Token token = tokenRepository.findByUserAndTokenType(user,tokenType).orElseThrow(()->new NotFoundException("findByUserAndTokenType : Bu arama kriterleri için token bulunamadı"));
-        return Optional.of(token);
+        return  tokenRepository.findByUserAndTokenType(user,tokenType);
     }
 
     @Override

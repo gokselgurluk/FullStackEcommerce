@@ -180,7 +180,21 @@ button {
   gap: 0.5rem;
   padding: 0.25rem;
   z-index: 1;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  /* Arka plan resmi olarak ekleme */
+  background-image: url("/images/logoWhite.png");
+  background-color: #181818;
+  background-size: contain; /* Resmin boyutu tamamen görünür olacak şekilde ayarlanır */
+  background-repeat: no-repeat; /* Tekrarlamayı önler */
+  background-position: center; /* Resmi ortalar */
+  width: 90px; /* Logo boyutunu belirle */
+  height: 90px; /* Logo boyutunu belirle */
+  border: 1px;
+  border-radius:  10%;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
+
 .form-title {
   font-size: 2rem; /* Daha büyük başlık */
   font-weight: bold;
@@ -199,7 +213,7 @@ button {
   width: 100%; /* Full width */
   height: 100%; /* Full width */
   max-width: 70%; /* Maksimum genişlik sınırı kaldırıldı */
-  max-height: 70%; /* Maksimum genişlik sınırı kaldırıldı */
+  max-height: 80%; /* Maksimum genişlik sınırı kaldırıldı */
   padding: 4rem;
   border-radius: 1rem;
   border: 1px solid #e5e7eb;
@@ -217,12 +231,12 @@ button {
   width: 100%;
   display: flex;
   align-items: center;
-  margin-bottom: 10px; /* Alt boşluk ekleyelim */
+ 
 }
 
 .input-field {
   width: 100%;
-  max-width: 400px; /* İstersen maksimum genişlik belirleyebilirsin */
+  max-width: 100%; /* İstersen maksimum genişlik belirleyebilirsin */
   padding: 10px 60px 10px 10px; /* Sağda boşluk bırak */
   text-align: center; /* Yazıyı ortalar */
   margin-bottom: 10px; /* Alt boşluk ekler */
@@ -262,31 +276,97 @@ button {
   align-items: center;
   justify-content: center;
 }
+
+.cointainer {
+  display: flex;
+  justify-content: space-between; /* Sağ ve sola hizala */
+  align-items: center; /* Dikeyde ortala */
+  width: 100%;
+  max-width: 100%;
+  flex-wrap: nowrap; /* Aynı satırda kalsın */
+}
+
 /* "Şifremi Unuttum" yazısının alt kısma yerleştirilmesi */
 .forget-password {
-  position: absolute;
-  bottom: -25px; /* Input altına yerleştirilecek */
+
   left: 0;
   font-size: 14px;
   color: rgba(0, 0, 0, 0.7);
   cursor: pointer;
 }
+
+/* "Şifremi Unuttum" yazısının alt kısma yerleştirilmesi */
+.remember-me-container {
+
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.7);
+  cursor: pointer;
+
+  
+ 
+}
+.remember-me-checkbox {
+  width: 15px;
+  height: 15px;
+  border-radius: 4px;
+  border: 2px solid #888;
+  outline: none;
+  transition: all 0.3s ease;
+  margin-right: 8px; /* Checkbox ile label arasında boşluk bırakma */
+}
+
+/* Change the border color on focus */
+.remember-me-checkbox:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+/* Style when checked */
+.remember-me-checkbox:checked {
+  background-color: #007bff;
+  border-color: #007bff;
+  position: relative;
+}
+
+/* Add checkmark or custom indicator */
+.remember-me-checkbox:checked::after {
+  content: "✔";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 12px;
+}
+
+
+
+
 /* Login Button */
 .login-button {
-  width: 40%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center; /* Yazıyı ortalar */
+  width: 100%;
+  height: 11%;
+  max-width: 100%; /* İstersen maksimum genişlik belirleyebilirsin */
+  max-height:100% ;
   padding: 0.75rem;
-  margin-top: 1rem;
+  margin-top: 3rem;
   margin-bottom:  1rem;
-  border-radius: 2rem;
-  background-color: rgba(22, 163, 74, 0.897);
   color: white;
   font-weight: 500;
   transition: background-color 0.2s;
-
+  border-radius: 1rem;
+  border: 1px solid #808080;
+  background-color: #181818;
+  backdrop-filter: blur(24px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .login-button:hover {
-  background-color: #217c42;
+  background-color: #16161696;
 }
 
 /* Sign Up Button */
@@ -304,13 +384,44 @@ button {
   background-color: #16161696;
 }
 
-.Sign-Up{
-  font-size: 1rem; /* Daha büyük başlık */
-  font-weight: bold;
-  margin-bottom: 20px; /* Aşağıdaki inputlardan biraz daha uzaklaşsın */
-  color:#181818; /* Daha koyu renk */
-  text-align: center;
+
+.signup-container {
+   display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center; /* Yazıyı ortalar */
+  width: 100%;
+  max-width: 100% ; /* İstersen maksimum genişlik belirleyebilirsin */
+  padding: 5px 5px 5px 5px; /* Sağda boşluk bırak */
+  text-align: center; /* Yazıyı ortalar */
+  border-radius: 1rem;
+  border: 0px solid #808080;
+  background-color: rgba(0, 0, 0, 0.178);
+  backdrop-filter: blur(24px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  
 }
+.signup-text {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #707070; /* Daha soluk gri ton */
+  text-align: center;
+  
+}
+
+/* Link (Sign Up) rengini koyulaştırma */
+.signup-link {
+  color: #181818; /* Koyu renk */
+  font-weight: bold;
+  text-decoration: none; /* Alt çizgiyi kaldır */
+  margin-left: 5px;
+}
+
+/* Link üzerine gelince hafif koyulaştır */
+.signup-link:hover {
+  color: #16161696;
+}
+
 /* Sağ Bölüm */
 .login-right {
   background-color: rgba(22, 163, 74, 0.897); /* Same green color as the left side */

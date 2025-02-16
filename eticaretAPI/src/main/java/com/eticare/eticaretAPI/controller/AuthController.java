@@ -1,9 +1,10 @@
 package com.eticare.eticaretAPI.controller;
 
 import com.eticare.eticaretAPI.config.exeption.NotFoundException;
-import com.eticare.eticaretAPI.config.jwt.CustomUserDetails;
 import com.eticare.eticaretAPI.config.modelMapper.IModelMapperService;
 import com.eticare.eticaretAPI.dto.request.User.UserUpdateRequest;
+import com.eticare.eticaretAPI.entity.*;
+import com.eticare.eticaretAPI.entity.enums.TokenType;
 import com.eticare.eticaretAPI.service.*;
 import com.eticare.eticaretAPI.service.impl.AuthService;
 import com.eticare.eticaretAPI.config.jwt.CustomUserDetailsService;
@@ -16,28 +17,26 @@ import com.eticare.eticaretAPI.dto.request.ForgotPasswordRequest.ForgotPasswordR
 import com.eticare.eticaretAPI.dto.request.User.UserSaveRequest;
 import com.eticare.eticaretAPI.dto.response.AuthenticationResponse;
 import com.eticare.eticaretAPI.dto.response.UserResponse;
-import com.eticare.eticaretAPI.entity.Session;
-import com.eticare.eticaretAPI.entity.Token;
-import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.repository.ISessionRepository;
 import com.eticare.eticaretAPI.utils.DeviceUtils;
 import com.eticare.eticaretAPI.utils.IpUtils;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.Date;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
-
 
 
     private final CustomUserDetailsService userDetailsService;
@@ -82,30 +81,35 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    @Transactional
     public ResponseEntity<?> createAuthToken(@RequestBody AuthenticationRequest authenticationRequest, HttpServletRequest httpRequest) {
+
+
         try {
             // Süresi dolmuş token'ları kontrol et ve güncelle
             tokenService.checkAndUpdateExpiredTokens();
+            // IP adresi ve cihaz bilgisi alınır
+            String clientIp = IpUtils.getClientIp(httpRequest);
+            Map<String, String> userAgent = DeviceUtils.getUserAgent(httpRequest);
 
-            // Kullanıcıyı doğrula ve token üret
-            List<Token> tokens = authService.authenticate(authenticationRequest.getEmail(), authenticationRequest.getPassword());
-            if (tokens.size() < 2) {
-                throw new RuntimeException("Token üretimi sırasında bir hata oluştu.");
+            // Kullanıcıyı doğrula ve sessionı dogrula sonra token üret
+            User user = authService.authenticate(authenticationRequest.getEmail(), authenticationRequest.getPassword(), clientIp, userAgent.get("Device"));
+
+            if (user.isAccountLocked()) {
+                return ResponseEntity.status(HttpStatus.LOCKED).body(ResultHelper.errorWithData("Hesap kilidini açmak için otp kodunu giriniz", "beklemeniz gereken süre : " + user.getDiffLockedTime() + " dakika", HttpStatus.LOCKED));
+            }
+            Token refreshToken = tokenService.refreshToken(user);
+            EmailSend emailSend = sessionService.requestOtpIfNeeded(user, refreshToken, clientIp, userAgent);
+
+            if (emailSend != null) {
+                return   ResponseEntity.status(HttpStatus.SEE_OTHER)
+                        .body("OTP Doğrulaması Gerekiyor E-posta kutunuzu kontrol edin dogrulama için kalan süreniz : " + String.valueOf(TimeUnit.MILLISECONDS.toMinutes(emailSend.getEmailExpiryDate().getTime() - new Date().getTime())));
             }
 
-            Token refreshToken = tokens.get(0); // İlk eleman (Refresh Token)
-            Token accessToken = tokens.get(1);  // İkinci eleman (Access Token)
+            // Session Güncelle
+            sessionService.createOrUpdateSession(user, refreshToken, clientIp, userAgent);
 
-            User user = userService.getUserByMail(authenticationRequest.getEmail())
-                    .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
-
-            // IP adresi ve cihaz bilgisi alınır
-            String ipAddress = IpUtils.getClientIp(httpRequest);
-            Map<String, String> deviceInfo = DeviceUtils.getUserAgent(httpRequest);
-
-            // Session oluşturulur
-            sessionService.createSession(user, refreshToken, ipAddress, deviceInfo);
-
+            Token accessToken = tokenService.accessToken(user);
             // Yanıt olarak token ve kullanıcı bilgilerini gönder
             AuthenticationResponse response = AuthenticationResponse.builder()
                     .accessToken(accessToken.getTokenValue())
@@ -115,17 +119,31 @@ public class AuthController {
                     .build();
 
             return ResponseEntity.ok(response);
+        } catch (LockedException e) {
+            return ResponseEntity.status(HttpStatus.LOCKED).body(ResultHelper.errorWithData(e.getMessage(), null, HttpStatus.LOCKED));
         } catch (RuntimeException e) {
-            User user = userService.getUserByMail(authenticationRequest.getEmail()).orElse(null);
-            if (user != null && user.getAccountLockedTime() != null) {
-                // Hata mesajı ve kilitli süreyi dön
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(ResultHelper.errorWithData(e.getMessage(), "Hesabınız kilitli kalan süre: " + userService.diffLockedTime(user) + " dakika", HttpStatus.BAD_REQUEST));
-            }
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResultHelper.errorWithData(e.getMessage(), null, HttpStatus.BAD_REQUEST));
         }
     }
 
+    @PostMapping("/otp-verification")
+    public ResultData<?> otpVerification(@RequestBody VerifyCodeRequest verifyCodeRequest, HttpServletRequest httpRequest) {
+        try {
+            String value = verifyCodeRequest.getVerifyToken();
+            String email = verifyCodeRequest.getEmail();
+            // IP adresi ve cihaz bilgisi alınır
+            String clientIp = IpUtils.getClientIp(httpRequest);
+            Map<String, String> userAgent = DeviceUtils.getUserAgent(httpRequest);
+
+            codeService.isValidateCode(email, value);
+            sessionService.verifyOtpAndEnableSession(email, clientIp, userAgent.get("Device"));
+            return ResultHelper.success("Oturum başarıyla doğrulandı.");
+
+        } catch (Exception e) {
+            return ResultHelper.errorWithData(e.getMessage(), null, HttpStatus.FORBIDDEN);
+        }
+
+    }
 
     @PostMapping("/activate-account")
     public ResultData<?> activateAccount(@RequestBody VerifyCodeRequest verifyCodeRequest) {
@@ -239,9 +257,9 @@ public class AuthController {
 
         Session session = sessionRepository.findByRefreshToken(user.getEmail()).orElseThrow(() -> new RuntimeException("Session bilgisi bulunamadı"));
 
-        if (sessionService.isValidSession(session.getEmail(), session.getIpAddress(), session.getDevice())) {
+        if (sessionService.isSessionValid(session.getEmail(), session.getIpAddress(), session.getDeviceInfo())) {
             if (session.getIpAddress().equalsIgnoreCase(IpUtils.getClientIp(httpServletRequest))
-                    && session.getDevice().equalsIgnoreCase(DeviceUtils.getUserAgent(httpServletRequest).get("Device"))) {
+                    && session.getDeviceInfo().equalsIgnoreCase(DeviceUtils.getUserAgent(httpServletRequest).get("Device"))) {
                 if (session.getEmail() == null || !jwtService.isTokenValid(session.getRefreshToken())) {
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                             .body("Refresh token geçersiz veya süresi dolmuş. Lütfen tekrar giriş yapınız.");

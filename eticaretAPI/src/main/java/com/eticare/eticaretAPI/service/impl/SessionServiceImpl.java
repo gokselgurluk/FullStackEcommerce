@@ -1,47 +1,58 @@
 package com.eticare.eticaretAPI.service.impl;
 
-import com.eticare.eticaretAPI.config.exeption.NotFoundException;
+import com.eticare.eticaretAPI.entity.EmailSend;
 import com.eticare.eticaretAPI.entity.Session;
 import com.eticare.eticaretAPI.entity.Token;
 import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.repository.ISessionRepository;
 
+import com.eticare.eticaretAPI.repository.ITokenRepository;
+import com.eticare.eticaretAPI.service.EmailSendService;
 import com.eticare.eticaretAPI.service.SessionService;
-import com.eticare.eticaretAPI.service.UserService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class SessionServiceImpl implements SessionService {
     private final ISessionRepository sessionRepository;
-    private final UserService userService;
+    private final EmailSendService emailSendService;
+    private final ITokenRepository tokenRepository;
+    @Value("${MAX.FAILD.ENTER.COUNT}")
+    private Integer MAX_FAILD_ENTER_COUNT;
 
-    public SessionServiceImpl(ISessionRepository sessionRepository, UserService userService) {
+    public SessionServiceImpl(ISessionRepository sessionRepository, EmailSendService emailSendService, ITokenRepository tokenRepository) {
         this.sessionRepository = sessionRepository;
-        this.userService = userService;
+        this.emailSendService = emailSendService;
+        this.tokenRepository = tokenRepository;
     }
 
-    @Override
-    public Session createSession(User user, Token token,String ipAddress, Map<String,String> deviceInfo) {
+    public void createOrUpdateSession(User user, Token token, String ipAddress, Map<String, String> deviceInfo) {
+        Optional<Session> sessionOptional = sessionRepository.findByEmailAndIpAddressAndDeviceInfo(
+                user.getEmail(), ipAddress, deviceInfo.get("Device"));
+
         Session session = new Session();
-        session.setEmail(user.getEmail());
-        session.setRefreshToken(token.getTokenValue());
-        session.setIpAddress(ipAddress);
+
+        if (sessionOptional.isPresent()) {
+            session = sessionOptional.get();
+        } else {
+            session.setEmail(user.getEmail());
+            session.setIpAddress(ipAddress);
+            session.setDeviceInfo(deviceInfo.get("Device"));
+        }
+
         session.setBrowser(deviceInfo.get("Browser"));
         session.setOs(deviceInfo.get("OS"));
-        session.setDevice(deviceInfo.get("Device"));
         session.setCreatedAt(new Date());
-        session.setExpiresAt(token.getExpires_at()); //  oturum süresi
-        session.setToken(token); // Burada token nesnesini sağlamalısınız
-        session.setUser(user); // Burada user nesnesini sağlamalısınız
+        // Eğer token `null` ise, refreshToken değeri "null" yerine boş string ("") olabilir
+        session.setRefreshToken(token != null ? token.getTokenValue() : "");
+        session.setExpiresAt(token != null ? token.getExpires_at() : null);
+        session.setToken(token); // Eğer token null olursa zaten null atanmış olur
+        session.setUser(user);
 
-        return sessionRepository.save(session);
-
+        sessionRepository.save(session);
     }
-
     @Override
     public void terminateSession(Long sessionId) {
         Session session = sessionRepository.findById(sessionId)
@@ -49,32 +60,64 @@ public class SessionServiceImpl implements SessionService {
         sessionRepository.delete(session);
     }
 
-    @Override
-    public List<Session> getActiveSessions(Long userId) {
-        return sessionRepository.findByUserIdAndExpiresAtAfter(userId, new Date());
-    }
 
     @Override
     public Session getSessionByRefreshToken(String refreshToken) {
         return sessionRepository.findByRefreshToken(refreshToken)
-                .orElseThrow(()->new RuntimeException("Session bulunamadı"));
+                .orElseThrow(() -> new RuntimeException("Session bulunamadı"));
     }
-
 
     @Override
-    public boolean isValidSession(String email, String ipAddress, String deviceInfo) {
-        // Kullanıcıyı email ile bul
-        User user = userService.getUserByMail(email).orElseThrow(() -> new NotFoundException("isValidSession Error : Kullanıcı bulunamadı"));
-
-        // Kullanıcının aktif oturumlarını kontrol et
-        List<Session> sessions = sessionRepository.findByUserIdAndExpiresAtAfter(user.getId(), new Date());
-        return sessions.stream()
-                .anyMatch(session ->
-                        session.getIpAddress().equals(ipAddress) &&
-                                session.getDevice().equals(deviceInfo));
+    public void incrementFailedLoginAttempts(String email) {
+        List<Session> sessionList = sessionRepository.findByEmail(email);
+        for (Session session : sessionList) {
+            session.setIncrementFailedAttempts(session.getIncrementFailedAttempts() + 1);
+            if (session.getIncrementFailedAttempts() >= MAX_FAILD_ENTER_COUNT) {
+                session.setVerifiedSession(false);
+            }
+            sessionRepository.save(session);
+        }
     }
 
+    @Override
+    public boolean isSessionValid(String email, String ipAddress, String device) {
 
+        return sessionRepository.findByEmailAndIpAddressAndDeviceInfo(email, ipAddress, device)
+                .map(Session::isVerifiedSession) // Eğer session varsa, doğrulama durumunu döndür
+                .orElse(false); // Eğer session yoksa, false döndür
+    }
+
+    @Override
+    public void verifyOtpAndEnableSession(String email, String ipAddress, String device) {
+        Optional<Session> optionalSession = sessionRepository.findByEmailAndIpAddressAndDeviceInfo(email, ipAddress, device);
+        if (optionalSession.isPresent()) {
+            optionalSession.get().setVerifiedSession(true);// OTP doğrulandıktan sonra oturumu aktif hale getir
+            Token refreshToken = optionalSession.get().getToken();
+            refreshToken.setRevoked(false);
+            tokenRepository.save(refreshToken);
+            sessionRepository.save(optionalSession.get());
+
+        }
+
+    }
+
+    @Override
+    public EmailSend requestOtpIfNeeded(User user, Token token, String ipAddress, Map<String, String> deviceInfo) {
+        String email = user.getEmail();
+        EmailSend emailSend = null;
+        if (!isSessionValid(email, ipAddress, deviceInfo.get("Device"))) {
+            emailSend = emailSendService.sendSecurityCodeEmail(email);
+            createOrUpdateSession(user, token,ipAddress,  deviceInfo);
+        }
+
+        return emailSend;
+    }
+
+    @Override
+    public List<Session> getActiveSessions(String email) {
+        List<Session> sessionList = sessionRepository.findByEmail(email);
+        return sessionList;
+    }
 
     @Override
     public void terminateAllSessionsForUser(Long userId) {

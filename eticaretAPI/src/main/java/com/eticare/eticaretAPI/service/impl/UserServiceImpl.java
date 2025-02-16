@@ -6,9 +6,7 @@ import com.eticare.eticaretAPI.config.modelMapper.IModelMapperService;
 import com.eticare.eticaretAPI.dto.request.User.UserSaveRequest;
 import com.eticare.eticaretAPI.dto.request.User.UserUpdateRequest;
 import com.eticare.eticaretAPI.dto.response.UserResponse;
-import com.eticare.eticaretAPI.entity.Token;
 import com.eticare.eticaretAPI.entity.User;
-import com.eticare.eticaretAPI.entity.enums.TokenType;
 
 import com.eticare.eticaretAPI.repository.IUserRepository;
 
@@ -20,7 +18,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -47,19 +44,26 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateUserLocked(User user ,boolean status) {
-        user.setLocked(!status);
-        save(user);
+    public void updateUserLocked(User user) {
+        if(user.getAccountLockedTime() != null && user.getAccountLockedTime().after(new Date())){
+            user.setAccountLocked(true);
+            save(user);
+        }
+
+
     }
 
     @Override
-    public long diffLockedTime(User user) {
-        if(user.getAccountLockedTime()== null){
-         return 0;
+    public void diffLockedTime(User user) {
+        /*if(user.getAccountLockedTime()== null){
+            user.setDiffLockedTime(Math.max(diffTimeMinute, 0));
+        }*/
+         if (user.getAccountLockedTime() != null && user.getAccountLockedTime().after(new Date())) {
+            long diffMillis = user.getAccountLockedTime().getTime() - System.currentTimeMillis();
+            long diffTimeMinute = TimeUnit.MILLISECONDS.toMinutes(diffMillis);
+            user.setDiffLockedTime(Math.max(diffTimeMinute, 0));
+            userRepository.save(user);
         }
-        long diffMillis = user.getAccountLockedTime().getTime() - System.currentTimeMillis();
-        long diffTimeMinute =  TimeUnit.MILLISECONDS.toMinutes(diffMillis);
-        return  Math.max(diffTimeMinute, 0);
     }
 
     @Override
@@ -81,8 +85,6 @@ public class UserServiceImpl implements UserService {
         if (user.getIncrementFailedLoginAttempts() >= MAX_FAILD_ENTER_COUNT) {
             user.setAccountLockedTime(new Date(System.currentTimeMillis() + ACCOUNT_LOCKED_TIME)); // 30 dk kilitle
         }
-
-
         userRepository.save(user);
     }
 

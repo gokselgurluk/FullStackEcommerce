@@ -6,7 +6,8 @@ import lombok.*;
 import java.util.Date;
 
 @Entity
-@Data
+@Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -28,13 +29,14 @@ public class Session {
 
     private String browser; // Tarayıcı bilgisi
     private String os;      // İşletim sistemi bilgisi
-    private String device;  // Cihaz türü bilgisi
-
-    @Column(name = "session_created_at", nullable = false)
+    private String deviceInfo;  // Cihaz türü bilgisi
+    private boolean isVerifiedSession ;
+    private int incrementFailedAttempts = 0;
+    @Column(name = "session_created_at")
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt = new Date(); // Oturumun oluşturulma zamanı
 
-    @Column(name = "session_expires_at", nullable = false)
+    @Column(name = "session_expires_at")
     @Temporal(TemporalType.TIMESTAMP)
     private Date expiresAt; // Oturumun geçerlilik süresi
 
@@ -56,7 +58,7 @@ public class Session {
                 ", ipAddress='" + ipAddress + '\'' +
                 ", browser='" + browser + '\'' +
                 ", os='" + os + '\'' +
-                ", device='" + device + '\'' +
+                ", device='" + deviceInfo + '\'' +
                 ", createdAt=" + createdAt +
                 ", expiresAt=" + expiresAt +
                 ", user=" + user +

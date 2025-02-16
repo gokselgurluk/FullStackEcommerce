@@ -8,8 +8,8 @@ import com.eticare.eticaretAPI.entity.enums.SecretTypeEnum;
 import com.eticare.eticaretAPI.entity.enums.TokenType;
 
 public interface EmailSendService {
-    String sendVerificationCodeEmail(String email, String code) ;
-
+    void sendSecurityCodeEmailWithMedia(EmailSend emailSend) ;
+    EmailSend sendSecurityCodeEmail(String email) ;
    // BufferedImage generateCodeImage(String code) throws IOException;
 
    // void createImageAndSendEmail(String email, String code);
