@@ -35,6 +35,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 🔹 Endpoint kontrolü: Sadece "/send-activation-email" endpoint'ine gelen isteği kontrol et
         boolean isResendActivationRequest = request.getRequestURI().contains("/send-activation-email");
         boolean isActivateAccountRequest = request.getRequestURI().contains("/auth/activate-account");
+
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
         Boolean isActive = null;
@@ -86,6 +87,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             } else {
                 System.out.println("JwtAuthenticationFilter : request.getHeader boş");
+                filterChain.doFilter(request, response); // Eğer token yoksa diğer filtrelere devam et
+                return;
             }
         } catch (ExpiredJwtException e) {
             // JWT süresi dolmuşsa, 403 status kodu döner

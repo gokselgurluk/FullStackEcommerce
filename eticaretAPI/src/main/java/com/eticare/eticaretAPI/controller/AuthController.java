@@ -81,7 +81,6 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    @Transactional
     public ResponseEntity<?> createAuthToken(@RequestBody AuthenticationRequest authenticationRequest, HttpServletRequest httpRequest) {
 
 
@@ -93,7 +92,7 @@ public class AuthController {
             Map<String, String> userAgent = DeviceUtils.getUserAgent(httpRequest);
 
             // Kullanıcıyı doğrula ve sessionı dogrula sonra token üret
-            User user = authService.authenticate(authenticationRequest.getEmail(), authenticationRequest.getPassword(), clientIp, userAgent.get("Device"));
+            User user = authService.authenticate(authenticationRequest.getEmail(), authenticationRequest.getPassword(),httpRequest);
 
             if (user.isAccountLocked()) {
                 return ResponseEntity.status(HttpStatus.LOCKED).body(ResultHelper.errorWithData("Hesap kilidini açmak için otp kodunu giriniz", "beklemeniz gereken süre : " + user.getDiffLockedTime() + " dakika", HttpStatus.LOCKED));

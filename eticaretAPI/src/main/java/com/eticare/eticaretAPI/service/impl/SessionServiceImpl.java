@@ -19,8 +19,8 @@ public class SessionServiceImpl implements SessionService {
     private final ISessionRepository sessionRepository;
     private final EmailSendService emailSendService;
     private final ITokenRepository tokenRepository;
-    @Value("${MAX.FAILD.ENTER.COUNT}")
-    private Integer MAX_FAILD_ENTER_COUNT;
+    @Value("${MAX.FAILED.ENTER.COUNT}")
+    private Integer MAX_FAILED_ENTER_COUNT;
 
     public SessionServiceImpl(ISessionRepository sessionRepository, EmailSendService emailSendService, ITokenRepository tokenRepository) {
         this.sessionRepository = sessionRepository;
@@ -72,7 +72,7 @@ public class SessionServiceImpl implements SessionService {
         List<Session> sessionList = sessionRepository.findByEmail(email);
         for (Session session : sessionList) {
             session.setIncrementFailedAttempts(session.getIncrementFailedAttempts() + 1);
-            if (session.getIncrementFailedAttempts() >= MAX_FAILD_ENTER_COUNT) {
+            if (session.getIncrementFailedAttempts() >= MAX_FAILED_ENTER_COUNT) {
                 session.setVerifiedSession(false);
             }
             sessionRepository.save(session);

@@ -19,7 +19,6 @@ public class CustomUserDetails implements UserDetails {
     private final Date accountLockedUntil; // Kullanıcının kilit süresi
 
     public CustomUserDetails(String email, String password, Collection<? extends GrantedAuthority> authorities, Date accountLockedUntil) {
-
         this.email = email;
         this.password = password;
         this.authorities = authorities;

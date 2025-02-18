@@ -10,6 +10,7 @@ import com.eticare.eticaretAPI.entity.enums.TokenType;
 import com.eticare.eticaretAPI.service.TokenService;
 import com.eticare.eticaretAPI.service.UserService;
 import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.LockedException;
@@ -49,45 +50,34 @@ public class AuthService {
     public void register(User user) {
         // Save User in DB
         String refreshToken = jwtService.generateRefreshToken(user);
-        Date expiresRefreshToken = (jwtService.extractClaim(refreshToken, Claims::getExpiration));
         tokenService.saveOrUpdateToken(user, refreshToken, TokenType.REFRESH);
         // Token'ı veritabanına kaydet
 
     }
 
 
-    // Kullanıcı doğrulama ve token üretme
-    public User authenticate(String email, String password, String clientIp,String newDeviceInfo) throws RuntimeException {
+    // Kullanıcı doğrulama ve token üret
+    public User authenticate(String email, String password, HttpServletRequest request) throws RuntimeException {
         try {
 /*
             Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
 */
             UsernamePasswordAuthenticationToken authRequest =
                     new UsernamePasswordAuthenticationToken(email, password);
-            authRequest.setDetails(Map.of("ipAddress", clientIp, "Device", newDeviceInfo));
+            authRequest.setDetails(request);
             Authentication authentication = authenticationManager.authenticate(authRequest);
-
             CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
 
-
             return userService.getUserByMail(customUserDetails.getUsername()).orElseThrow(); // Doğrulanan kullanıcıyı al
-
-
-
-         /*   List<Token> tokens = new ArrayList<>();
-            tokens.add(tokenService.refreshToken(user));
-            tokens.add(tokenService.accessToken(user));*/
 
 
         } catch (UsernameNotFoundException | BadCredentialsException e) {
             throw new RuntimeException(e.getMessage());
         } catch (LockedException e) {
-        throw new LockedException( e.getMessage());
-        }
-        catch (AuthenticationException e) {
+            throw new LockedException(e.getMessage());
+        } catch (AuthenticationException e) {
             throw new RuntimeException("Kimlik doğrulama hatası :" + e.getMessage());
         }
-
 
 
     }

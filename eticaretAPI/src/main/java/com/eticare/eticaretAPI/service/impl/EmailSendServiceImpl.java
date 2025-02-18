@@ -32,16 +32,14 @@ import java.util.Optional;
 
 @Service
 public class EmailSendServiceImpl implements EmailSendService {
-
+    @Value("${max_attempts}")
+    private int remainingAttempts;
     private final JavaMailSender javaMailSender;
     private final UserService userService;
     private final TokenService tokenService;
     private final CodeService codeService;
-
     private final IEmailSendRepository emailSendRepository;
     private static final String IMAGE_PATH = "C:\\Users\\ASUS\\IdeaProjects\\eticaretAPI\\eticaretAPI\\src\\main\\resources\\images\\logo.png";
-    @Value("${max_attempts}")
-    private int remainingAttempts;
     private static final long EMAIL_EXPIRATION = 1000 * 60 * 2; // 2 dk
 
     public EmailSendServiceImpl(JavaMailSender javaMailSender, UserService userService, TokenService tokenService, CodeService codeService, IEmailSendRepository emailSendRepository) {

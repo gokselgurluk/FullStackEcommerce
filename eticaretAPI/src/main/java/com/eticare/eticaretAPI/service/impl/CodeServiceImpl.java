@@ -22,14 +22,13 @@ import static org.apache.commons.lang3.time.DateUtils.isSameDay;
 
 @Service
 public class CodeServiceImpl implements CodeService {
-
+    @Value("${max_attempts}")
+    private  Integer remainingAttempts;
+    @Value("${char-pool-set}")
+    private  String charPool;
     private final ICodeRepository verificationTokenRepository;
     private  final UserService userService;
 
-    @Value("${max_attempts}")
-    private  int remainingAttempts;
-    @Value("${char-pool-set}")
-    private  String charPool;
     public CodeServiceImpl(ICodeRepository verificationTokenRepository,  UserService userService) {
         this.verificationTokenRepository = verificationTokenRepository;
         this.userService = userService;

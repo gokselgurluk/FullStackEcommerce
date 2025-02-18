@@ -2,6 +2,7 @@ package com.eticare.eticaretAPI.config.jwt;
 
 import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -31,8 +32,6 @@ public class CustomUserDetailsService implements UserDetailsService {
                 user.getPassword(),
                 Collections.singletonList(new SimpleGrantedAuthority(user.getRoleEnum().name())),
                 user.getAccountLockedTime()
-
-
         );
     }
 

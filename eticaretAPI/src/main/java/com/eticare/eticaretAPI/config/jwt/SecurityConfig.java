@@ -1,9 +1,12 @@
 package com.eticare.eticaretAPI.config.jwt;
 
+import com.eticare.eticaretAPI.service.BlockedIpService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -23,21 +26,33 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
+    private final BlockedIpService blockedIpService;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, UserDetailsService userDetailsService, PasswordEncoder passwordEncoder, BlockedIpService blockedIpService) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
+
+        this.blockedIpService = blockedIpService;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())  // CSRF korumasını devre dışı bırak
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/refresh-token", "/auth/login", "/auth/register","/auth/otp-verification", "/send-activation-email", "/auth/activate-account", "auth/reset-password", "api/forgot-password", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**", "/Message").permitAll()  // "Message" endpoint'ini herkesin erişmesine izin ver
+                        .requestMatchers("/auth/refresh-token", "/auth/login", "/auth/register",
+                                "/auth/otp-verification", "/send-activation-email", "/auth/activate-account",
+                                "auth/reset-password", "api/forgot-password", "/swagger-ui/**", "/v3/api-docs/**",
+                                "/swagger-resources/**", "/webjars/**", "/Message").permitAll()  // "Message" endpoint'ini herkesin erişmesine izin ver
                         .anyRequest().authenticated()  // Diğer endpoint'ler için doğrulama gerekli
-                )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // JWT doğrulama filtresi
+                )            // Özel IP kontrol filtresini, UsernamePasswordAuthenticationFilter'dan önce ekleyin.
+                // Önce IP bloklama filtresini çalıştır
+                .addFilterBefore(new BlockedIpFilter(blockedIpService), UsernamePasswordAuthenticationFilter.class)
+                // Sonra JWT kimlik doğrulama filtresini çalıştır
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .formLogin(Customizer.withDefaults());
+
+               // .addFilterBefore( UsernamePasswordAuthenticationFilter.class); // JWT doğrulama filtresi
 
         return http.build();
     }

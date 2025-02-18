@@ -22,8 +22,8 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class UserServiceImpl implements UserService {
 
-    @Value("${MAX.FAILD.ENTER.COUNT}")
-    private Integer MAX_FAILD_ENTER_COUNT;
+    @Value("${MAX.FAILED.ENTER.COUNT}")
+    private Integer MAX_FAILED_ENTER_COUNT;
 
     private final static long ACCOUNT_LOCKED_TIME =1000*60*30;
     private final IUserRepository userRepository;
@@ -64,6 +64,7 @@ public class UserServiceImpl implements UserService {
             user.setDiffLockedTime(Math.max(diffTimeMinute, 0));
             userRepository.save(user);
         }
+
     }
 
     @Override
@@ -82,7 +83,7 @@ public class UserServiceImpl implements UserService {
         // Başarısız giriş sayacını artır
         user.setIncrementFailedLoginAttempts(user.getIncrementFailedLoginAttempts() + 1);
         // Eğer limit aşıldıysa hesabı kilitle
-        if (user.getIncrementFailedLoginAttempts() >= MAX_FAILD_ENTER_COUNT) {
+        if (user.getIncrementFailedLoginAttempts() >= MAX_FAILED_ENTER_COUNT) {
             user.setAccountLockedTime(new Date(System.currentTimeMillis() + ACCOUNT_LOCKED_TIME)); // 30 dk kilitle
         }
         userRepository.save(user);
