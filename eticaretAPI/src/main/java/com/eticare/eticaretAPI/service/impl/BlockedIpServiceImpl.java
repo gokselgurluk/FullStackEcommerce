@@ -61,17 +61,16 @@ public class BlockedIpServiceImpl implements BlockedIpService {
             blockedIp.setUnblocked_at(new Date(System.currentTimeMillis() + IP_BLOCKED_TIME));
             blockedIp.setBlockedIpStatus(true);
             blockedIpDiffTime(blockedIp);
-            blockedIpRepository.save(failedAttempt.getBlockedIP());
+            blockedIpRepository.save(blockedIp);
             new Timer().schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    failedAttempt.getBlockedIP().setBlockedIpStatus(false);
-                    blockedIpRepository.save(failedAttempt.getBlockedIP());
+                    blockedIp.setIncrementFailedAttempts(0);
+                    blockedIp.setBlockedIpStatus(false);
+                    blockedIpRepository.save(blockedIp);
                 }
-            },failedAttempt.getBlockedIP().getUnblocked_at().getTime() - System.currentTimeMillis());
+            },blockedIp.getUnblocked_at().getTime() - System.currentTimeMillis());
         }
-        System.out.println("tarihlerin ve blok durumu guncelleme işlemi sonrası nesne durumu" +failedAttempt.getBlockedIP());
-        System.out.println(failedAttempt.getBlockedIP().getUnblocked_at());
     }
 
     @Override
@@ -85,4 +84,6 @@ public class BlockedIpServiceImpl implements BlockedIpService {
             }
             return false;
         }
+
+
 }

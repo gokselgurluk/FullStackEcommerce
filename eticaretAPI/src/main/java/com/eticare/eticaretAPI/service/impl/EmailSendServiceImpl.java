@@ -197,12 +197,14 @@ public class EmailSendServiceImpl implements EmailSendService {
             }
             return emailSend;
         } catch (Exception e) {
-            throw new RuntimeException("E-posta kaydedilirken hata oluştu. : " + e.getMessage());
+            throw new RuntimeException("E-posta gönderim hatası. : " + e.getMessage());
         }
     }
 
     @Override
+    @Transactional
     public EmailSend sendSecurityCodeEmail(String email) {
+
         try {
             if (StringUtils.isBlank(email)) {
                 throw new IllegalArgumentException("Geçersiz e-posta adresi.");
@@ -215,7 +217,9 @@ public class EmailSendServiceImpl implements EmailSendService {
             }*/
 
             Code code = codeService.createVerifyCode(user);
+            System.out.println("code uretıldı: " + code.getCodeValue());
             EmailSend emailSend = saveOrUpdateEmailSend(user, null, code, code.getTokenType(), SecretTypeEnum.CODE);
+            System.out.println("code uretıldı: " + emailSend.toString());
             if (emailSend != null) {
                 sendSecurityCodeEmailWithMedia(emailSend);
             }
@@ -230,8 +234,7 @@ public class EmailSendServiceImpl implements EmailSendService {
         try {
             String email = emailSend.getUser().getEmail();
             String Value = emailSend.getToken() != null ? emailSend.getToken().getTokenValue() : emailSend.getCode().getCodeValue();
-            String verifyUrl = "http://localhost:5173/verify-otp";
-            MimeMessage message = javaMailSender.createMimeMessage();
+            String verifyUrl = "http://localhost:5173/otp-verify?code=" + Value + "&email=" + email;            MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
             helper.setFrom("noreply@e-TicaretHesapSifreSıfırlamaService");
             helper.setTo(email);
@@ -276,12 +279,15 @@ public class EmailSendServiceImpl implements EmailSendService {
     }
 
 
-
     @Override
     public EmailSend saveOrUpdateEmailSend(User user, Token token, Code code, TokenType tokenType, SecretTypeEnum secretTypeEnum) {
-        EmailSend emailSend = emailSendRepository.findByUserAndTokenTypeAndSecretTypeEnum(user, tokenType, secretTypeEnum).orElse(null);
 
-        if (emailSend != null) {
+       try {
+
+        Optional<EmailSend> optionalEmailSend = emailSendRepository.findByUserAndTokenTypeAndSecretTypeEnum(user, tokenType, secretTypeEnum);
+        EmailSend emailSend = new EmailSend();
+        if (optionalEmailSend.isPresent()) {
+            emailSend = optionalEmailSend.get();
             // Token veya kod süresi kontrolü
             if (emailSend.getEmailExpiryDate().before(new Date())) {
                 // Aynı gün içinde mi kontrol et
@@ -301,17 +307,35 @@ public class EmailSendServiceImpl implements EmailSendService {
             } else {
                 throw new IllegalStateException("Code veya Token geçerliliğini koruyor.");
             }
-
             emailSend.setLastSendDate(new Date());
             emailSend.setEmailExpiryDate(new Date(System.currentTimeMillis() + EMAIL_EXPIRATION));
             emailSend.setValue(token != null ? token.getTokenValue() : code.getCodeValue());
+        }
+        // Eğer daha önce kayıt yoksa, yeni oluştur
+        if (optionalEmailSend.isEmpty()) {
+            emailSend.setUser(user);
+            emailSend.setSecretTypeEnum(secretTypeEnum);
+            emailSend.setTokenType(tokenType);
+            emailSend.setValue(token != null ? token.getTokenValue() : code.getCodeValue());
+            emailSend.setRemainingAttempts(remainingAttempts - 1);
+            emailSend.setLastSendDate(new Date());
+            emailSend.setEmailExpiryDate(new Date(System.currentTimeMillis() + EMAIL_EXPIRATION));
+            emailSend.setToken(token);
+            emailSend.setCode(code);
 
 
         }
+        emailSendRepository.save(emailSend);
+        return emailSend;
+       }catch (Exception e){
+           throw new RuntimeException("email sınıf ıveri tabanı akyıt sorunu : "+e.getMessage());
+       }
 
-        // Eğer daha önce kayıt yoksa, yeni oluştur
-        if (emailSend == null) {
-            emailSend = EmailSend.builder()
+    }
+
+}
+
+   /*         emailSend = EmailSend.builder()
                     .user(user)
                     .secretTypeEnum(secretTypeEnum)
                     .tokenType(tokenType)
@@ -322,10 +346,4 @@ public class EmailSendServiceImpl implements EmailSendService {
                     .token(token)
                     .code(code)
                     .build();
-        }
-
-        emailSendRepository.save(emailSend);
-        return emailSend;
-    }
-
-}
+        }*/

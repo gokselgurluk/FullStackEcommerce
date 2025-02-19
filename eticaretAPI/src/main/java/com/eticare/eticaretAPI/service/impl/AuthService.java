@@ -1,5 +1,6 @@
 package com.eticare.eticaretAPI.service.impl;
 
+import com.eticare.eticaretAPI.config.exeption.NotFoundException;
 import com.eticare.eticaretAPI.config.jwt.CustomUserDetails;
 import com.eticare.eticaretAPI.config.jwt.JwtService;
 import com.eticare.eticaretAPI.entity.Session;
@@ -68,7 +69,7 @@ public class AuthService {
             Authentication authentication = authenticationManager.authenticate(authRequest);
             CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
 
-            return userService.getUserByMail(customUserDetails.getUsername()).orElseThrow(); // Doğrulanan kullanıcıyı al
+            return userService.getUserByMail(customUserDetails.getUsername()).orElseThrow(()-> new NotFoundException("authenticate işlemi için kullanıc ıyok")); // Doğrulanan kullanıcıyı al
 
 
         } catch (UsernameNotFoundException | BadCredentialsException e) {

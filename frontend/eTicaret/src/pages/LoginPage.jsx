@@ -82,6 +82,13 @@ const LoginPage = () => {
             message: `${error.response.data.message} `,
             type: 'error', // Error tipi
           });
+        }else if (error.response?.data) {
+          // Eğer response'da message varsa
+          setModalData({
+            isOpen: true,
+            message: `${error.response.data} `,
+            type: 'error', // Error tipi
+          });
         } else {
           // Genel hata mesajı
           setModalData({

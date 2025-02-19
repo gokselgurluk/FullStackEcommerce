@@ -75,8 +75,16 @@ public class CustomAuthenticationProvider extends DaoAuthenticationProvider {
 
         // Eğer kilit süresi varsa veya şu anki zamandan sonra ise hesap kilitlidir.
         if (userOptional.get().isAccountLocked()) {
+            CustomUserDetails userDetails = new CustomUserDetails(
+                    user.getEmail(),
+                    user.getPassword(),
+                    authorities,
+                    user.getAccountLockedTime()
+            );
             userService.diffLockedTime(userOptional.get());
-            return new UsernamePasswordAuthenticationToken(userOptional.get(), null, authorities);
+            return new UsernamePasswordAuthenticationToken(userDetails, password, authorities);
+
+            //return new UsernamePasswordAuthenticationToken(userOptional.get(), password, authorities);
             //throw new LockedException("Hesap kilitli beklemeniz gereken süre : "+ userOptional.get().getDiffLockedTime() +" dakika");
         }
 

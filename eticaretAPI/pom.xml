@@ -111,17 +111,23 @@
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/com.github.ua-parser/uap-java -->
 		<dependency>
+			<!--useagent bılgıelrını duznelı hale getırmek ıcın parser-->
 			<groupId>com.github.ua-parser</groupId>
 			<artifactId>uap-java</artifactId>
 			<version>1.6.1</version>
 		</dependency>
+		<!--belli krakter gruplarını kontrolu için kendi validation sınıfımızı olusturken kullandık-->
 		<dependency>
 			<groupId>org.passay</groupId>
 			<artifactId>passay</artifactId>
 			<version>1.6.0</version>
 		</dependency>
-
-
+<!--.nvm otomatı kbaslatmak ıcın-->
+		<dependency>
+			<groupId>io.github.cdimascio</groupId>
+			<artifactId>dotenv-java</artifactId>
+			<version>2.2.0</version>
+		</dependency>
 	</dependencies>
 
 

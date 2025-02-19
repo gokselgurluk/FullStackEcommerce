@@ -64,7 +64,6 @@ public class UserServiceImpl implements UserService {
             user.setDiffLockedTime(Math.max(diffTimeMinute, 0));
             userRepository.save(user);
         }
-
     }
 
     @Override
@@ -82,6 +81,7 @@ public class UserServiceImpl implements UserService {
         }
         // Başarısız giriş sayacını artır
         user.setIncrementFailedLoginAttempts(user.getIncrementFailedLoginAttempts() + 1);
+        System.out.println("user arttırıldı "+ user.getIncrementFailedLoginAttempts());
         // Eğer limit aşıldıysa hesabı kilitle
         if (user.getIncrementFailedLoginAttempts() >= MAX_FAILED_ENTER_COUNT) {
             user.setAccountLockedTime(new Date(System.currentTimeMillis() + ACCOUNT_LOCKED_TIME)); // 30 dk kilitle

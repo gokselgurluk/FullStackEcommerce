@@ -13,6 +13,7 @@ import CartPage from './pages/CartPage'; // Sepet sayfası
 import ActivateAccountPage from './auth/ActivateAccountPage'; // Sepet sayfası
 import ForgotPassword from './auth/ForgotPassword'; // Sepet sayfası
 import ResetPassword from './auth/ResetPassword'; // Sepet sayfası
+import OtpVerify from './auth/OtpVerifyPage'; // Sepet sayfası
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const App = () => {
@@ -28,6 +29,7 @@ const App = () => {
             <Route path="/activate-account" element={<ActivateAccountPage />} />
             <Route path="/forget-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/otp-verify" element={<OtpVerify />} />
             {/* PrivateRoute ile ProfilePage'i koru */}
             <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
             <Route path="/email-verify" element={<EmailVerifyPage />} />

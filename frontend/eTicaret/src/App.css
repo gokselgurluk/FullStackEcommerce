@@ -233,6 +233,25 @@ button {
   align-items: center;
  
 }
+.input-otp-wrapper {
+  display: flex;
+  justify-content: center;
+  gap: 10px; /* Kutular arası boşluk */
+}
+.input-otp {
+  width: 50px; /* Kare formu için genişlik */
+  height: 50px; /* Kare formu için yükseklik */
+  text-align: center;
+  font-size: 20px;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  outline: none;
+  transition: all 0.2s ease-in-out;
+}
+.input-otp-wrapper input:focus {
+  border-color: #007BFF; /* Odaklandığında mavi çerçeve */
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
 
 .input-field {
   width: 100%;

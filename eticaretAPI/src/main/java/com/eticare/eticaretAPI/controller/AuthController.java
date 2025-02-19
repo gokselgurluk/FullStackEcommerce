@@ -4,14 +4,13 @@ import com.eticare.eticaretAPI.config.exeption.NotFoundException;
 import com.eticare.eticaretAPI.config.modelMapper.IModelMapperService;
 import com.eticare.eticaretAPI.dto.request.User.UserUpdateRequest;
 import com.eticare.eticaretAPI.entity.*;
-import com.eticare.eticaretAPI.entity.enums.TokenType;
 import com.eticare.eticaretAPI.service.*;
 import com.eticare.eticaretAPI.service.impl.AuthService;
 import com.eticare.eticaretAPI.config.jwt.CustomUserDetailsService;
 import com.eticare.eticaretAPI.config.jwt.JwtService;
 import com.eticare.eticaretAPI.config.result.ResultData;
 import com.eticare.eticaretAPI.config.result.ResultHelper;
-import com.eticare.eticaretAPI.dto.request.ActivatedAccount.VerifyCodeRequest;
+import com.eticare.eticaretAPI.dto.request.ActivatedAccount.VerificationRequest;
 import com.eticare.eticaretAPI.dto.request.AuthRequest.AuthenticationRequest;
 import com.eticare.eticaretAPI.dto.request.ForgotPasswordRequest.ForgotPasswordRequest;
 import com.eticare.eticaretAPI.dto.request.User.UserSaveRequest;
@@ -21,18 +20,14 @@ import com.eticare.eticaretAPI.repository.ISessionRepository;
 import com.eticare.eticaretAPI.utils.DeviceUtils;
 import com.eticare.eticaretAPI.utils.IpUtils;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Date;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/auth")
@@ -83,7 +78,6 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> createAuthToken(@RequestBody AuthenticationRequest authenticationRequest, HttpServletRequest httpRequest) {
 
-
         try {
             // Süresi dolmuş token'ları kontrol et ve güncelle
             tokenService.checkAndUpdateExpiredTokens();
@@ -102,7 +96,7 @@ public class AuthController {
 
             if (emailSend != null) {
                 return   ResponseEntity.status(HttpStatus.SEE_OTHER)
-                        .body("OTP Doğrulaması Gerekiyor E-posta kutunuzu kontrol edin dogrulama için kalan süreniz : " + String.valueOf(TimeUnit.MILLISECONDS.toMinutes(emailSend.getEmailExpiryDate().getTime() - new Date().getTime())));
+                        .body("Yeni IP algılandı OTP Doğrulaması için E-posta kutunuzu kontrol edin: ");
             }
 
             // Session Güncelle
@@ -126,10 +120,10 @@ public class AuthController {
     }
 
     @PostMapping("/otp-verification")
-    public ResultData<?> otpVerification(@RequestBody VerifyCodeRequest verifyCodeRequest, HttpServletRequest httpRequest) {
+    public ResultData<?> otpVerification(@RequestBody VerificationRequest verificationRequest, HttpServletRequest httpRequest) {
         try {
-            String value = verifyCodeRequest.getVerifyToken();
-            String email = verifyCodeRequest.getEmail();
+            String value = verificationRequest.getCodeValue();
+            String email = verificationRequest.getEmail();
             // IP adresi ve cihaz bilgisi alınır
             String clientIp = IpUtils.getClientIp(httpRequest);
             Map<String, String> userAgent = DeviceUtils.getUserAgent(httpRequest);
@@ -145,8 +139,8 @@ public class AuthController {
     }
 
     @PostMapping("/activate-account")
-    public ResultData<?> activateAccount(@RequestBody VerifyCodeRequest verifyCodeRequest) {
-        String token = verifyCodeRequest.getVerifyToken();
+    public ResultData<?> activateAccount(@RequestBody VerificationRequest verificationRequest) {
+        String token = verificationRequest.getTokenValue();
 
         try {
             boolean expiredToken = jwtService.isTokenExpired(token);

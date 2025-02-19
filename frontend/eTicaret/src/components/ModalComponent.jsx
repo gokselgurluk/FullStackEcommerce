@@ -33,18 +33,18 @@ const ModalComponent = ({ isOpen, onRequestClose, message, type }) => {
           >
             {/* İkon */}
             {type === 'success' ? (
-              <AiOutlineCheckCircle style={{ color: 'green', fontSize: '50px' }} />
+              <AiOutlineCheckCircle style={{ color: 'green', fontSize: '30px' }} />
             ) : type === 'error' ? (
-              <AiOutlineCloseCircle style={{ color: 'red', fontSize: '50px' }} />
+              <AiOutlineCloseCircle style={{ color: 'red', fontSize: '30px' }} />
             ) : (
-              <AiOutlineCheckCircle style={{ color: 'orange', fontSize: '50px' }} /> // enter için farklı ikon
+              <AiOutlineCheckCircle style={{ color: 'orange', fontSize: '30px' }} /> // enter için farklı ikon
             )}
 
             {/* Mesaj */}
             <p
               style={{
                 margin: 0,
-                fontSize: '20px',
+                fontSize: '15px',
                 fontWeight: 'bold', // Font kalınlığı
                 color: getMessageColor(), // Renkler dinamik olarak belirleniyor
               }}
