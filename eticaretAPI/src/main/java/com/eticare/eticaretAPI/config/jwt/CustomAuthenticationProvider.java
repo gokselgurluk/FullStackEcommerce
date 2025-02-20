@@ -74,7 +74,7 @@ public class CustomAuthenticationProvider extends DaoAuthenticationProvider {
 
 
         // Eğer kilit süresi varsa veya şu anki zamandan sonra ise hesap kilitlidir.
-        if (userOptional.get().isAccountLocked()) {
+        if (userOptional.get().isAccountLocked() && sessionService.isSessionValid(email, clientIp, userAgent.get("Device"))) {
             CustomUserDetails userDetails = new CustomUserDetails(
                     user.getEmail(),
                     user.getPassword(),

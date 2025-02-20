@@ -81,10 +81,16 @@ public class SessionServiceImpl implements SessionService {
 
     @Override
     public boolean isSessionValid(String email, String ipAddress, String device) {
-
-        return sessionRepository.findByEmailAndIpAddressAndDeviceInfo(email, ipAddress, device)
+        Optional <Session> session =sessionRepository.findByEmailAndIpAddressAndDeviceInfo(email, ipAddress, device);
+        if(session.isPresent()){
+            session.get().isVerifiedSession();
+            System.out.println( session.get().isVerifiedSession());
+            return true;
+        }
+        return false;
+       /* return sessionRepository.findByEmailAndIpAddressAndDeviceInfo(email, ipAddress, device)
                 .map(Session::isVerifiedSession) // Eğer session varsa, doğrulama durumunu döndür
-                .orElse(false); // Eğer session yoksa, false döndür
+                .orElse(false); // Eğer session yoksa, false döndür*/
     }
 
     @Override
