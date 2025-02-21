@@ -5,13 +5,14 @@ import axiosInstance from '../api/axiosInstance';
 import ModalComponent from '../components/ModalComponent';
 import { FaGoogle, FaFacebook, FaApple } from "react-icons/fa"; // react-icons paketi
 import { Eye, EyeOff, Mail } from "lucide-react";
-
+import { Loader } from "lucide-react";
 const LoginPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);  // Default checked
+  const [loading, setLoading] = useState(false); // Yeni state
   const [modalData, setModalData] = useState({
     isOpen: false,
     message: '',
@@ -47,58 +48,41 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault(); // Sayfa yenilenmesini engelle
+    setLoading(true); // İşlem başladı, butonu devre dışı bırak
     try {
       const response = await axiosInstance.post('/auth/login', formData);
       const userData = response.data;
+      
       if (userData?.accessToken) {
         localStorage.setItem('accessToken', userData.accessToken);
         login(userData.accessToken);
         setModalData({
           isOpen: true,
           message: userData.active ? 'Giriş başarılı!' : 'Hesabınız aktif değil, e-mail doğrulaması yapınız.',
-          type: userData.active ? 'success' : 'warring',
+          type: userData.active ? 'success' : 'warning',
+        });
+      } else {
+        setModalData({ isOpen: true, message: 'Giriş başarısız!', type: 'error' });
+      }
+    } catch (error) {
+      console.log(error.response);
+      if (error.response?.data === "Hesap Aktif Degil") {
+        setModalData({
+          isOpen: true,
+          message: "Hesap Aktif Değil! E-mail doğrulaması gerekli.",
+          type: 'warning',
         });
       } else {
         setModalData({
           isOpen: true,
-          message: 'Giriş başarısız!',
-          type: 'error', // Giriş başarısızsa error tipi
+          message: error.response?.data?.message || 'Bir hata oluştu. Lütfen tekrar deneyin.',
+          type: 'error',
         });
       }
-     } catch (error) {
-        console.log(error.response);
-        // Hesap aktif değilse (E-mail doğrulaması gerekliyse)
-        if (error.response?.data === "Hesap Aktif Degil") {
-          const errorMessage = `${error.response.data} E-mail doğrulaması gerekli.`;
-          setModalData({
-            isOpen: true,
-            message: errorMessage,
-            type: 'warning', // "warning" tipini kullanıyoruz
-          });
-        } else if (error.response?.data?.message) {
-          // Eğer response'da message varsa
-          setModalData({
-            isOpen: true,
-            message: `${error.response.data.message} `,
-            type: 'error', // Error tipi
-          });
-        }else if (error.response?.data) {
-          // Eğer response'da message varsa
-          setModalData({
-            isOpen: true,
-            message: `${error.response.data} `,
-            type: 'error', // Error tipi
-          });
-        } else {
-          // Genel hata mesajı
-          setModalData({
-            isOpen: true,
-            message: 'Bir hata oluştu. Lütfen tekrar deneyin.',
-            type: 'error', // Error tipi
-          });
-        }
-      }
+    } finally {
+      setLoading(false); // İşlem tamamlandı, butonu tekrar aktif hale getir
     }
+  };
   return (
     <main className="login-container">
       <div className="login-left">
@@ -142,7 +126,7 @@ const LoginPage = () => {
               onChange={handleInputChange}
               required
             />
-            <button className="password-toggle" type="button" onClick={togglePasswordVisibility}>
+            <button className="password-toggle" tabIndex="-1" type="button" onClick={togglePasswordVisibility} >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
@@ -162,7 +146,9 @@ const LoginPage = () => {
            
           </div>
           </div>
-          <button type="submit" className="login-button">Login</button>
+          <button type="submit" className="login-button" disabled={loading}>
+  {loading ? <Loader className="spinner" size={20} /> : "Login"}
+</button>
         
           <div className="signup-container">
             <div className="signup-text">

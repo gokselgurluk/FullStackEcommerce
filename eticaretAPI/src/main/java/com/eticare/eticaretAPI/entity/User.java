@@ -62,6 +62,9 @@ public class User {
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CMS> cmsContent = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user")
+    private List<Code> codes; // Bir kullanıcıya birden fazla kod atanabilir
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Token> tokens = new ArrayList<>();
 

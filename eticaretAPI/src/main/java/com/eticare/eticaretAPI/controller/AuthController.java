@@ -91,17 +91,18 @@ public class AuthController {
             if (user.isAccountLocked()) {
                 return ResponseEntity.status(HttpStatus.LOCKED).body(ResultHelper.errorWithData("Hesap kilidini açmak için otp kodunu giriniz", "beklemeniz gereken süre : " + user.getDiffLockedTime() + " dakika", HttpStatus.LOCKED));
             }
+
             Token refreshToken = tokenService.refreshToken(user);
-            EmailSend emailSend = sessionService.requestOtpIfNeeded(user, refreshToken, clientIp, userAgent);
 
-            if (emailSend != null) {
-                return   ResponseEntity.status(HttpStatus.SEE_OTHER)
-                        .body("Yeni IP algılandı OTP Doğrulaması için E-posta kutunuzu kontrol edin: ");
+            if(!sessionService.isSessionValid(user.getEmail(),clientIp,userAgent.get("Device"))){
+                EmailSend emailSend = sessionService.requestOtpIfNeeded(user, refreshToken, clientIp, userAgent);
+                if(emailSend!=null) {
+                    return ResponseEntity.status(HttpStatus.SEE_OTHER)
+                            .body(ResultHelper.successWithData("Yeni IP algılandı OTP Doğrulaması için E-posta kutunuzu kontrol edin: ", emailSend.getEmailExpiryDate(), HttpStatus.SEE_OTHER));
+                }
             }
-
             // Session Güncelle
             sessionService.createOrUpdateSession(user, refreshToken, clientIp, userAgent);
-
             Token accessToken = tokenService.accessToken(user);
             // Yanıt olarak token ve kullanıcı bilgilerini gönder
             AuthenticationResponse response = AuthenticationResponse.builder()
@@ -120,7 +121,7 @@ public class AuthController {
     }
 
     @PostMapping("/otp-verification")
-    public ResultData<?> otpVerification(@RequestBody VerificationRequest verificationRequest, HttpServletRequest httpRequest) {
+    public ResponseEntity<?> otpVerification(@RequestBody VerificationRequest verificationRequest, HttpServletRequest httpRequest) {
         try {
             String value = verificationRequest.getCodeValue();
             String email = verificationRequest.getEmail();
@@ -128,12 +129,13 @@ public class AuthController {
             String clientIp = IpUtils.getClientIp(httpRequest);
             Map<String, String> userAgent = DeviceUtils.getUserAgent(httpRequest);
 
-            codeService.isValidateCode(email, value);
-            sessionService.verifyOtpAndEnableSession(email, clientIp, userAgent.get("Device"));
-            return ResultHelper.success("Oturum başarıyla doğrulandı.");
-
+            if(codeService.isValidateCode(email, value)){
+                sessionService.verifyOtpAndEnableSession(email, clientIp, userAgent.get("Device"));
+                return ResponseEntity.status(HttpStatus.OK).body("Oturum başarıyla doğrulandı.");
+            }
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ResultHelper.Error500("Oturum dogrulanamadı."));
         } catch (Exception e) {
-            return ResultHelper.errorWithData(e.getMessage(), null, HttpStatus.FORBIDDEN);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResultHelper.errorWithData(e.getMessage(), null, HttpStatus.FORBIDDEN));
         }
 
     }

@@ -38,8 +38,9 @@ public class Code {
     @Temporal(TemporalType.TIMESTAMP)
     private Date lastSendDate = new Date();
 
-    @OneToOne
-    private  User user ;
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user; // Birden fazla kod bir kullanıcıya ait olacak
 
 
 }

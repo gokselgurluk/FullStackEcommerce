@@ -57,48 +57,40 @@ public class CodeServiceImpl implements CodeService {
 
     @Override
     public Code createVerifyCode(User user) {
-        // Yeni  kodu oluştur
-        String newCode = generateCode(6);
-        if (user==null) {
-            throw new NotFoundException("Dogrulama kodu oluşturmak için kullanıcı bilgisine ulaşılamadı: " ); // Kullanıcı bulunamazsa hata fırlat
-        }
-
         // Kullanıcı için var olan  verifyCode'ını kontrol et
-        Optional<Code> optionalVerifyCode = verificationTokenRepository.findByUser(user);
-        Code code;
-
+        Optional<Code> optionalVerifyCode = verificationTokenRepository.findByUserAndTokenType(user,TokenType.VERIFICATION);
+        System.out.println("Mevcut Code var mı?: " + optionalVerifyCode.isPresent());
+        Code code = new Code();
         if (optionalVerifyCode.isPresent()) {
             code = optionalVerifyCode.get();
+
             // Aynı gün ve maksimum gönderim sınırına ulaşıldıysa hata fırlat
             if(LocalDateTime.now().isBefore(code.getCodeExpiryDate())) {
                 throw new IllegalStateException("Code geçerliligini koruyor");
             }
-
             if (code.getRemainingAttempts() <=0) {
                 throw new IllegalStateException("Bugün için maksimum kod oluşturma sınırına ulaşıldı.");
             }
-
             if (!DateUtils.isSameDay(code.getLastSendDate(), new Date())) {
                 // Yeni güne geçilmiş, sayaç sıfırlanır
                 code.setRemainingAttempts(remainingAttempts);
             }
             code.setRemainingAttempts(code.getRemainingAttempts() - 1);
-            code.setCodeValue(newCode);
+            code.setCodeValue(generateCode(6)); // Yeni verifyCode oluştur
             code.setLastSendDate(new Date());
             code.setCodeExpiryDate(LocalDateTime.now().plusMinutes(2)); // Yeni geçerlilik süresi
-
         } else {
-            // Yeni verifyCode oluştur
-            code = new Code();
-            code.setUser(user); // Kullanıcıyı set et
-            code.setRemainingAttempts(remainingAttempts -1);
-            code.setCodeValue(newCode);
+
+
+             // Kullanıcıyı set et
+            code.setUser(user);
+            code.setRemainingAttempts(remainingAttempts - 1);
+            code.setCodeValue(generateCode(6)); // Yeni verifyCode oluştur
             code.setTokenType(TokenType.VERIFICATION);
             code.setLastSendDate(new Date());
             code.setCodeExpiryDate(LocalDateTime.now().plusMinutes(2)); // Geçerlilik süresi
             code.setExpired(false);
             code.setRevoked(false);
-
         }
 
         // onaykodu'u bilgilerini veritabanına kaydet
@@ -119,6 +111,8 @@ public class CodeServiceImpl implements CodeService {
 
         throw new NotFoundException("Verification code not found for user: " + user.getEmail() + " Gecersiz code: " + code);
     }
-
+/*  if (optionalVerifyCode==null) {
+            throw new NotFoundException("Dogrulama kodu oluşturmak için kullanıcı bilgisine ulaşılamadı: " ); // Kullanıcı bulunamazsa hata fırlat
+        }*/
 
 }

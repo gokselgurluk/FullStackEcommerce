@@ -83,9 +83,9 @@ public class SessionServiceImpl implements SessionService {
     public boolean isSessionValid(String email, String ipAddress, String device) {
         Optional <Session> session =sessionRepository.findByEmailAndIpAddressAndDeviceInfo(email, ipAddress, device);
         if(session.isPresent()){
-            session.get().isVerifiedSession();
+            boolean verifiedSession = session.get().isVerifiedSession();
             System.out.println( session.get().isVerifiedSession());
-            return true;
+            return verifiedSession;
         }
         return false;
        /* return sessionRepository.findByEmailAndIpAddressAndDeviceInfo(email, ipAddress, device)
@@ -110,13 +110,13 @@ public class SessionServiceImpl implements SessionService {
     @Override
     public EmailSend requestOtpIfNeeded(User user, Token token, String ipAddress, Map<String, String> deviceInfo) {
         String email = user.getEmail();
-        EmailSend emailSend = null;
-        if (!isSessionValid(email, ipAddress, deviceInfo.get("Device"))) {
-            emailSend = emailSendService.sendSecurityCodeEmail(email);
-            createOrUpdateSession(user, token,ipAddress,  deviceInfo);
-        }
+        createOrUpdateSession(user, token,ipAddress,  deviceInfo);
+        return  emailSendService.sendSecurityCodeEmail(email);
+//        if (!isSessionValid(email, ipAddress, deviceInfo.get("Device"))) {
 
-        return emailSend;
+//        }
+
+
     }
 
     @Override
