@@ -21,6 +21,7 @@ import com.eticare.eticaretAPI.utils.DeviceUtils;
 import com.eticare.eticaretAPI.utils.IpUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.ValidationException;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -66,12 +67,12 @@ public class AuthController {
      * Login endpoint: Kullanıcı adı ve şifre ile kimlik doğrulaması yapılır
      */
     @PostMapping("/register")
-    public ResultData<UserResponse> createUser(@Valid @RequestBody UserSaveRequest request) {
+    public ResponseEntity<ResultData<UserResponse>> createUser(@Valid @RequestBody UserSaveRequest request) {
         UserResponse userResponse = userService.createUser(request);
         User user = modelMapper.map(userResponse, User.class);
         authService.register(user);
         // Doğrulama kodu oluştur ve kullanıcıya gönder
-        return ResultHelper.created(userResponse);
+        return ResponseEntity.status(HttpStatus.OK).body(ResultHelper.created(userResponse));
         // UserServise sınıfında user sınıfı maplenıyor metot tıpı  UserResponse donuyor bu yuzden burada maplemedık
     }
 
@@ -141,7 +142,7 @@ public class AuthController {
     }
 
     @PostMapping("/activate-account")
-    public ResultData<?> activateAccount(@RequestBody VerificationRequest verificationRequest) {
+    public ResponseEntity<?> activateAccount(@RequestBody VerificationRequest verificationRequest) {
         String token = verificationRequest.getTokenValue();
 
         try {
@@ -157,20 +158,20 @@ public class AuthController {
 
             boolean isVerification = codeService.activateUser(email);
             if (isVerification) {
-                return ResultHelper.successWithData("Hesap Dogrulama Başarılı: ", email, HttpStatus.OK);
+                return ResponseEntity.status(HttpStatus.OK).body(ResultHelper.successWithData("Hesap Dogrulama Başarılı: ", email, HttpStatus.OK));
             } else {
                 // Eğer doğrulama başarısızsa hata döndürülür.
                 throw new IllegalStateException("Hesap Dogrulama Başarısız: ");
             }
 
         } catch (Exception e) {
-            return ResultHelper.errorWithData(e.getMessage(), null, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResultHelper.errorWithData(e.getMessage(), null, HttpStatus.BAD_REQUEST));
         }
 
     }
 
     @PostMapping("/reset-password")
-    public ResultData<?> resetPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ForgotPasswordRequest request) {
 
         try {
             String resetToken = request.getResetPasswordToken();
@@ -183,30 +184,31 @@ public class AuthController {
             }
             String email = jwtService.extractEmail(resetToken);
             boolean expiredToken = jwtService.isTokenExpired(resetToken);
-            System.out.println("reset token: " + resetToken);
+
 
             if (expiredToken) {
                 throw new IllegalStateException("Geçersiz veya süresi dolmuş token.");
             }
 
-            if (!password.isBlank() || !confirmPassword.isBlank()) {
+
                 if (password.equalsIgnoreCase(confirmPassword)) {
                     user.setPassword(password);
                     UserUpdateRequest userUpdateRequest = this.modelMapperService.forRequest().map(user, UserUpdateRequest.class);
                     userService.updateUser(userUpdateRequest);
                     tokenService.delete(tokenFind);
-                    return ResultHelper.successWithData("Şifreniz başarıyla sıfırlandı: ", email, HttpStatus.OK);
+                    return ResponseEntity.status(HttpStatus.OK).body(ResultHelper.successWithData("Şifreniz başarıyla sıfırlandı: ", email, HttpStatus.OK));
 
                 } else {
                     throw new RuntimeException("Şifreler uyuşmuyor");
 
                 }
-            } else {
-                throw new IllegalStateException("Şifre geçersiz veya boş");
             }
 
+            catch (ValidationException e){
+                throw new IllegalStateException("Şifre geçersiz veya boş");
+
         } catch (Exception e) {
-            return ResultHelper.errorWithData("Hesap Dogrulanama Başarısız: ", e.getMessage(), HttpStatus.BAD_REQUEST);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResultHelper.errorWithData("Şifre degişimi başarısız : ", e.getMessage(), HttpStatus.BAD_REQUEST));
         }
 
     }

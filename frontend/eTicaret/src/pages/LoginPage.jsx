@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../api/axiosInstance';
@@ -11,14 +11,28 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);  // Default checked
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);  // Default checked
   const [loading, setLoading] = useState(false); // Yeni state
   const [modalData, setModalData] = useState({
     isOpen: false,
     message: '',
     type: '', // 'success', 'error', 'warning'
   });
-
+  useEffect(() => {
+    // localStorage'dan bilgileri al
+    const storedEmail = localStorage.getItem("rememberedEmail");
+    const storedPassword = localStorage.getItem("rememberedPassword");
+    const storedRememberMe = localStorage.getItem("rememberMe") === "true";
+  
+    if (storedRememberMe && storedEmail && storedPassword) {
+      setEmail(storedEmail);
+      setPassword(storedPassword);
+      setRememberMe(true); // Checkbox işaretli gelsin
+      setFormData({ email: storedEmail, password: storedPassword });
+    }
+  }, []);
   const closeModal = () => {
     setModalData({ isOpen: false, message: "", type: "" });
     // Modal kapandıktan sonra yönlendirme işlemi
@@ -33,10 +47,13 @@ const LoginPage = () => {
     }
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
+const handleInputChange = (e) => {
+  const { name, value } = e.target;
+  setFormData({ ...formData, [name]: value });
+
+  if (name === "email") setEmail(value);
+  if (name === "password") setPassword(value);
+};
 
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
@@ -44,11 +61,22 @@ const LoginPage = () => {
 
   const handleRememberMeChange = (e) => {
     setRememberMe(e.target.checked);
+  
   };
 
   const handleSubmit = async (e) => {
+   
     e.preventDefault(); // Sayfa yenilenmesini engelle
     setLoading(true); // İşlem başladı, butonu devre dışı bırak
+    if (rememberMe) {
+      localStorage.setItem("rememberedEmail", email);
+      localStorage.setItem("rememberedPassword", password);
+      localStorage.setItem("rememberMe", "true");
+    } else {
+      localStorage.removeItem("rememberedEmail");
+      localStorage.removeItem("rememberedPassword");
+      localStorage.removeItem("rememberMe");
+    }
     try {
       const response = await axiosInstance.post('/auth/login', formData);
       const userData = response.data;
@@ -91,7 +119,7 @@ const LoginPage = () => {
 
         {/* Giriş Formu */}
         <form className="login-form" onSubmit={handleSubmit}>
-          <h2 className="form-title">Login In</h2>
+          <h2 className="form-title-text">Zaten bir hesabınız var mı ?</h2>
           {/* Sosyal Medya Butonları */}
           <div className="social-login">
             <button className="social-btn google"><FaGoogle size={20} /> </button>
@@ -100,7 +128,7 @@ const LoginPage = () => {
           </div>
           {/* Ayırıcı Çizgi */}
           <div className="divider">
-            <span>Or continue </span>
+            <span>veya</span>
           </div>
 
           <div className="input-wrapper">
@@ -132,7 +160,7 @@ const LoginPage = () => {
           </div>
 
           <div className="cointainer">
-            <a className="forget-password" href="/forget-password">Forget Password</a>
+            <a className="forget-password" href="/forget-password">Şifremi unuttum</a>
 
             <div className="remember-me-container">
               <input
@@ -142,17 +170,17 @@ const LoginPage = () => {
                 checked={rememberMe}
                 onChange={handleRememberMeChange}
               />
-              <label htmlFor="rememberMe" className="remember-me-label">Remember me</label>
+              <label htmlFor="rememberMe" className="remember-me-label">Beni Hatırla</label>
            
           </div>
           </div>
           <button type="submit" className="login-button" disabled={loading}>
-  {loading ? <Loader className="spinner" size={20} /> : "Login"}
+  {loading ? <Loader className="spinner" size={20} /> : "Giriş Yap"}
 </button>
         
           <div className="signup-container">
             <div className="signup-text">
-              Don’t have an account ? <a href="/register" className="signup-link">Sign Up</a>
+            Bir hesabınız yok mu ?<a href="/register" className="signup-link">Hesap Oluştur</a>
             </div>
           </div>
         </form>

@@ -4,28 +4,8 @@ import { Container, Navbar, Nav, Form, FormControl, Button, Row, Col, Card } fro
 const HomePage = () => {
   return (
     <>
-      {/* Üst Kısım (Header) */}
-      <Navbar bg="dark" variant="dark" expand="lg">
-        <Container>
-          <Navbar.Brand href="#home">E-Ticaret</Navbar.Brand>
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="me-auto">
-              <Nav.Link href="#categories">Kategoriler</Nav.Link>
-              <Nav.Link href="#deals">Kampanyalar</Nav.Link>
-            </Nav>
-            <Form className="d-flex">
-              <FormControl type="search" placeholder="Ürün Ara..." className="me-2" />
-              <Button variant="outline-light">Ara</Button>
-            </Form>
-            <Nav>
-              <Nav.Link href="#cart">Sepet</Nav.Link>
-              <Nav.Link href="#account">Hesabım</Nav.Link>
-            </Nav>
-          </Navbar.Collapse>
-        </Container>
-      </Navbar>
-      
+
+
       {/* Ana Banner */}
       <Container className="mt-4">
         <Row>

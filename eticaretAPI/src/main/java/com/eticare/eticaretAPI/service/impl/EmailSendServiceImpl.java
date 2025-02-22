@@ -268,7 +268,7 @@ public class EmailSendServiceImpl implements EmailSendService {
                     + "<h2 style='color:#333;'>OTP Doğrulama</h2>"
                     + "<p style='font-size:16px; color:#555;'>Aşağıdaki kodu kullanarak giriş yapabilirsiniz:</p>"
                     + "<p><strong style='font-size:24px; color:#007BFF;'>" + Value + "</strong></p>"
-                    + "<a href='" + verifyUrl + "' style='display:inline-block; background-color:#28a745; color:white; padding:12px 20px; margin: 20px 0; border-radius:5px; text-decoration:none; font-weight:bold;'>OTP GİRİŞİ</a>"
+                    + "<a href='" + verifyUrl + "' style='display:inline-block; background-color:#28a745; color:white; padding:12px 20px; border-radius:5px; text-decoration:none; font-weight:bold;'>OTP GİRİŞİ</a>"
                     + "<p style='color:red; font-weight:bold;'>Bu kod yalnızca 2 dakika geçerlidir!</p>"
                     + "<p style='font-size:14px; color:#888;'>Eğer bu isteği siz yapmadıysanız, lütfen görmezden gelin.</p>"
                     + "</td></tr>"

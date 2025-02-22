@@ -3,6 +3,7 @@ package com.eticare.eticaretAPI.service.impl;
 import com.eticare.eticaretAPI.config.exeption.EmailAlreadyRegisteredException;
 import com.eticare.eticaretAPI.config.exeption.NotFoundException;
 import com.eticare.eticaretAPI.config.modelMapper.IModelMapperService;
+import com.eticare.eticaretAPI.config.result.ResultHelper;
 import com.eticare.eticaretAPI.dto.request.User.UserSaveRequest;
 import com.eticare.eticaretAPI.dto.request.User.UserUpdateRequest;
 import com.eticare.eticaretAPI.dto.response.UserResponse;
@@ -13,6 +14,8 @@ import com.eticare.eticaretAPI.repository.IUserRepository;
 import com.eticare.eticaretAPI.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -95,9 +98,18 @@ public class UserServiceImpl implements UserService {
         if (userRepository.existsByEmail(userSaveRequest.getEmail())) {
             throw new EmailAlreadyRegisteredException("Email daha önce kayıtedilmiş");
         }
-        User user = this.modelMapperService.forRequest().map(userSaveRequest, User.class);
-        user.setPassword(passwordEncoder.encode(userSaveRequest.getPassword()));
-        return saveUserAndReturnResponse(user);
+        if (userSaveRequest.getPassword().equalsIgnoreCase(userSaveRequest.getConfirmPassword())) {
+            User user = this.modelMapperService.forRequest().map(userSaveRequest, User.class);
+            user.setPassword(passwordEncoder.encode(userSaveRequest.getPassword()));
+            UserUpdateRequest userUpdateRequest = this.modelMapperService.forRequest().map(user, UserUpdateRequest.class);
+            return saveUserAndReturnResponse(user);
+
+        } else {
+            throw new RuntimeException("Şifreler uyuşmuyor");
+
+        }
+
+
     }
 
     @Override

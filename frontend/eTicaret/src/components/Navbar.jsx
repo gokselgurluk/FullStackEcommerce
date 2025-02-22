@@ -1,9 +1,10 @@
 import React from "react";
 import { useAuth } from "../context/AuthContext"; // AuthContext'ten isAuth'i alıyoruz
 import { Link } from "react-router-dom";
-import { Navbar, Nav, Container, Button, NavDropdown } from "react-bootstrap"; // NavDropdown eklendi
+import { Container, Navbar, Nav, Form, FormControl, Button, Row, Col, Card, NavDropdown } from "react-bootstrap";
 import { BsPersonCircle, BsCart } from "react-icons/bs";
 import { FaSignOutAlt, FaSignInAlt } from "react-icons/fa";
+import { Search } from "lucide-react";
 
 const Navbars = () => {
   const { isAuth, logout } = useAuth(); // isAuth'i ve logout fonksiyonunu alıyoruz
@@ -12,17 +13,32 @@ const Navbars = () => {
     <Navbar bg="dark" variant="dark" expand="lg">
       <Container>
         {/* Navbar */}
-        <Navbar.Brand as={Link} to="/">E-Shop</Navbar.Brand>
+        <Navbar.Brand as={Link} to="/">E-Ticaret</Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            <Nav.Link as={Link} to="/">Home</Nav.Link>
-            <Nav.Link as={Link} to="/shop">Shop</Nav.Link>
-            <NavDropdown title="Categories" id="basic-nav-dropdown">
-              <NavDropdown.Item as={Link} to="/electronics">Electronics</NavDropdown.Item>
-              <NavDropdown.Item as={Link} to="/clothing">Clothing</NavDropdown.Item>
-              <NavDropdown.Item as={Link} to="/accessories">Accessories</NavDropdown.Item>
+            <Nav.Link as={Link} to="/">Anasayfa</Nav.Link>
+            <Nav.Link as={Link} to="/shop">Magaza</Nav.Link>
+            <NavDropdown title="Kategoriler" id="basic-nav-dropdown">
+              <NavDropdown.Item as={Link} to="/electronics">Elektronik</NavDropdown.Item>
+              <NavDropdown.Item as={Link} to="/accessories">Ev & Yaşam</NavDropdown.Item>
+              <NavDropdown.Item as={Link} to="/clothing">Moda & Giyim</NavDropdown.Item>
+              <NavDropdown.Item as={Link} to="/accessories">Hobi & Eğlence</NavDropdown.Item>
+              <NavDropdown.Item as={Link} to="/accessories">Süpermarket & Gıda</NavDropdown.Item>
+              <NavDropdown.Item as={Link} to="/accessories">Kişisel Bakım & Kozmetik</NavDropdown.Item>
             </NavDropdown>
+            <Nav.Link href="#deals">Kampanyalar</Nav.Link>
+            <Form className="search-container">
+              <Search className="search-icon"  />
+              <FormControl
+                type="search"
+                placeholder=""
+                className="search-input"
+              />
+            </Form>
+          </Nav>
+          <Nav>
+
           </Nav>
         </Navbar.Collapse>
 
@@ -42,13 +58,13 @@ const Navbars = () => {
                 onClick={logout}
               >
                 <FaSignOutAlt />
-                Logout
+                Çıkış
               </Button>
             </>
           ) : (
             <Button as={Link} to="/login" variant="outline-light" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
               <FaSignInAlt />
-              Login
+              Giriş
             </Button>
           )}
         </Nav>

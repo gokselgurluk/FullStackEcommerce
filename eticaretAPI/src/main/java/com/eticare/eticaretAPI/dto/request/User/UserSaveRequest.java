@@ -17,6 +17,9 @@ public class UserSaveRequest {
     @NotBlank(message = "Password cannot be empty or blank")
     private String password;
 
+    @annotationValidPassword
+    @NotBlank(message = "Password cannot be empty or blank")
+    private String confirmPassword;
 
     @Email(message = "Email must be a valid format")
     @NotBlank(message = "Email cannot be empty or blank")
