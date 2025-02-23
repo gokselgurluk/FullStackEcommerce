@@ -69,6 +69,7 @@ public class AuthService {
             Authentication authentication = authenticationManager.authenticate(authRequest);
             CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
 
+
             return userService.getUserByMail(customUserDetails.getUsername()).orElseThrow(()-> new NotFoundException("authenticate işlemi için kullanıc ıyok")); // Doğrulanan kullanıcıyı al
 
 

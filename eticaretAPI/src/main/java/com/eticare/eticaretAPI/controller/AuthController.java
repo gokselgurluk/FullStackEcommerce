@@ -29,6 +29,7 @@ import org.springframework.security.authentication.LockedException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/auth")
@@ -85,13 +86,15 @@ public class AuthController {
             // IP adresi ve cihaz bilgisi alınır
             String clientIp = IpUtils.getClientIp(httpRequest);
             Map<String, String> userAgent = DeviceUtils.getUserAgent(httpRequest);
+            Optional<User> userOptional= userService.getUserByMail(authenticationRequest.getEmail());
+            if (userOptional.get().isAccountLocked()) {
+                System.out.println("bloklu hesap algılandı");
+                return ResponseEntity.status(HttpStatus.LOCKED).body(ResultHelper.errorWithData("Hesap kilidini açmak için otp kodunu giriniz", "beklemeniz gereken süre : " + userOptional.get().getDiffLockedTime() + " dakika", HttpStatus.LOCKED));
+            }
 
             // Kullanıcıyı doğrula ve sessionı dogrula sonra token üret
             User user = authService.authenticate(authenticationRequest.getEmail(), authenticationRequest.getPassword(),httpRequest);
 
-            if (user.isAccountLocked()) {
-                return ResponseEntity.status(HttpStatus.LOCKED).body(ResultHelper.errorWithData("Hesap kilidini açmak için otp kodunu giriniz", "beklemeniz gereken süre : " + user.getDiffLockedTime() + " dakika", HttpStatus.LOCKED));
-            }
 
             Token refreshToken = tokenService.refreshToken(user);
 

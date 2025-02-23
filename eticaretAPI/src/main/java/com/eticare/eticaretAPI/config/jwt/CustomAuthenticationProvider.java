@@ -75,6 +75,7 @@ public class CustomAuthenticationProvider extends DaoAuthenticationProvider {
 
         // Eğer kilit süresi varsa veya şu anki zamandan sonra ise hesap kilitlidir.
         if (userOptional.get().isAccountLocked() && sessionService.isSessionValid(email, clientIp, userAgent.get("Device"))) {
+            System.out.println("oturm durumu ve hesap kılıt durumu ? "+userOptional.get().isAccountLocked());
             CustomUserDetails userDetails = new CustomUserDetails(
                     user.getEmail(),
                     user.getPassword(),
@@ -97,11 +98,14 @@ public class CustomAuthenticationProvider extends DaoAuthenticationProvider {
             if (sessionService.isSessionValid(email, clientIp, userAgent.get("Device"))) {
                 sessionService.incrementFailedLoginAttempts(email);
                 userService.handleFailedLogin(user);
+                System.out.println("oturm durumu ve hesap kılıt durumu ? "+user.isAccountLocked());
+
             } else {
                 failedAttemptService.recordFailedAttempts(email);
             }
 
             userService.updateUserLocked(userOptional.get()); // Burada güncelle
+            System.out.println("oturm durumu  ? "+user.getAccountLockedTime());
             throw new BadCredentialsException("Şifre yanlış");
         }
 

@@ -233,7 +233,7 @@ button {
 .form-title {
   font-size: 2rem; /* Daha büyük başlık */
   font-weight: bold;
-  margin-bottom: 5px; /* Aşağıdaki inputlardan biraz daha uzaklaşsın */
+  margin-bottom: 15px; /* Aşağıdaki inputlardan biraz daha uzaklaşsın */
   color:#181818; /* Daha koyu renk */
   text-align: center;
 }
