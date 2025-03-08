@@ -1,4 +1,5 @@
 # Proje: proje.shop
+# [Proje Canlı Link: proje.shop](https://proje.shop)
 
 ## Hakkında
 proje.shop, güvenli bir kullanıcı yönetim sistemi sunan bir e-ticaret sitesidir. Kullanıcıların hesap güvenliğini sağlamak amacıyla çeşitli güvenlik önlemleri entegre edilmiştir.
