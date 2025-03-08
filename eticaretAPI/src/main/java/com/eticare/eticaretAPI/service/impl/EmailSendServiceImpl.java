@@ -60,7 +60,7 @@ public class EmailSendServiceImpl implements EmailSendService {
 
             MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8"); // UTF-8 karakter seti eklendi
-            helper.setFrom("noreply@e-TicaretMailDogrulamaService");
+            helper.setFrom("info@proje.shop");
             helper.setTo(email);
             helper.setSubject("Account Verification Code");
             // HTML formatında içerik
@@ -143,7 +143,7 @@ public class EmailSendServiceImpl implements EmailSendService {
             String resetUrl = "http://localhost:5173/reset-password?token=" + Value;
             MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
-            helper.setFrom("noreply@e-TicaretHesapSifreSıfırlamaService");
+            helper.setFrom("info@proje.shop");
             helper.setTo(email);
             helper.setSubject("Account Reset Password Link");
             // HTML formatında içerik
@@ -252,7 +252,7 @@ public class EmailSendServiceImpl implements EmailSendService {
             String Value = emailSend.getToken() != null ? emailSend.getToken().getTokenValue() : emailSend.getCode().getCodeValue();
             String verifyUrl = "http://localhost:5173/otp-verify?code=" + Value + "&email=" + email;            MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
-            helper.setFrom("noreply@e-TicaretOturumDogrulamaService");
+            helper.setFrom("info@proje.shop");
             helper.setTo(email);
             helper.setSubject("OTP Verify Link");
             // HTML formatında içerik

@@ -24,3 +24,4 @@ dist-ssr
 *.sw?
 # application.properties dosyasını hariç tut
 application.properties
+.env.development

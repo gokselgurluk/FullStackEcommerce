@@ -86,7 +86,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
 
             } else {
-                System.out.println("JwtAuthenticationFilter : request.getHeader boş");
                 filterChain.doFilter(request, response); // Eğer token yoksa diğer filtrelere devam et
                 return;
             }

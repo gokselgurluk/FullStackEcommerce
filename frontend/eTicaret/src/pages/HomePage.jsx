@@ -11,7 +11,7 @@ const HomePage = () => {
         <Row>
           <Col>
             <Card className="bg-dark text-white">
-              <Card.Img src="https://via.placeholder.com/1200x400" alt="Kampanya" />
+              <Card.Img src="https://dummyimage.com/1200x400/000/fff" alt="Kampanya" />
               <Card.ImgOverlay>
                 <Card.Title>Büyük İndirimler!</Card.Title>
                 <Card.Text>Sezonun en iyi fırsatlarını kaçırmayın.</Card.Text>

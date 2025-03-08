@@ -59,6 +59,14 @@
 			<version>42.5.4</version> <!-- PostgreSQL sürümünü belirtmek -->
 			<scope>runtime</scope>
 		</dependency>
+		<!-- MySQL Connector -->
+		<!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>8.0.33</version>
+		</dependency>
+
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
@@ -122,17 +130,30 @@
 			<artifactId>passay</artifactId>
 			<version>1.6.0</version>
 		</dependency>
-<!--.nvm otomatı kbaslatmak ıcın-->
+<!--.nvm otomatık baslatmak ıcın-->
 		<dependency>
 			<groupId>io.github.cdimascio</groupId>
 			<artifactId>dotenv-java</artifactId>
 			<version>2.2.0</version>
 		</dependency>
+
 	</dependencies>
 
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.2.0</version>
+				<configuration>
+					<archive>
+						<manifestEntries>
+							<Main-Class>com.eticare.eticaretAPI.EticaretApiApplication</Main-Class> <!-- Ana sınıfınızı Main olarak güncelledik -->
+						</manifestEntries>
+					</archive>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>

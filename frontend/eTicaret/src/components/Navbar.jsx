@@ -13,7 +13,7 @@ const Navbars = () => {
     <Navbar bg="dark" variant="dark" expand="lg">
       <Container>
         {/* Navbar */}
-        <Navbar.Brand as={Link} to="/">E-Ticaret</Navbar.Brand>
+        <Navbar.Brand as={Link} to="/"><div className="logo-White"></div></Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">

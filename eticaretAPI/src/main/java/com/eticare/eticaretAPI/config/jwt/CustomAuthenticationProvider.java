@@ -61,7 +61,6 @@ public class CustomAuthenticationProvider extends DaoAuthenticationProvider {
 
         BlockedIp blockedIp = blockedIpService.blockedIpCreate(clientIp);
         failedAttemptService.createOrUpdateFailedAttempt(email, blockedIp, userAgent);
-
         Optional<User> userOptional = userService.getUserByMail(email);
 
         if (userOptional.isEmpty()) {
@@ -75,7 +74,7 @@ public class CustomAuthenticationProvider extends DaoAuthenticationProvider {
 
         // Eğer kilit süresi varsa veya şu anki zamandan sonra ise hesap kilitlidir.
         if (userOptional.get().isAccountLocked() && sessionService.isSessionValid(email, clientIp, userAgent.get("Device"))) {
-            System.out.println("oturm durumu ve hesap kılıt durumu ? "+userOptional.get().isAccountLocked());
+            System.out.println("oturum durumu ve hesap kılıt durumu ? "+userOptional.get().isAccountLocked());
             CustomUserDetails userDetails = new CustomUserDetails(
                     user.getEmail(),
                     user.getPassword(),

@@ -25,7 +25,7 @@ const LoginPage = () => {
     const storedEmail = localStorage.getItem("rememberedEmail");
     const storedPassword = localStorage.getItem("rememberedPassword");
     const storedRememberMe = localStorage.getItem("rememberMe") === "true";
-  
+
     if (storedRememberMe && storedEmail && storedPassword) {
       setEmail(storedEmail);
       setPassword(storedPassword);
@@ -47,13 +47,13 @@ const LoginPage = () => {
     }
   };
 
-const handleInputChange = (e) => {
-  const { name, value } = e.target;
-  setFormData({ ...formData, [name]: value });
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
 
-  if (name === "email") setEmail(value);
-  if (name === "password") setPassword(value);
-};
+    if (name === "email") setEmail(value);
+    if (name === "password") setPassword(value);
+  };
 
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
@@ -61,11 +61,11 @@ const handleInputChange = (e) => {
 
   const handleRememberMeChange = (e) => {
     setRememberMe(e.target.checked);
-  
+
   };
 
   const handleSubmit = async (e) => {
-   
+
     e.preventDefault(); // Sayfa yenilenmesini engelle
     setLoading(true); // İşlem başladı, butonu devre dışı bırak
     if (rememberMe) {
@@ -78,9 +78,11 @@ const handleInputChange = (e) => {
       localStorage.removeItem("rememberMe");
     }
     try {
+      console.log("Base URL:", axiosInstance.defaults.baseURL);
       const response = await axiosInstance.post('/auth/login', formData);
+    
       const userData = response.data;
-      
+
       if (userData?.accessToken) {
         localStorage.setItem('accessToken', userData.accessToken);
         login(userData.accessToken);
@@ -103,7 +105,7 @@ const handleInputChange = (e) => {
       } else {
         setModalData({
           isOpen: true,
-          message: error.response?.data?.message || 'Bir hata oluştu. Lütfen tekrar deneyin.',
+          message: error.response?.data?.message +'\n'+error.response?.data?.data || 'Bir hata oluştu. Lütfen tekrar deneyin.',
           type: 'error',
         });
       }
@@ -114,8 +116,7 @@ const handleInputChange = (e) => {
   return (
     <main className="login-container">
       <div className="login-left">
-        <div className='login-left-clip-box'></div>
-        <div className='logo-container'></div>
+        <div className="logo-cart"></div>
 
         {/* Giriş Formu */}
         <form className="login-form" onSubmit={handleSubmit}>
@@ -171,23 +172,19 @@ const handleInputChange = (e) => {
                 onChange={handleRememberMeChange}
               />
               <label htmlFor="rememberMe" className="remember-me-label">Beni Hatırla</label>
-           
-          </div>
+
+            </div>
           </div>
           <button type="submit" className="login-button" disabled={loading}>
-  {loading ? <Loader className="spinner" size={20} /> : "Giriş Yap"}
-</button>
-        
+            {loading ? <Loader className="spinner" size={20} /> : "Giriş Yap"}
+          </button>
+
           <div className="signup-container">
             <div className="signup-text">
-            Bir hesabınız yok mu ?<a href="/register" className="signup-link">Hesap Oluştur</a>
+              Bir hesabınız yok mu ?<a href="/register" className="signup-link">Hesap Oluştur</a>
             </div>
           </div>
         </form>
-      </div>
-
-      <div className="login-right">
-        <img className='svg' src="/images/shopping-cart.svg" alt="Market Arabası" />
       </div>
 
       <ModalComponent

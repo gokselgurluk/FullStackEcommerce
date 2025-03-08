@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 public class BlockedIpServiceImpl implements BlockedIpService {
     @Value("${MAX.FAILED.ENTER.COUNT}")
     private Integer MAX_FAILED_ENTER_COUNT;
-    private final static long IP_BLOCKED_TIME =1000*60*60; //24 saat
+    private final static long IP_BLOCKED_TIME =1000*60*2; //24 saat
     private final IBlockedIpRepository blockedIpRepository;
 
     public BlockedIpServiceImpl(IBlockedIpRepository blockedIpRepository) {

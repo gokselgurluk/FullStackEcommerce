@@ -1,7 +1,10 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-})
+  base: '/', // Hostingde yolların bozulmaması için
+  server: {
+    historyApiFallback: true, // SPA yönlendirme için gerekli
+  },
+});

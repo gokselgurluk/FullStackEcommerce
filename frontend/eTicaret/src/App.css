@@ -111,9 +111,12 @@ button {
 /* Main Layout */
 .login-container {
   display: flex;
-  justify-content: start; /* Yatayda ortala */
+  justify-content: center; /* Yatayda ortala */
+  justify-items: center;
   width: 100%;
   min-height: 100vh;
+  background:  rgba(255, 255, 255, 0.377); /* Green background to match login-left */
+
   
 }
 
@@ -191,13 +194,13 @@ button {
 
 /* Sol Bölüm */
 .login-left {
-  background-color: rgba(22, 163, 74, 0.897); /* Same green color as the right side */
+  background:  rgba(255, 255, 255, 0.377); /* Green background to match login-left */
   position: relative;
   width: 50%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: start;
+  justify-content: center;
   padding: 0rem;
 }
 .login-left-clip-box {
@@ -209,7 +212,7 @@ button {
   z-index: 0;
 }
 /* Logo */
-.logo-container {
+.logo-cart {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -218,16 +221,32 @@ button {
   margin-top: 10px;
   margin-bottom: 10px;
   /* Arka plan resmi olarak ekleme */
-  background-image: url("/images/logoWhite.png");
-  background-color: #181818;
+  background-image: url("/images/logoCart.png");
+  background-color:  rgba(217, 217, 217, 0.342);
   background-size: contain; /* Resmin boyutu tamamen görünür olacak şekilde ayarlanır */
   background-repeat: no-repeat; /* Tekrarlamayı önler */
   background-position: center; /* Resmi ortalar */
   width: 90px; /* Logo boyutunu belirle */
   height: 90px; /* Logo boyutunu belirle */
-  border: 1px;
+  border: 2px;
   border-radius:  10%;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+/* Logo */
+.logo-White {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem;
+  z-index: 1;
+  /* Arka plan resmi olarak ekleme */
+  background-image: url("/images/logoWhite.png");
+  background-color:  none;
+  background-size: contain; /* Resmin boyutu tamamen görünür olacak şekilde ayarlanır */
+  background-repeat: no-repeat; /* Tekrarlamayı önler */
+  background-position: center; /* Resmi ortalar */
+  width: 50px; /* Logo boyutunu belirle */
+  height: 50px; /* Logo boyutunu belirle */
 }
 
 .form-title {
@@ -503,7 +522,7 @@ button {
 
 /* Sağ Bölüm */
 .login-right {
-  background-color: rgba(22, 163, 74, 0.897); /* Same green color as the left side */
+  background-color: #16a34a; /* Same green color as the left side */
   flex-direction: column;
   display: flex;
   align-items: center;
@@ -513,12 +532,12 @@ button {
 
 /* SVG Görseli */
 .svg {
-  width: 390px;
-  height: 465px;
+  width: 500px;
+  height: auto;
   display: flex;
-  align-items: flex-end; /* Aligns to the bottom */
-  justify-content: center;
-  margin-top: 300px; /* Pushes the SVG to the bottom */
+
+margin-top: 100px;
+ 
 }
 
 /* Modal Stilleri */

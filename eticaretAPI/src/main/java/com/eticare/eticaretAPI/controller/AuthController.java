@@ -87,14 +87,15 @@ public class AuthController {
             String clientIp = IpUtils.getClientIp(httpRequest);
             Map<String, String> userAgent = DeviceUtils.getUserAgent(httpRequest);
             Optional<User> userOptional= userService.getUserByMail(authenticationRequest.getEmail());
-            if (userOptional.get().isAccountLocked()) {
-                System.out.println("bloklu hesap algılandı");
-                return ResponseEntity.status(HttpStatus.LOCKED).body(ResultHelper.errorWithData("Hesap kilidini açmak için otp kodunu giriniz", "beklemeniz gereken süre : " + userOptional.get().getDiffLockedTime() + " dakika", HttpStatus.LOCKED));
-            }
+
 
             // Kullanıcıyı doğrula ve sessionı dogrula sonra token üret
             User user = authService.authenticate(authenticationRequest.getEmail(), authenticationRequest.getPassword(),httpRequest);
 
+            if (userOptional.get().isAccountLocked()) {
+                System.out.println("bloklu hesap algılandı");
+                return ResponseEntity.status(HttpStatus.LOCKED).body(ResultHelper.errorWithData("Hesap kilidini açmak için otp kodunu giriniz", "beklemeniz gereken süre : " + userOptional.get().getDiffLockedTime() + " dakika", HttpStatus.LOCKED));
+            }
 
             Token refreshToken = tokenService.refreshToken(user);
 
