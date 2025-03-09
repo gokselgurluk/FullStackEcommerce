@@ -105,7 +105,7 @@ const LoginPage = () => {
       } else {
         setModalData({
           isOpen: true,
-          message: error.response?.data?.message +'\n'+error.response?.data?.data || 'Bir hata oluştu. Lütfen tekrar deneyin.',
+          message: error.response?.data?.message + (error.response?.data?.data ? '\n' + error.response.data.data : '') || 'Bir hata oluştu. Lütfen tekrar deneyin.',
           type: 'error',
         });
       }
