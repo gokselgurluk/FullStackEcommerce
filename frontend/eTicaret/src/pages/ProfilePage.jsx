@@ -161,6 +161,7 @@ const ProfilePage = () => {
                 <td>Status</td>
                 <td>{profile.active ? "Active" : "Inactive"}</td>
               </tr>
+              
             </tbody>
           </Table>
 
@@ -176,13 +177,12 @@ const ProfilePage = () => {
                   <th>Device</th>
                   <th>Created At</th>
                   <th>Expires At</th>
+                  <th>Oturumu Yönet</th>
                 </tr>
               </thead>
               <tbody>
                 {sessions.map((session) => (
                   <tr key={session.id}>
-
-
                     <td>{session.id}</td>
                     <td>{session.ipAddress}</td>
                     <td>{session.browser}</td>
@@ -190,6 +190,8 @@ const ProfilePage = () => {
                     <td>{session.device}</td>
                     <td>{new Date(session.createdAt).toLocaleString()}</td>
                     <td>{new Date(session.expiresAt).toLocaleString()}</td>
+                <td><button style={{borderRadius:"10px"}}>Kaldır</button></td>
+             
                   </tr>
                 ))}
               </tbody>

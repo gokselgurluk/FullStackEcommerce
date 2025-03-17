@@ -60,18 +60,14 @@ public class AuthService {
     // Kullanıcı doğrulama ve token üret
     public User authenticate(String email, String password, HttpServletRequest request) throws RuntimeException {
         try {
-/*
-            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
-*/
+         //   Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
             UsernamePasswordAuthenticationToken authRequest =
                     new UsernamePasswordAuthenticationToken(email, password);
             authRequest.setDetails(request);
             Authentication authentication = authenticationManager.authenticate(authRequest);
             CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
 
-
-            return userService.getUserByMail(customUserDetails.getUsername()).orElseThrow(()-> new NotFoundException("authenticate işlemi için kullanıc ıyok")); // Doğrulanan kullanıcıyı al
-
+            return userService.getUserByMail(customUserDetails.getUsername()).orElseThrow(()-> new NotFoundException("authenticate işlemi için kullanıcı yok")); // Doğrulanan kullanıcıyı al
 
         } catch (UsernameNotFoundException | BadCredentialsException e) {
             throw new RuntimeException(e.getMessage());

@@ -1,6 +1,8 @@
 package com.eticare.eticaretAPI.config.jwt;
 
+import com.eticare.eticaretAPI.config.result.ResultHelper;
 import com.eticare.eticaretAPI.entity.BlockedIp;
+import com.eticare.eticaretAPI.entity.Session;
 import com.eticare.eticaretAPI.entity.User;
 import com.eticare.eticaretAPI.entity.enums.RoleEnum;
 import com.eticare.eticaretAPI.service.BlockedIpService;
@@ -11,7 +13,10 @@ import com.eticare.eticaretAPI.utils.DeviceUtils;
 import com.eticare.eticaretAPI.utils.IpUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.core.Authentication;
@@ -67,14 +72,36 @@ public class CustomAuthenticationProvider extends DaoAuthenticationProvider {
             failedAttemptService.recordFailedAttempts(email);
             throw new UsernameNotFoundException("Bu e-posta ile kayıtlı kullanıcı bulunamadı: " + email);
         }
+
+        userService.updateUserLocked(userOptional.get());
+        if (userOptional.get().isAccountLocked()) {
+            userService.diffLockedTime(userOptional.get());
+            throw new LockedException("Hesap bloklu şifrenizi sıfırlayın veya beklemeniz gereken süre : " + userOptional.get().getDiffLockedTime() + " dakika");
+        }
+
+        if (userOptional.get().getPassword() == null) {
+            throw new BadCredentialsException("Şifre bilgisi eksik.");
+        }
+
+        if (!passwordEncoder.matches(password,userOptional.get().getPassword())) {
+            Optional<Session> optionalSession = sessionService.findByEmailAndIpAddressAndDeviceInfo(email, clientIp, userAgent.get("Device"));
+            if (optionalSession.isPresent()) {
+                userService.handleFailedLogin(userOptional.get());
+                sessionService.incrementFailedLoginAttempts(email, clientIp, userAgent.get("Device"));
+            } else {
+                failedAttemptService.recordFailedAttempts(email);
+            }
+            throw new BadCredentialsException("Şifre yanlış");
+        }
         User user = userOptional.get();
         RoleEnum role = user.getRoleEnum();
         List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.name()));
+        return new UsernamePasswordAuthenticationToken(user, password, authorities);
+    }
+}
 
-
-        // Eğer kilit süresi varsa veya şu anki zamandan sonra ise hesap kilitlidir.
+   /*     // Eğer kilit süresi varsa veya şu anki zamandan sonra ise hesap kilitlidir.
         if (userOptional.get().isAccountLocked() && sessionService.isSessionValid(email, clientIp, userAgent.get("Device"))) {
-            System.out.println("oturum durumu ve hesap kılıt durumu ? "+userOptional.get().isAccountLocked());
             CustomUserDetails userDetails = new CustomUserDetails(
                     user.getEmail(),
                     user.getPassword(),
@@ -84,33 +111,4 @@ public class CustomAuthenticationProvider extends DaoAuthenticationProvider {
             userService.diffLockedTime(userOptional.get());
             return new UsernamePasswordAuthenticationToken(userDetails, password, authorities);
 
-            //return new UsernamePasswordAuthenticationToken(userOptional.get(), password, authorities);
-            //throw new LockedException("Hesap kilitli beklemeniz gereken süre : "+ userOptional.get().getDiffLockedTime() +" dakika");
-        }
-
-
-        if (user.getPassword() == null) {
-            throw new BadCredentialsException("Şifre bilgisi eksik.");
-        }
-
-        if (!passwordEncoder.matches(password, user.getPassword())) {
-            if (sessionService.isSessionValid(email, clientIp, userAgent.get("Device"))) {
-                sessionService.incrementFailedLoginAttempts(email);
-                userService.handleFailedLogin(user);
-                System.out.println("oturm durumu ve hesap kılıt durumu ? "+user.isAccountLocked());
-
-            } else {
-                failedAttemptService.recordFailedAttempts(email);
-            }
-
-            userService.updateUserLocked(userOptional.get()); // Burada güncelle
-            System.out.println("oturm durumu  ? "+user.getAccountLockedTime());
-            throw new BadCredentialsException("Şifre yanlış");
-        }
-
-
-        userService.resetFailedLoginAttempts(user);
-
-        return new UsernamePasswordAuthenticationToken(user, password, authorities);
-    }
-}
+        }*/

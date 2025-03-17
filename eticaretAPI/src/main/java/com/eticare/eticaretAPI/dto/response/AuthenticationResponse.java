@@ -13,7 +13,8 @@ import java.util.Collection;
 @NoArgsConstructor
 @Builder
     public class AuthenticationResponse {
-        private String accessToken;;
+        private String accessToken;
+        private String refreshToken;
         private String email;
         private RoleEnum role;
         private boolean isActive;

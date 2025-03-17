@@ -16,9 +16,25 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 public class BlockedIpServiceImpl implements BlockedIpService {
+    @Override
+    public void blockedIpUpdate(BlockedIp blockedIp) {
+        if(blockedIp.getUnblocked_at() != null && blockedIp.getUnblocked_at().after(new Date())) {
+            blockedIpDiffTime(blockedIp);
+            blockedIp.setBlockedIpStatus(true);
+        }
+        if((blockedIp.getUnblocked_at() == null || blockedIp.getUnblocked_at().before(new Date()))&& blockedIp.isBlockedIpStatus()){
+            blockedIp.setBlockedIpStatus(false);
+            blockedIp.setIncrementFailedAttempts(0);
+            blockedIp.setUnblocked_at(null);
+            blockedIp.setDiffLockedTime(0);
+            blockedIp.setBlockedIpStatus(false);
+        }
+        blockedIpRepository.save(blockedIp);
+    }
+
     @Value("${MAX.FAILED.ENTER.COUNT}")
     private Integer MAX_FAILED_ENTER_COUNT;
-    private final static long IP_BLOCKED_TIME =1000*60*2; //24 saat
+    private final static long IP_BLOCKED_TIME =1000*60*60; //1 saat
     private final IBlockedIpRepository blockedIpRepository;
 
     public BlockedIpServiceImpl(IBlockedIpRepository blockedIpRepository) {
@@ -52,38 +68,31 @@ public class BlockedIpServiceImpl implements BlockedIpService {
     public void incrementFailedIpAttempts(FailedAttempt failedAttempt) {
        BlockedIp blockedIp= failedAttempt.getBlockedIP();
 
-        if (blockedIpDiffTime(blockedIp)){
-            throw new LockedException("İp adresiniz bloklu : kalan dk : "+failedAttempt.getBlockedIP().getDiffLockedTime());
+        if (blockedIp.isBlockedIpStatus()){
+          return;
         }
         blockedIp.setIncrementFailedAttempts(blockedIp.getIncrementFailedAttempts()+1);
+
         if( blockedIp.getIncrementFailedAttempts()>=MAX_FAILED_ENTER_COUNT){
             blockedIp.setBlocked_at(new Date());
             blockedIp.setUnblocked_at(new Date(System.currentTimeMillis() + IP_BLOCKED_TIME));
-            blockedIp.setBlockedIpStatus(true);
-            blockedIpDiffTime(blockedIp);
             blockedIpRepository.save(blockedIp);
             new Timer().schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    blockedIp.setIncrementFailedAttempts(0);
+                   /* blockedIp.setIncrementFailedAttempts(0);
                     blockedIp.setBlockedIpStatus(false);
-                    blockedIpRepository.save(blockedIp);
+                    blockedIpRepository.save(blockedIp);*/
+                    blockedIpUpdate(blockedIp);
                 }
             },blockedIp.getUnblocked_at().getTime() - System.currentTimeMillis());
         }
     }
 
     @Override
-    public boolean blockedIpDiffTime(BlockedIp blockedIp) {
-            if( blockedIp.getUnblocked_at()!=null && blockedIp.getUnblocked_at().after(new Date())){
-                long diffMillis = blockedIp.getUnblocked_at().getTime() - System.currentTimeMillis();
-                long diffTimeMinute = TimeUnit.MILLISECONDS.toMinutes(diffMillis);
-                blockedIp.setDiffLockedTime(Math.max(diffTimeMinute, 0));
-                blockedIpRepository.save(blockedIp);
-                return true;
-            }
-            return false;
-        }
-
-
+    public void blockedIpDiffTime(BlockedIp blockedIp) {
+        long diffMillis = blockedIp.getUnblocked_at().getTime() - System.currentTimeMillis();
+        long diffTimeMinute = TimeUnit.MILLISECONDS.toMinutes(diffMillis);
+        blockedIp.setDiffLockedTime(Math.max(diffTimeMinute, 0));
+    }
 }

@@ -21,17 +21,22 @@ public class Session {
     @Column(nullable = false)
     private String email;
 
-    @Column(nullable = false)
-    private String refreshToken;
+    /*@Column(nullable = false)
+    private String refreshToken;*/
 
     @Column(nullable = false)
     private String ipAddress;
 
+    @Builder.Default
+    private int incrementFailedAttempts = 0;
+
     private String browser; // Tarayıcı bilgisi
     private String os;      // İşletim sistemi bilgisi
     private String deviceInfo;  // Cihaz türü bilgisi
-    private boolean isVerifiedSession ;
-    private int incrementFailedAttempts = 0;
+
+    @Builder.Default
+    private boolean isVerifiedSession = true;
+
     @Column(name = "session_created_at")
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt = new Date(); // Oturumun oluşturulma zamanı
@@ -44,17 +49,15 @@ public class Session {
     @JoinColumn(name = "user_id", nullable = false)
     private User user; // Oturumun sahibi kullanıcı
 
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "token_id", nullable = false)
-    private Token token; // Oturumun ilgili Refresh Token'ı
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "token_id", unique = true, nullable = false)
+    private Token token;
 
     @Override
     public String toString() {
         return "Session{" +
                 "id=" + id +
                 ", email='" + email + '\'' +
-                ", refreshToken='" + refreshToken + '\'' +
                 ", ipAddress='" + ipAddress + '\'' +
                 ", browser='" + browser + '\'' +
                 ", os='" + os + '\'' +

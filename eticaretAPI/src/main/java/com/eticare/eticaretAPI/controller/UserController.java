@@ -59,7 +59,7 @@ private  final TokenService tokenService;
             return ResultHelper.Error500("No user found with email: " + userDetails.getUsername());
         }
 
-        Token token = tokenService.findByUserAndTokenType(user.get() ,TokenType.REFRESH).orElseThrow(()->new RuntimeException("UserController:kullanıcıya aıt token bılgısı bulunamadı"));
+       // Token token = tokenService.findByUserAndTokenType(user.get() ,TokenType.REFRESH).orElseThrow(()->new RuntimeException("UserController:kullanıcıya aıt token bılgısı bulunamadı"));
         List<Session> sessionList = sessionService.getActiveSessions(user.get().getEmail());
         List<SessionResponse> sessionResponsesList =sessionList.stream().map(Session->this.modelMapperService.forResponse().map(Session,SessionResponse.class)).collect(Collectors.toList());
         // return ResponseEntity.ok(new AuthenticationResponse("accessToken", userDetails.getUsername(), userDetails.getAuthorities(),user.isActive())); // Kullanıcı bilgilerini döndür

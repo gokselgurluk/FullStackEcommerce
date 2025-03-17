@@ -39,7 +39,9 @@ public class EmailSendServiceImpl implements EmailSendService {
     private final TokenService tokenService;
     private final CodeService codeService;
     private final IEmailSendRepository emailSendRepository;
-    private static final String IMAGE_PATH = "C:\\Users\\ASUS\\IdeaProjects\\eticaretAPI\\eticaretAPI\\src\\main\\resources\\images\\logo.png";
+    //private static final String IMAGE_PATH = "C:\\Users\\ASUS\\IdeaProjects\\eticaretAPI\\eticaretAPI\\src\\main\\resources\\images\\logo.png";
+    private static final String DOMAIN_URL = "https://proje.shop";
+    private static final String IMAGE_URL = "https://proje.shop/uploads/logo.png";
     private static final long EMAIL_EXPIRATION = 1000 * 60 * 2; // 2 dk
 
     public EmailSendServiceImpl(JavaMailSender javaMailSender, UserService userService, TokenService tokenService, CodeService codeService, IEmailSendRepository emailSendRepository) {
@@ -56,7 +58,7 @@ public class EmailSendServiceImpl implements EmailSendService {
         try {
             String email = emailSend.getUser().getEmail();
             String Value = emailSend.getToken() != null ? emailSend.getToken().getTokenValue() : emailSend.getCode().getCodeValue();
-            String activationLink = "http://localhost:5173/activate-account?token=" + Value;
+            String activationLink = DOMAIN_URL+"/activate-account?token=" + Value;
 
             MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8"); // UTF-8 karakter seti eklendi
@@ -70,7 +72,8 @@ public class EmailSendServiceImpl implements EmailSendService {
                     + "<tr><td align='center'>"
                     + "<table width='600' cellspacing='0' cellpadding='0' border='0' style='background-color:#ffffff; padding:40px; border-radius:8px;'>"
                     + "<tr><td align='center'>"
-                    + "<img src='cid:logoImage' alt='Şirket Logosu' style='width:50px; height:50px; margin-bottom:5px;' />"
+                    +"<img src='" + IMAGE_URL + "' alt='Şirket Logosu' style='width:50px; height:50px; margin-bottom:5px;' />"
+                    //+ "<img src='cid:logoImage' alt='Şirket Logosu' style='width:50px; height:50px; margin-bottom:5px;' />"
                     + "</td></tr>"
                     + "<tr><td align='center'>"
                     + "<h2 style='color:#333;'>Hoş Geldiniz! 🎉</h2>"
@@ -88,12 +91,12 @@ public class EmailSendServiceImpl implements EmailSendService {
             // HTML içeriği e-postaya ekle
             helper.setText(htmlContent, true); // true parametresi HTML içeriği olduğunu belirtir
             // Marka logosunu e-posta ile birlikte gömülü olarak ekle
-            File logoFile = new File(IMAGE_PATH);
+         /*   File logoFile = new File(IMAGE_PATH);
             if (!logoFile.exists()) {
                 throw new RuntimeException("Logo resmi bulunamadı !");
             } else {
                 helper.addInline("logoImage", logoFile);
-            }
+            }*/
 
             // E-posta gönder
             javaMailSender.send(message);
@@ -140,7 +143,7 @@ public class EmailSendServiceImpl implements EmailSendService {
         try {
             String email = emailSend.getUser().getEmail();
             String Value = emailSend.getToken() != null ? emailSend.getToken().getTokenValue() : emailSend.getCode().getCodeValue();
-            String resetUrl = "http://localhost:5173/reset-password?token=" + Value;
+            String resetUrl = DOMAIN_URL+"/reset-password?token=" + Value;
             MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
             helper.setFrom("info@proje.shop");
@@ -154,7 +157,9 @@ public class EmailSendServiceImpl implements EmailSendService {
                         + "<tr><td align='center'>"
                         + "<table width='600' cellspacing='0' cellpadding='0' border='0' style='background-color:#ffffff; padding:40px; border-radius:8px;'>"
                         + "<tr><td align='center'>"
-                        + "<img src='cid:logoImage' alt='Şirket Logosu' style='width:50px; height:50px; margin-bottom:5px;' />"
+                        +"<img src='" + IMAGE_URL + "' alt='Şirket Logosu' style='width:50px; height:50px; margin-bottom:5px;' />"
+
+                        // + "<img src='cid:logoImage' alt='Şirket Logosu' style='width:50px; height:50px; margin-bottom:5px;' />"
                         + "</td></tr>"
                         + "<tr><td align='center'>"
                         + "<h2 style='color:#333;'>Hoş Geldiniz! 🎉</h2>"
@@ -171,19 +176,16 @@ public class EmailSendServiceImpl implements EmailSendService {
                 throw new RuntimeException(e);
             }
 
-
             // HTML içeriği e-postaya ekle
             helper.setText(htmlContent, true); // true parametresi HTML içeriği olduğunu belirtir
             // Marka logosunu e-posta ile birlikte gömülü olarak ekle
-            helper.addInline("logoImage", new File(IMAGE_PATH));
-
-            // E-posta gönder
+          /*  helper.addInline("logoImage", new File(IMAGE_PATH));
             File logoFile = new File(IMAGE_PATH);
             if (!logoFile.exists()) {
                 throw new RuntimeException("Logo resmi bulunamadı !");
             } else {
                 helper.addInline("logoImage", logoFile);
-            }
+            }*/
             // E-posta gönder
             javaMailSender.send(message);
 
@@ -203,10 +205,10 @@ public class EmailSendServiceImpl implements EmailSendService {
             User user = userService.getUserByMail(email)
                     .orElseThrow(() -> new EntityNotFoundException("sendResetPasswordTokenEmail : kullanıcı bulunamadı"));
 
-            if (!user.isActive()) {
+            /*if (!user.isActive()) {
                 throw new IllegalStateException("Hesap aktif degil.");
             }
-
+            */
 
             Token token = tokenService.resetPasswordToken(user);
             EmailSend emailSend = saveOrUpdateEmailSend(user, token, null, token.getTokenType(), SecretTypeEnum.TOKEN);
@@ -250,7 +252,7 @@ public class EmailSendServiceImpl implements EmailSendService {
         try {
             String email = emailSend.getUser().getEmail();
             String Value = emailSend.getToken() != null ? emailSend.getToken().getTokenValue() : emailSend.getCode().getCodeValue();
-            String verifyUrl = "http://localhost:5173/otp-verify?code=" + Value + "&email=" + email;            MimeMessage message = javaMailSender.createMimeMessage();
+            String verifyUrl = DOMAIN_URL+"/otp-verify?code=" + Value + "&email=" + email;            MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
             helper.setFrom("info@proje.shop");
             helper.setTo(email);
@@ -262,7 +264,9 @@ public class EmailSendServiceImpl implements EmailSendService {
                     + "<tr><td align='center'>"
                     + "<table width='600' cellspacing='0' cellpadding='0' border='0' style='background-color:#ffffff; padding:40px; border-radius:8px;'>"
                     + "<tr><td align='center'>"
-                    + "<img src='cid:logoImage' alt='Şirket Logosu' style='width:50px; height:50px; margin-bottom:5px;' />"
+                    +"<img src='" + IMAGE_URL + "' alt='Şirket Logosu' style='width:50px; height:50px; margin-bottom:5px;' />"
+
+                    //+ "<img src='cid:logoImage' alt='Şirket Logosu' style='width:50px; height:50px; margin-bottom:5px;' />"
                     + "</td></tr>"
                     + "<tr><td align='center'>"
                     + "<h2 style='color:#333;'>OTP Doğrulama</h2>"
@@ -281,15 +285,13 @@ public class EmailSendServiceImpl implements EmailSendService {
             // HTML içeriği e-postaya ekle
             helper.setText(htmlContent, true); // true parametresi HTML içeriği olduğunu belirtir
             // Marka logosunu e-posta ile birlikte gömülü olarak ekle
-            helper.addInline("logoImage", new File(IMAGE_PATH));
-
-            // E-posta gönder
+          /*  helper.addInline("logoImage", new File(IMAGE_PATH));
             File logoFile = new File(IMAGE_PATH);
             if (!logoFile.exists()) {
                 throw new RuntimeException("Logo resmi bulunamadı !");
             } else {
                 helper.addInline("logoImage", logoFile);
-            }
+            }*/
             // E-posta gönder
             javaMailSender.send(message);
 
@@ -349,7 +351,7 @@ public class EmailSendServiceImpl implements EmailSendService {
         emailSendRepository.save(emailSend);
         return emailSend;
        }catch (Exception e){
-           throw new RuntimeException("email sınıf ıveri tabanı akyıt sorunu : "+e.getMessage());
+           throw new RuntimeException("email sınıf ıveri tabanı kayıt sorunu : "+e.getMessage());
        }
 
     }

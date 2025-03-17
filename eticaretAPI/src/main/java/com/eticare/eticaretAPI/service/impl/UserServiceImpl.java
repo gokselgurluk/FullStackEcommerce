@@ -46,15 +46,6 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
-    @Override
-    public void updateUserLocked(User user) {
-        if(user.getAccountLockedTime() != null && user.getAccountLockedTime().after(new Date())){
-            user.setAccountLocked(true);
-            save(user);
-        }
-
-
-    }
 
     @Override
     public void diffLockedTime(User user) {
@@ -70,8 +61,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void resetFailedLoginAttempts(User user) {
-        user.setIncrementFailedLoginAttempts(0);
+    public void updateUserLocked(User user) {
+        if(user.getAccountLockedTime() != null && user.getAccountLockedTime().after(new Date())) {
+            user.setAccountLocked(true);
+        }
+        if((user.getAccountLockedTime() == null || user.getAccountLockedTime().before(new Date()))&& user.isAccountLocked()){
+            user.setAccountLocked(false);
+            user.setIncrementFailedLoginAttempts(0);
+            user.setAccountLockedTime(null);
+            user.setDiffLockedTime(0);
+        }
         userRepository.save(user);
     }
 
@@ -84,7 +83,6 @@ public class UserServiceImpl implements UserService {
         }
         // Başarısız giriş sayacını artır
         user.setIncrementFailedLoginAttempts(user.getIncrementFailedLoginAttempts() + 1);
-        System.out.println("user arttırıldı "+ user.getIncrementFailedLoginAttempts());
         // Eğer limit aşıldıysa hesabı kilitle
         if (user.getIncrementFailedLoginAttempts() >= MAX_FAILED_ENTER_COUNT) {
             user.setAccountLockedTime(new Date(System.currentTimeMillis() + ACCOUNT_LOCKED_TIME)); // 30 dk kilitle

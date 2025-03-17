@@ -27,8 +27,8 @@ public class BlockedIpFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
         String clientIp = IpUtils.getClientIp(request);
-
         Optional<BlockedIp> blockedIp = blockedIpService.findByBlockedIp(clientIp);
+        blockedIp.ifPresent(blockedIpService::blockedIpUpdate);
         if (blockedIp.isPresent() && blockedIp.get().isBlockedIpStatus()) {
             response.setStatus(HttpStatus.LOCKED.value());
             response.setContentType("application/json");
@@ -36,8 +36,8 @@ public class BlockedIpFilter extends OncePerRequestFilter {
 
             String jsonResponse = new ObjectMapper().writeValueAsString(
                     ResultHelper.successWithData(
-                            "Yöneticiyle İletişime Geçin IP adresiniz bloklu",
-                            "IP : " + clientIp + " Blok süresi: " + blockedIp.get().getUnblocked_at(),
+                            "Yöneticiyle İletişime Geçin IP : " + clientIp + " adresiniz bloklu",
+                            " Kalan süre: " + blockedIp.get().getDiffLockedTime(),
                             HttpStatus.LOCKED)
             );
 

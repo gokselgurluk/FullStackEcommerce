@@ -25,7 +25,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
         User user = userService.getUserByMail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Kullanıcı bulunamadı: " + email));
+                .orElseThrow(() -> new UsernameNotFoundException("Bu e-posta ile kayıtlı kullanıcı bulunamadı: " + email));
 
         return new CustomUserDetails(
                 user.getEmail(),

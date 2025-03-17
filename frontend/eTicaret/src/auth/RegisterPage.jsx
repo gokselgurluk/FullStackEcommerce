@@ -3,7 +3,7 @@ import axios from 'axios';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Yönlendirme için gerekli
 import ModalComponent from "../components/ModalComponent"; // ModalComponent'ı kullanıyoruz
-import { Eye, EyeOff, Mail } from "lucide-react";
+import { Eye, EyeOff, XSquare } from "lucide-react";
 
 const RegisterPage = () => {
     const navigate = useNavigate(); // Yönlendirme işlemi için useNavigate hook'u
@@ -48,7 +48,9 @@ const RegisterPage = () => {
         setFormData({ ...formData, [name]: value });
     };
 
- 
+    const clearEmail = () => {
+        setFormData({ ...formData, email: "" });
+      };
 
 
     const handleSubmit = async (e) => {
@@ -185,7 +187,9 @@ const RegisterPage = () => {
                                 placeholder="Email Adresinizi Girin"
                                 required
                             />
-                            <Mail className="mail-toggle" />
+                           {formData.email && (
+        <XSquare className="mail-XSquare" onClick={clearEmail} />
+      )}
                         </div>
 
                     </div>

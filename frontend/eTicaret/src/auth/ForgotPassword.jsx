@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axiosInstance from "../api/axiosInstance";
-import { Mail, Loader } from "lucide-react";
+import { XSquare, Loader } from "lucide-react";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -11,7 +11,9 @@ const ForgotPassword = () => {
   const handleEmailChange = (e) => {
     setEmail(e.target.value);
   };
-
+  const clearEmail = () => {
+    setFormData({ email: "" });
+  };
   const handleSubmit = async (e) => {
     e.preventDefault(); // Önce engelle
     setLoading(true);
@@ -47,7 +49,9 @@ const ForgotPassword = () => {
                 placeholder="E-posta adresinizi girin"
                 required
               />
-              <Mail className="mail-toggle" />
+              {email && (
+        <XSquare className="mail-XSquare" onClick={clearEmail} />
+      )}
             </div>
           </div>
           <button type="submit" className="login-button" disabled={loading} style={{ maxWidth: "200px" }}>

@@ -22,8 +22,8 @@ import static org.apache.commons.lang3.time.DateUtils.isSameDay;
 
 @Service
 public class CodeServiceImpl implements CodeService {
-    @Value("${max_attempts}")
-    private  Integer remainingAttempts;
+ /*   @Value("${max_attempts}")
+    private  Integer remainingAttempts;*/
     @Value("${char-pool-set}")
     private  String charPool;
     private final ICodeRepository verificationTokenRepository;
@@ -68,14 +68,15 @@ public class CodeServiceImpl implements CodeService {
             if(LocalDateTime.now().isBefore(code.getCodeExpiryDate())) {
                 throw new IllegalStateException("Code geçerliligini koruyor");
             }
-            if (code.getRemainingAttempts() <=0) {
+            /*  if (code.getRemainingAttempts() <=0) {
                 throw new IllegalStateException("Bugün için maksimum kod oluşturma sınırına ulaşıldı.");
             }
-            if (!DateUtils.isSameDay(code.getLastSendDate(), new Date())) {
+          if (!DateUtils.isSameDay(code.getLastSendDate(), new Date())) {
                 // Yeni güne geçilmiş, sayaç sıfırlanır
                 code.setRemainingAttempts(remainingAttempts);
-            }
-            code.setRemainingAttempts(code.getRemainingAttempts() - 1);
+            }*/
+//            code.setRemainingAttempts(code.getRemainingAttempts() - 1);
+
             code.setCodeValue(generateCode(6)); // Yeni verifyCode oluştur
             code.setLastSendDate(new Date());
             code.setCodeExpiryDate(LocalDateTime.now().plusMinutes(2)); // Yeni geçerlilik süresi
@@ -84,7 +85,7 @@ public class CodeServiceImpl implements CodeService {
 
              // Kullanıcıyı set et
             code.setUser(user);
-            code.setRemainingAttempts(remainingAttempts - 1);
+//          code.setRemainingAttempts(remainingAttempts - 1);
             code.setCodeValue(generateCode(6)); // Yeni verifyCode oluştur
             code.setTokenType(TokenType.VERIFICATION);
             code.setLastSendDate(new Date());
@@ -108,8 +109,7 @@ public class CodeServiceImpl implements CodeService {
             LocalDateTime expiryDate = codeValueOtp.get().getCodeExpiryDate();
             return expiryDate.isAfter(LocalDateTime.now());
         }
-
-        throw new NotFoundException("Verification code not found for user: " + user.getEmail() + " Gecersiz code: " + code);
+        return false;
     }
 /*  if (optionalVerifyCode==null) {
             throw new NotFoundException("Dogrulama kodu oluşturmak için kullanıcı bilgisine ulaşılamadı: " ); // Kullanıcı bulunamazsa hata fırlat

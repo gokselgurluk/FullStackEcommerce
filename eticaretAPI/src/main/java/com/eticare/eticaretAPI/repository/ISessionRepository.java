@@ -1,6 +1,7 @@
 package com.eticare.eticaretAPI.repository;
 
 import com.eticare.eticaretAPI.entity.Session;
+import com.eticare.eticaretAPI.entity.Token;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,7 +15,7 @@ public interface ISessionRepository extends JpaRepository<Session , Long> {
     // Belirli bir kullanıcıya ait aktif oturumları getir
     List<Session> findByUserIdAndExpiresAtAfter(Long userId, Date now);
     // Refresh Token üzerinden oturum bul
-    Optional<Session> findByRefreshToken(String token);
+    Optional<Session> findByToken(Token token);
     Optional<Session> findByEmailAndIpAddressAndDeviceInfo(String email , String ipAddress , String device);
     // Kullanıcının tüm oturumlarını sil
     void deleteByUserId(Long userId);

@@ -2,7 +2,8 @@ import React from 'react';
 import Modal from 'react-modal';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
-import { AiOutlineCheckCircle, AiOutlineCloseCircle } from 'react-icons/ai';
+import { AiFillCheckCircle , AiFillCloseCircle , AiFillExclamationCircle   } from 'react-icons/ai';
+
 // Modal'ın kök elementini ayarlama
 Modal.setAppElement('#root');
 
@@ -10,7 +11,16 @@ const ModalComponent = ({ isOpen, onRequestClose, message, type }) => {
   const getMessageColor = () => {
     if (type === 'success') return 'green';
     if (type === 'error') return 'red';
-    return 'orange'; // enter türü için renk (isteğe bağlı)
+    if (type === 'warning') return 'orange';
+    return 'black'; // Varsayılan renk
+  };
+
+
+  const getIcon = () => {
+    if (type === 'success') return <AiFillCheckCircle style={{ color: 'green', fontSize: '40px' }} />;
+    if (type === 'error') return <AiFillCloseCircle  style={{ color: 'red', fontSize: '40px' }} />;
+    if (type === 'warning') return <AiFillExclamationCircle  style={{ color: 'orange', fontSize: '40px' }} />;
+    return null;
   };
 
   return (
@@ -21,39 +31,21 @@ const ModalComponent = ({ isOpen, onRequestClose, message, type }) => {
       className="custom-modal"
       overlayClassName="custom-overlay"
     >
+      {/* Modal başlık ve ikon */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '40px' }}>
+        {getIcon()}
+      </div>
+
+      {/* Mesaj içeriği */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {message.split("\n").map((line, index) => (
-          <div
-            key={index}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px', // İkon ve metin arasındaki boşluk
-            }}
-          >
-            {/* İkon */}
-            {type === 'success' ? (
-              <AiOutlineCheckCircle style={{ color: 'green', fontSize: '30px' }} />
-            ) : type === 'error' ? (
-              <AiOutlineCloseCircle style={{ color: 'red', fontSize: '30px' }} />
-            ) : (
-              <AiOutlineCheckCircle style={{ color: 'orange', fontSize: '30px' }} /> // enter için farklı ikon
-            )}
-
-            {/* Mesaj */}
-            <p
-              style={{
-                margin: 0,
-                fontSize: '15px',
-                fontWeight: 'bold', // Font kalınlığı
-                color: getMessageColor(), // Renkler dinamik olarak belirleniyor
-              }}
-            >
-              {line}
-            </p>
-          </div>
+          <p key={index} style={{ margin: 0, fontSize: '15px', fontWeight: 'bold', color: getMessageColor() }}>
+            {line}
+          </p>
         ))}
       </div>
+
+      {/* Kapat butonu */}
       <Stack
         direction="row"
         spacing={2}
@@ -64,7 +56,7 @@ const ModalComponent = ({ isOpen, onRequestClose, message, type }) => {
       >
         <Button
           variant={type === 'success' ? 'contained' : 'outlined'}
-          color={type === 'success' ? 'success' : type === 'error' ? 'error' : 'warning'} // enter türü için 'warning' rengi
+          color={type === 'success' ? 'success' : type === 'error' ? 'error' : 'warning'}
           onClick={onRequestClose}
         >
           Kapat

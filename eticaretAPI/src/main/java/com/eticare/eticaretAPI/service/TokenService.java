@@ -12,7 +12,7 @@ import java.util.Optional;
 public interface TokenService {
     Token findByTokenValue(String token);
     void delete(Token token);
-    Optional<Token> findByUserAndTokenType(User user, TokenType tokenType);
+    Optional<Token> findByUserAndTokenValueAndTokenType(User user,String tokenValue, TokenType tokenType);
     List<Token> findAllByUserId(Long userId);
     Token refreshToken(User user);
     Token accessToken(User user);
@@ -23,4 +23,5 @@ public interface TokenService {
     // Revoked token'ları güncelle
     void revokeToken(String tokenString);
     Token saveOrUpdateToken(User user,String token, TokenType tokenType);
+
 }

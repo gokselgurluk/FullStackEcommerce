@@ -9,7 +9,8 @@ public interface BlockedIpService {
 
     Optional<BlockedIp> findByBlockedIp(String ipAddresses);
     BlockedIp blockedIpCreate(String clientIp);
-    boolean blockedIpDiffTime(BlockedIp blockedIp);
+    void blockedIpDiffTime(BlockedIp blockedIp);
     void incrementFailedIpAttempts(FailedAttempt failedAttempt);
+    void blockedIpUpdate(BlockedIp blockedIp);
 
 }

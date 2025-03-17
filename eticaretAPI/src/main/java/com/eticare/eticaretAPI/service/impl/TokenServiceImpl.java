@@ -39,8 +39,8 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public Optional<Token> findByUserAndTokenType(User user, TokenType tokenType) {
-        return  tokenRepository.findByUserAndTokenType(user,tokenType);
+    public Optional<Token> findByUserAndTokenValueAndTokenType(User user,String tokenValue, TokenType tokenType) {
+        return  tokenRepository.findByUserAndTokenValueAndTokenType(user,tokenValue,tokenType);
     }
 
     @Override
@@ -87,8 +87,9 @@ public class TokenServiceImpl implements TokenService {
         List<Token> tokens = tokenRepository.findAll();
         for (Token token : tokens) {
             if (token.getExpires_at().before(new Date()) && !token.isExpired()) {
-                token.setExpired(true);  // Token süresi dolmuşsa expired'ı true yap
-                tokenRepository.save(token);
+                tokenRepository.delete(token);
+              /*  token.setExpired(true);  // Token süresi dolmuşsa expired'ı true yap
+                tokenRepository.save(token);*/
             }
         }
     }
@@ -102,7 +103,12 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public Token saveOrUpdateToken(User user,String token, TokenType tokenType) {
-        Optional<Token> existingToken = tokenRepository.findByUserAndTokenType(user, tokenType);
+        Optional<Token> existingToken;
+        if(tokenType==TokenType.REFRESH) {
+          existingToken = tokenRepository.findByUserAndTokenValueAndTokenType(user, token, tokenType);
+        }else {
+            existingToken = tokenRepository.findByUserAndTokenType(user, tokenType);
+        }
         Token tokenCreateOrUpdate = null;
         if (existingToken.isPresent()) {
             // Mevcut token'ı güncelle
@@ -126,5 +132,8 @@ public class TokenServiceImpl implements TokenService {
         tokenRepository.save(tokenCreateOrUpdate);
         return tokenCreateOrUpdate;
     }
+
+
+
 }
 

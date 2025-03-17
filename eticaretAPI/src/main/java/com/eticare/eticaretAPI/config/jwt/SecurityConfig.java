@@ -41,7 +41,7 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable())  // CSRF korumasını devre dışı bırak
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/refresh-token", "/auth/login", "/auth/register",
-                                "/auth/otp-verification", "/send-activation-email", "/auth/activate-account",
+                                "/auth/otp-session-verification", "/send-activation-email", "/auth/activate-account",
                                 "auth/reset-password", "api/forgot-password", "/swagger-ui/**", "/v3/api-docs/**",
                                 "/swagger-resources/**", "/webjars/**", "/Message").permitAll()  // "Message" endpoint'ini herkesin erişmesine izin ver
                         .anyRequest().authenticated()  // Diğer endpoint'ler için doğrulama gerekli

@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import ModalComponent from "../components/ModalComponent";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Mail,Loader } from "lucide-react";
+import { Eye, EyeOff,Loader } from "lucide-react";
 
 const EmailVerifyPage = () => {
   const { isAuth } = useAuth();
@@ -40,7 +40,7 @@ const EmailVerifyPage = () => {
       if (type === "error") {
         navigate("/email-verify");
       }
-    }, 100);
+    }, 500);
   };
 
   const showModal = (message, type) => {
@@ -59,7 +59,7 @@ const EmailVerifyPage = () => {
   const handleEmailChange = (e) => {
     setEmail(e.target.value);
   };
-
+ 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("");
@@ -118,7 +118,7 @@ const EmailVerifyPage = () => {
         }
         return prev - 1;
       });
-    }, 1000);
+    }, 500);
   };
 
   if (!isAuth) {
@@ -133,7 +133,7 @@ const EmailVerifyPage = () => {
           <h4 className="form-title">E-posta Doğrulama</h4>
           <div>
             <div className="input-wrapper">
-              <Mail className="mail-toggle" />
+             
               <input
                 className="input-field"
                 type="email"
@@ -143,6 +143,7 @@ const EmailVerifyPage = () => {
                 required
                 disabled='true'
               />
+                 
             </div>
           </div>
           <p style={{ marginTop: "10px", color: "#555" }}>

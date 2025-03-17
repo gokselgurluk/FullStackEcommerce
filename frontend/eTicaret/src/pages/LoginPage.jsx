@@ -4,8 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../api/axiosInstance';
 import ModalComponent from '../components/ModalComponent';
 import { FaGoogle, FaFacebook, FaApple } from "react-icons/fa"; // react-icons paketi
-import { Eye, EyeOff, Mail } from "lucide-react";
-import { Loader } from "lucide-react";
+import { Eye, EyeOff, XSquare,Loader  } from "lucide-react";
+
 const LoginPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -63,7 +63,9 @@ const LoginPage = () => {
     setRememberMe(e.target.checked);
 
   };
-
+  const clearEmail = () => {
+    setFormData({ ...formData, email: "" });
+  };
   const handleSubmit = async (e) => {
 
     e.preventDefault(); // Sayfa yenilenmesini engelle
@@ -80,12 +82,12 @@ const LoginPage = () => {
     try {
       console.log("Base URL:", axiosInstance.defaults.baseURL);
       const response = await axiosInstance.post('/auth/login', formData);
-    
       const userData = response.data;
 
       if (userData?.accessToken) {
         localStorage.setItem('accessToken', userData.accessToken);
-        login(userData.accessToken);
+        localStorage.setItem('refreshToken', userData.refreshToken);
+        login(userData.accessToken,userData.refreshToken);
         setModalData({
           isOpen: true,
           message: userData.active ? 'Giriş başarılı!' : 'Hesabınız aktif değil, e-mail doğrulaması yapınız.',
@@ -105,7 +107,9 @@ const LoginPage = () => {
       } else {
         setModalData({
           isOpen: true,
-          message: error.response?.data?.message + (error.response?.data?.data ? '\n' + error.response.data.data : '') || 'Bir hata oluştu. Lütfen tekrar deneyin.',
+          message: error.response?.data?.message ? 
+          error.response.data.message + 
+          (error.response.data.data ? '\n' + error.response.data.data : '') : 'Bir hata oluştu. Lütfen tekrar deneyin.',          
           type: 'error',
         });
       }
@@ -142,7 +146,9 @@ const LoginPage = () => {
               onChange={handleInputChange}
               required
             />
-            <Mail className="mail-toggle" />
+            {formData.email && (
+        <XSquare className="mail-XSquare" onClick={clearEmail} />
+      )}
           </div>
 
           <div className="input-wrapper">
@@ -161,8 +167,6 @@ const LoginPage = () => {
           </div>
 
           <div className="cointainer">
-            <a className="forget-password" href="/forget-password">Şifremi unuttum</a>
-
             <div className="remember-me-container">
               <input
                 type="checkbox"
@@ -172,8 +176,9 @@ const LoginPage = () => {
                 onChange={handleRememberMeChange}
               />
               <label htmlFor="rememberMe" className="remember-me-label">Beni Hatırla</label>
-
             </div>
+
+            <a className="forget-password" href="/forget-password">Şifremi unuttum</a>
           </div>
           <button type="submit" className="login-button" disabled={loading}>
             {loading ? <Loader className="spinner" size={20} /> : "Giriş Yap"}

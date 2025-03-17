@@ -57,20 +57,19 @@ if (value && index < codeValue.length - 1) {
     event.preventDefault(); // Sayfanın yenilenmesini engelle
 
     try {
-        const response = await axiosInstance.post("auth/otp-verification", {
+        const response = await axiosInstance.post("auth/otp-session-verification", {
         codeValue: codeValue.join(""), // JSON formatında gönderiyoruz
           email: emailFromUrl,
         });
         console.log(response);
       
-        if(response.data.status === true)  {
-          showModal("Doğrulama başarılı! Giriş yapabilirsiniz.","success");
-        setTimeout(() => {
-          navigate("/login");
-        }, 500);
-      }else{
-        showModal(response.data.message||"Doğrulama başarırısız! ","error")
-      }
+        if (response?.data?.status === true) { 
+          showModal(response?.data?.message ||"Doğrulama başarılı! Giriş yapabilirsiniz.", "success");
+          
+          setTimeout(() => {
+            navigate("/login");
+          }, 500);
+        } 
       } catch (error) {
         if(error.response.status === 403)  {
           showModal(error.response?.data?.message||"Baglantı süresi dolmuş veya geçersiz","warning");
@@ -78,17 +77,19 @@ if (value && index < codeValue.length - 1) {
         if(error.response.status === 404){
           showModal(error.response?.data?.message||"Kayıt bulunamadı","error");
         }
-        
-        else{
-        setMessage("❌ " + ("Bilinmeyen bir hata ile karşılaşıldı"));
-      }
+        if(error.response.status === 400){
+          showModal(error.response?.data?.message || "Doğrulama başarısız!", "error");
+        }
+          else{
+          setMessage("❌ " +("Bilinmeyen bir hata ile karşılaşıldı"));
+        }
       }
     };
 
   return (
     <main className="main">
       <div className="form-container">
-        <form className="login-form" onSubmit={handleVerify} style={{ maxWidth: "50%" }}>
+        <form className="form" onSubmit={handleVerify} >
           <h4 className="form-title">OTP Doğrulama</h4>
           <div className="input-otp-wrapper">
   {codeValue.map((digit, index) => (

@@ -39,7 +39,7 @@ public class Token {
     @Enumerated(EnumType.STRING)
     private TokenType tokenType;
 
-    private boolean revoked = true; // Token iptal edildi mi?
+    private boolean revoked = false; // Token iptal edildi mi?
 
     private boolean expired; // Token süresi doldu mu?
 
@@ -47,21 +47,22 @@ public class Token {
     @JoinColumn(name = "user_id")
     private  User user ;
 
+
     @OneToOne(mappedBy = "token")
     private EmailSend emailSend;
 
-    @OneToMany(mappedBy = "token", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Session> sessions = new ArrayList<>();
     @Override
     public String toString() {
         return "Token{" +
                 "id=" + id +
-                ", token='" + tokenValue + '\'' +
+                ", tokenValue='" + tokenValue + '\'' +
                 ", created_at=" + created_at +
                 ", expires_at=" + expires_at +
                 ", tokenType=" + tokenType +
                 ", revoked=" + revoked +
                 ", expired=" + expired +
+                ", user=" + user +
+                ", emailSend=" + emailSend +
                 '}';
     }
 }

@@ -20,7 +20,7 @@ public class JwtService {
 
     @Value("${jwt.secret}")
     private String SECRET_KEY;
-    private static final long ACCESS_TOKEN_EXPIRATION = 1000 * 60 * 15; // 15 dakika
+    private static final long ACCESS_TOKEN_EXPIRATION = 1000 * 60 ; // 15 dakika
     private static final long REFRESH_TOKEN_EXPIRATION = 1000 * 60 * 60 * 24 * 7; // 7 gün
     private static final long ACTIVATION_TOKEN_EXPIRATION = 1000 * 60 * 2; // 3 dk
 

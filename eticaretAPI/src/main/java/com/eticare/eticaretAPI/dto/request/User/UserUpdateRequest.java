@@ -5,6 +5,8 @@ import com.eticare.eticaretAPI.utils.annotationValidPassword;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
+import java.util.Date;
+
 @Data
 public class UserUpdateRequest {
     @Positive(message = "Id pozıtıf olmalı")
@@ -27,10 +29,16 @@ public class UserUpdateRequest {
     @NotBlank(message = "Email cannot be empty or blank")
     private String email;
 
-    private Boolean active; // Kullanıcı aktif/pasif durumu
+   /* private Boolean active; // Kullanıcı aktif/pasif durumu
 
-    //private Date lastLogin; // Son giriş tarihi (isteğe bağlı)
+    private Date accountLockedTime;
+
+    private long diffLockedTime ;
+
+    private int incrementFailedLoginAttempts;
+
+    private boolean isAccountLocked  ; // Varsayılan olarak kullanıcı aktif değil
 
     private RoleEnum roleEnum; // Kullanıcı rolü (isteğe bağlı)
-
+*/
 }

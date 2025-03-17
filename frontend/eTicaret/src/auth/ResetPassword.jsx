@@ -76,8 +76,11 @@ const ResetPassword = () => {
                 confirmPassword,
                 resetPasswordToken
             });
-           
-            showModal("Şifre başarıyla sıfırlandı.", "success");
+           if(response.status==200){
+            showModal(response?.data+"  "+response?.data?.message, "success");
+           }else{
+            showModal(response.data.message,"warning")
+           }
       
         } catch (error) {
             console.log("Backend yanıtı:", error.response.data);
